@@ -1,2 +1,2 @@
-# ap-java-sdk
-Java Payment SDKs
+# Java Payment SDK
+
