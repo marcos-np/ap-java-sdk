@@ -21,7 +21,7 @@ public class QuixHostedQuery extends QuixHostedRequest {
         this.paysolExtendedData = paysolExtendedData;
     }
 
-    public QuixHostedQuery(double amount, String customerId, String merchantTransactionId, String statusURL, String successURL, String errorURL, String cancelURL,String awaitingURL, String firstName, String lastName, String customerEmail, String dob, String paysolExtendedData, int apiVersion) {
+    public QuixHostedQuery(String amount, String customerId, String merchantTransactionId, String statusURL, String successURL, String errorURL, String cancelURL,String awaitingURL, String firstName, String lastName, String customerEmail, String dob, String paysolExtendedData, int apiVersion) {
         super(amount, customerId, merchantTransactionId, statusURL, successURL, errorURL, cancelURL,awaitingURL, firstName, lastName, customerEmail, dob, apiVersion);
         this.paysolExtendedData = paysolExtendedData;
     }

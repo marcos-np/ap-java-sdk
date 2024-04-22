@@ -94,11 +94,11 @@ class HostedPaymentTest {
         assertEquals(3, queryParameterSlot.captured.size)
         assertEquals("111222", queryParameterSlot.captured["merchantId"])
         assertEquals(
-            "2BDGM6x+gfSbyWnsjorW6bt9H5s+USzuFPrNh2EGOH9fEcf0GmC0hzuGXJNTKx2mSteJt8m0zt3SD6JuEq6TQGiLKRs+chOVZ3Sq19Iu6DDwgpSAECLs1AikUZPFl0v82o+AIjDJ0+i3QqphdP5qlQe85e7NO52xS8SF2UgIK6xyrjLNfoOIM6EGm+Q1e/n9Np9FGiJvjOK68YAxkNldQRvUvoUsMONXjyVnig1Nre1lrUZRyIeCbESDuR8Iu0RF//Nt/08E/WCgPeY8k376UtFgwB6gGZ6YL0+dRm9d62kaIlmE08gMea+4UZxPJHtVZ7iXseYX0mikhNhCmUFSX2URBYDaEaI8/khxEdO41qouztsgZ6uiEnrWHMkmSTCWfIi77faLe3ZSIVyl69TsFwSdTyvcmlAxF/YircyqVVMJL4UE7nMZ2H7QQYOEvv2p4O4bFViygzhramfRqhNZDxo1CsXpZQdnO6/HghV4yuXUFXd6DB8z2bhAevraIS3WoaeuA9+UyLN8JTjRiwPS2A==",
+            "2BDGM6x+gfSbyWnsjorW6YR+jWqn+xq5Rdr/mOk7Fy7y+QqTAA8hUOGSsOksnzXs7LCbpXaom5lwlPb4AFvuTJVaSkyJF97jW1fOHUKySERIT+qCLHesZIboEOYOP1TzFUohvr+FDufNlnqhfFFtkk371jPxKV5g21FB1eq+WuQMBwPTHRHGNrJac0HcEMxcvi7VgqqLJ5I0kopPATShgHohWZfMvdaguvsYQG59Y5+pw2zJM3iEdPU88euZD+0QgiHE8ClU30NyLg25xyVvvGulMmmzGPjktsDBXUFR8XU0g3wCfaidqVLtlVmaCuaO5SArx/bYwW+bIQoGdIa0ABosUiJArZcMCgowOm8QdgBZBuo2EVavz6AzAFA0d4pMfbNE5S2SJJ28f9bXRwSDbMXpp/0+UM+5T+HyoaS82ZT2jP3l9vLuUppnDbOKDjnU0+YcOSs4McXYhp+G2lXzQiZN8KJCRsHJ68gQC3j+sS/rkgb89jG0SnMmiRBD8+LHYUeJuPGIDi99mFZCkyCEEYOHHhHSaSBNt2jUBfHcCZbgZTIogBol0vQ7VAbpUGGi5w2Fgsc0ycgnaVspWI6xVQ==",
             queryParameterSlot.captured["encrypted"]
         )
         assertEquals(
-            "7d1f73132ccad63692fd75a6f43a0ad3a0e947042656fa11629968379919fafa",
+            "9966797579e373792a3f1c59af2bc9d0c09edb1ef3d65bd47595e40cd25485a1",
             queryParameterSlot.captured["integrityCheck"]
         )
 
@@ -187,5 +187,70 @@ class HostedPaymentTest {
 
         assertEquals(Error.MISSING_PARAMETER, errorSlot.captured)
         assertEquals("Missing statusURL", errorMessageSlot.captured)
+    }
+
+    @Test
+    fun failInvalidAmountHosted() {
+        mockkConstructor(SocketAdapter::class, recordPrivateCalls = true)
+        every { anyConstructed<SocketAdapter>().connect(any(), any()) } just Runs
+
+        val mockedSecurityUtils = mockk<SecurityUtils>()
+        every { mockedSecurityUtils.generateIV() } returns ByteArray(16) { 1 }
+        every { mockedSecurityUtils.hash256(any()) } answers { callOriginal() }
+        every { mockedSecurityUtils.base64Encode(any()) } answers { callOriginal() }
+        every { mockedSecurityUtils.applyAESPadding(any()) } answers { callOriginal() }
+        every { mockedSecurityUtils.cbcEncryption(any(), any(), any(), any()) } answers { callOriginal() }
+
+        mockkStatic(SecurityUtils::class)
+        every { SecurityUtils.getInstance() } returns mockedSecurityUtils
+
+        mockkConstructor(NetworkAdapter::class, recordPrivateCalls = true)
+        every {
+            anyConstructed<NetworkAdapter>()["sendRequest"](
+                any<HashMap<String, String>>(),
+                any<HashMap<String, String>>(),
+                any<RequestBody>(),
+                any<String>(),
+                any<RequestListener>()
+            )
+        } answers { }
+
+        val mockedResponseListener = mockk<ResponseListener>();
+        every { mockedResponseListener.onError(any(), any()) } just Runs
+        every { mockedResponseListener.onRedirectionURLReceived(any()) } just Runs
+        every { mockedResponseListener.onResponseReceived(any(), any(), any()) } just Runs
+
+        val credentials = Credentials()
+        credentials.merchantPass = "11111111112222222222333333333344"
+        credentials.merchantKey = "11111111-1111-1111-1111-111111111111"
+        credentials.merchantId = "111222"
+        credentials.environment = Environment.STAGING
+        credentials.productId = "1112220001"
+
+        val hostedPaymentRedirection = HostedPaymentRedirection()
+        hostedPaymentRedirection.currency = Currency.EUR
+        hostedPaymentRedirection.paymentSolution = PaymentSolutions.creditcards
+        hostedPaymentRedirection.amount = "50,11"
+        hostedPaymentRedirection.country = CountryCode.ES
+        hostedPaymentRedirection.customerId = "903"
+        hostedPaymentRedirection.statusURL = "https://test.com/status"
+        hostedPaymentRedirection.successURL = "https://test.com/success"
+        hostedPaymentRedirection.errorURL = "https://test.com/error"
+        hostedPaymentRedirection.awaitingURL = "https://test.com/waiting"
+        hostedPaymentRedirection.cancelURL = "https://test.com/cancel"
+        hostedPaymentRedirection.merchantTransactionId = "12345678"
+        hostedPaymentRedirection.apiVersion = 5
+
+        val hostedPaymentAdapter = HostedPaymentAdapter(credentials)
+
+        hostedPaymentAdapter.sendHostedPaymentRequest(hostedPaymentRedirection, mockedResponseListener)
+
+        val errorSlot = slot<Error>()
+        val errorMessageSlot = slot<String>()
+
+        verify { mockedResponseListener.onError(capture(errorSlot), capture(errorMessageSlot)) }
+
+        assertEquals(Error.INVALID_AMOUNT, errorSlot.captured)
+        assertEquals(Error.INVALID_AMOUNT.message, errorMessageSlot.captured)
     }
 }

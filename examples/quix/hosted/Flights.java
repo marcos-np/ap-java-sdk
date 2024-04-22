@@ -42,7 +42,7 @@ public class Flights {
         // Step 2 - Configure Payment Parameters
         HostedQuixFlight hostedQuixFlight = new HostedQuixFlight();
         hostedQuixFlight.setApiVersion(5);
-        hostedQuixFlight.setAmount(99);
+        hostedQuixFlight.setAmount("99");
         hostedQuixFlight.setCustomerId("903");
         hostedQuixFlight.setStatusURL(Creds.statusUrl);
         hostedQuixFlight.setCancelURL(Creds.cancelUrl);

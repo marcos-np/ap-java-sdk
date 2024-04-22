@@ -46,7 +46,6 @@ class RecurringTest {
         every { mockedResponseListener.onError(any(), any()) } just Runs
         every { mockedResponseListener.onResponseReceived(any(), any(), any()) } just Runs
 
-
         val credentials = Credentials()
         credentials.merchantPass = "11111111112222222222333333333344"
         credentials.merchantKey = "11111111-1111-1111-1111-111111111111"
@@ -101,11 +100,11 @@ class RecurringTest {
         Assertions.assertEquals(3, queryParameterSlot.captured.size)
         Assertions.assertEquals("111222", queryParameterSlot.captured["merchantId"])
         Assertions.assertEquals(
-            "/jlLW9x3R1UXOPwL/vAPJnFFA9+KFT7GzhgkxlVDp6qxSRnSO4fjQKKFTr6Sbv/fyf+m9lEYqjAUKWPy6Fa3eebk5O9Nqy/ggI/y7p45MH8r9DwtG6u5psdpF9/ONskTR2Jn89qJ4mHIXM62HwtzBbdeRUZrfOXG6yHbt7+clhL7baB0r/BsLCKBwkibA0TB3Mdf4rhp7gPbCKgglvG5VJn/QBaTAvebaVwjAFzoGfAX+CQ/Am0NehDhyM5IqGXrqxNNZPfPXB0sqkZPEqw7JhNW6mS7fy/RTXckyL+KtI0CNHQ9RA779cgOykmAufjhaFUBnva0OeNScF2EFr4Yga2s/IpjJ0X7YWiqF+lLRcZY7RV5gRZoZh4F74FvWQQyEQM8P8vVjFGeERAd2dMr3Q+nO1lb2qp2PCmYf/fHOdH03Idj6t4KUKBIc02e7lq/sBfrS2z9LQw50TXxOQNaYd+Fkcdy8YSvuRisVPYb0JxYBm3xmMR37VrSnzCzS/4i/HGZOSsuorgAHvHUUusbYWf9/1qPPwC8T+/RkNEjgnEyP70scPZ8PwRA3VXBy+T121Xbb9bnxMQpdeUFKiHSLm6eLixgqQpSpM4y0EVgLdG6Gq24/BZyqwg9TJKchF5MGICoe3kd4XDjWaFybs27vYFFVXhg2J9kYEejDplh7BRHUs4EgMh+2Up2yvrreNUl",
+            "7QDv+7cYdagtQmVfr38p19LXAC7V747KKHceeSdEoxrMJV88ISU1YBv47F+zGTbBQRAxNvsqKgIqQ+GRWcl4SApIA7eK2pihFOfdoDQ9xSAvLB/oY31Bv1OGpToC/L0sJ8mqAOB3vo2cI1Lf0Q34FdD81pE9LpUotPuPKI6oXFBT2pJ7RF2uhhQslEVHnicLmtPCgDmKAg/svckRxZoOrpcE0bteymRpRibu1pIdMDZ7epUk/AB65+kQ6kMuwJNCRCNnlUWvEWize7wc2hKkMLuE1+IvHVOiMJw2WLWeWcQno8UEmhItPJpPJXt/Bk4CG8f867NPAnDqDG2+w/hwqwYVRTiTzLivzVdzZijxyo8DHvFg79K3vMK5Lw1KCG3tRwDCWovWTrIe0F5Q6uFxo3uCf+fuG56LLGQ4svFlxfW/6UnEWmt2NLi9k98LAzcAJjS3Zdg2Xj57OPNPKVh1Ze71LLQy5V4wLhMpJvavy0wzTHIiXY0Px9YltVqoA+ME8zce7B5zjDofW2Oh/Pbhc2Byka4cfvvQucf1yE/BJTcjuEwzQW97eh9fXnypYou8RA2VuWjlhqBkOyJvRzayqLNx6/+5CEfVQopmPhZaaVKVEA3f6fTC2s9w84S5ZfjGqt46QTctEACCFTYuSghkUW8rj/boRhRrDMirnZIfO3CcUCHcWlHeQllqwp0r+3rsZv4Izq449l+vfFbHVs8cKg==",
             queryParameterSlot.captured["encrypted"]
         )
         Assertions.assertEquals(
-            "47361e469bbe6ea9f085f6610f99414d2b10c0608fb8ae9a7f568f40a73bf6d8",
+            "44d232da729203529f458d157aeccf9bef6b252bd72ee02613930486e211a407",
             queryParameterSlot.captured["integrityCheck"]
         )
 
@@ -182,6 +181,51 @@ class RecurringTest {
 
         Assertions.assertEquals(Error.MISSING_PARAMETER, errorSlot.captured)
         Assertions.assertEquals("Missing cardNumber", errorMessageSlot.captured)
+    }
+
+    @Test
+    fun failInvalidAmountRecurringPayment() {
+        val mockedResponseListener = mockk<ResponseListener>()
+        every { mockedResponseListener.onError(any(), any()) } just Runs
+        every { mockedResponseListener.onResponseReceived(any(), any(), any()) } just Runs
+
+        val credentials = Credentials()
+        credentials.merchantPass = "11111111112222222222333333333344"
+        credentials.merchantKey = "11111111-1111-1111-1111-111111111111"
+        credentials.merchantId = "111222"
+        credentials.environment = Environment.STAGING
+        credentials.productId = "1112220001"
+
+        val h2HPaymentRecurrentInitial = H2HPaymentRecurrentInitial()
+
+        h2HPaymentRecurrentInitial.amount = "-7895"
+        h2HPaymentRecurrentInitial.currency = Currency.EUR
+        h2HPaymentRecurrentInitial.country = CountryCode.ES
+        h2HPaymentRecurrentInitial.cardNumber = "4907270002222227"
+        h2HPaymentRecurrentInitial.customerId = "903"
+        h2HPaymentRecurrentInitial.chName = "First name Last name"
+        h2HPaymentRecurrentInitial.cvnNumber = "123"
+        h2HPaymentRecurrentInitial.expDate = "0625"
+        h2HPaymentRecurrentInitial.paymentSolution = PaymentSolutions.creditcards
+        h2HPaymentRecurrentInitial.statusURL = "https://test.com/status"
+        h2HPaymentRecurrentInitial.successURL = "https://test.com/success"
+        h2HPaymentRecurrentInitial.errorURL = "https://test.com/error"
+        h2HPaymentRecurrentInitial.awaitingURL = "https://test.com/waiting"
+        h2HPaymentRecurrentInitial.cancelURL = "https://test.com/cancel"
+        h2HPaymentRecurrentInitial.merchantTransactionId = "12345678"
+        h2HPaymentRecurrentInitial.apiVersion = 5
+
+        val h2HPaymentAdapter = H2HPaymentAdapter(credentials)
+
+        h2HPaymentAdapter.sendH2hPaymentRecurrentInitial(h2HPaymentRecurrentInitial, mockedResponseListener)
+
+        val errorSlot = slot<Error>()
+        val errorMessageSlot = slot<String>()
+
+        verify { mockedResponseListener.onError(capture(errorSlot), capture(errorMessageSlot)) }
+
+        Assertions.assertEquals(Error.INVALID_AMOUNT, errorSlot.captured)
+        Assertions.assertEquals(Error.INVALID_AMOUNT.message, errorMessageSlot.captured)
     }
 
 }

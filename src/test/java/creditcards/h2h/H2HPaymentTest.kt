@@ -100,11 +100,11 @@ class H2HPaymentTest {
         assertEquals(3, queryParameterSlot.captured.size)
         assertEquals("111222", queryParameterSlot.captured["merchantId"])
         assertEquals(
-            "8R7mQRffpbBlV84oSuBAXcqmS6xvKcOR/C3dSOSpZt/KRbA+jBGxcTMIMybhY/q9WxCPo1Ber/fVwAuHYYUv2WLrOhrtQLZYdzgMj+gzcXS0GzlGVb0yiWSI2jwzTN34SfTc20vME3WGYFjAJfmQveW+ijmD5UFyGJUmjN6a3lvn0ywN4I/cmpQSXY2BOaxOyyJA5LjUvb0Ta9EMBb6+RGDZUdAcRNiFrUvUqjX1OyKvXgakz8TIEjjPhPExFzTtqIQ4EfnTvJDCVs8PK7b+WFRMihyCVSYfO1Ak1W56G3Z7+j1DMojz+mJOU1uEJ9qBBCTTCUZJ08Qb186mAfSjBAN7WP+hKalluYosZKn6Iho27k39ZAAfKqvaq+crpqZbuj4BL79qKICKHcc8Us2rpZVSOvMgKUzddrqEXvi9c+VJFcJ776eVINsnlZbB+WTMFo2QnNabxAh1KyVBioC7La5eg9rQg8M4zcy9u7TgWoZV77BDDQqxn3dB2E5ZMsvXRTg8CRGC6tJ5psmss1/bHNZJK5OeoyX5Xkrv4fjBuppLsKZ1iVta7HQ/0gHynSeHNdCZc+ZCi9IhsWTfhX6bX/X9+pPfGimX1St475sBrHQ=",
+            "7QDv+7cYdagtQmVfr38p1+HRNOMcBrftirm7FfE6+GOSF52tAfECBNLpz0a9jfI8Vlr7QWy4vIfNXFdl+saLSXIVvsH8bn31IcWKU3OeMVXo7oK9uHWbv+xCWoUVvCigNVKwnNRhH3hs4+pxifzJH0+t0lnb/P9KViOOqGRL/v7BeDN8BHaCF3rMLeUwE0q0os5MjtPjgmIC+jQVmjHlRb2KE+RhLewh/oazUTgOIMo75uj4DHuvlj9qhfRdU/iLhqgZd7P2jeQ0/zMa0Uv+N34NE4dzfeMNQ+leBbsbCiXKH15RubBngQ3MbT3OVd0+qfQE4bKc3ibITXuexUX/y/AufxXCvhX2hRGUxAaQeD0V1pmYkVAdzzIdQz0feLuZyLSY0QlxRRaME6lE1Re+fiWAik1ryPPY1EsBTDIF1/RgeMfH31KkLa1rgyNAv8G3kO4DNxV1ROmELsILCX4jDApkAlME+3Zx6gc/1BeDiRSwY+yssSBXZ6fJniAX39UzqaEsLeywtjdMadlYyjlvIKkh+x70gpiNIqfoYqVMV4Sr6CHzaMSaivIyWTttcYV+n4rUZDJbfP1NZ3puZ61R7eSBqxKzer23CHYH1un7um6JIrky7hkBbBo0SVCO5SFH",
             queryParameterSlot.captured["encrypted"]
         )
         assertEquals(
-            "6458bfd0e7791182976dbeb14f8fb366007e2a923d6642561ccefc542f5c31d9",
+            "c798dd66929a412f5da1346332c0b708da426a550967871beea867b8dd882792",
             queryParameterSlot.captured["integrityCheck"]
         )
 
@@ -177,5 +177,49 @@ class H2HPaymentTest {
 
         assertEquals(Error.MISSING_PARAMETER, errorSlot.captured)
         assertEquals("Missing amount", errorMessageSlot.captured)
+    }
+
+    @Test
+    fun failInvalidAmountH2HPayment() {
+        val mockedResponseListener = mockk<ResponseListener>();
+        every { mockedResponseListener.onError(any(), any()) } just Runs
+        every { mockedResponseListener.onResponseReceived(any(), any(), any() ) } just Runs
+
+        val credentials = Credentials()
+        credentials.merchantPass = "11111111112222222222333333333344"
+        credentials.merchantKey = "11111111-1111-1111-1111-111111111111"
+        credentials.merchantId = "111222"
+        credentials.environment = Environment.STAGING
+        credentials.productId = "1112220001"
+
+        val h2HRedirection = H2HRedirection()
+        h2HRedirection.amount = "50,9"
+        h2HRedirection.currency = Currency.EUR
+        h2HRedirection.country = CountryCode.ES
+        h2HRedirection.cardNumber = "4907270002222227"
+        h2HRedirection.customerId = "903"
+        h2HRedirection.chName = "First name Last name"
+        h2HRedirection.cvnNumber = "123"
+        h2HRedirection.expDate = "0625"
+        h2HRedirection.paymentSolution = PaymentSolutions.creditcards
+        h2HRedirection.statusURL = "https://test.com/status"
+        h2HRedirection.successURL = "https://test.com/success"
+        h2HRedirection.errorURL = "https://test.com/error"
+        h2HRedirection.awaitingURL = "https://test.com/waiting"
+        h2HRedirection.cancelURL = "https://test.com/cancel"
+        h2HRedirection.merchantTransactionId = "12345678"
+        h2HRedirection.apiVersion = 5
+
+        val h2HPaymentAdapter = H2HPaymentAdapter(credentials)
+
+        h2HPaymentAdapter.sendH2hPaymentRequest(h2HRedirection, mockedResponseListener)
+
+        val errorSlot = slot<Error>()
+        val errorMessageSlot = slot<String>()
+
+        verify { mockedResponseListener.onError(capture(errorSlot), capture(errorMessageSlot)) }
+
+        assertEquals(Error.INVALID_AMOUNT, errorSlot.captured)
+        assertEquals(Error.INVALID_AMOUNT.message, errorMessageSlot.captured)
     }
 }

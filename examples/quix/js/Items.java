@@ -43,8 +43,8 @@ public class Items {
         // region Step 2 - Configure Payment Parameters
         JSQuixItem jsQuixItem = new JSQuixItem();
         jsQuixItem.setPrepayToken("4c8eb302-890f-43ff-aa8c-7ee77acec777");
-        jsQuixItem.setAmount(99);
         jsQuixItem.setApiVersion(5);
+        jsQuixItem.setAmount("99");
         jsQuixItem.setCustomerId("55");
         jsQuixItem.setStatusURL(Creds.statusUrl);
         jsQuixItem.setCancelURL(Creds.cancelUrl);

@@ -50,6 +50,8 @@ public class Recurring {
         h2HPaymentRecurrentInitial.setAwaitingURL(Creds.awaitingUrl);
         h2HPaymentRecurrentInitial.setCancelURL(Creds.cancelUrl);
         h2HPaymentRecurrentInitial.setApiVersion(5);
+        h2HPaymentRecurrentInitial.setPaymentRecurringType(PaymentRecurringType.newCof);
+        h2HPaymentRecurrentInitial.setForceTokenRequest(true);
 
         // Step 3 - Send Payment Request
         H2HPaymentAdapter h2HPaymentAdapter = new H2HPaymentAdapter(credentials);

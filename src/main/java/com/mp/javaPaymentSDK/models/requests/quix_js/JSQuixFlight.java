@@ -13,7 +13,7 @@ public class JSQuixFlight extends QuixJSRequest {
     public JSQuixFlight() {
     }
 
-    public JSQuixFlight(double amount, String customerId, String merchantTransactionId, String statusURL, String successURL, String errorURL, String cancelURL,String awaitingURL, String firstName, String lastName, String customerEmail, String dob, String prepayToken, QuixFlightPaySolExtendedData paySolExtendedData, int apiVersion) {
+    public JSQuixFlight(String amount, String customerId, String merchantTransactionId, String statusURL, String successURL, String errorURL, String cancelURL,String awaitingURL, String firstName, String lastName, String customerEmail, String dob, String prepayToken, QuixFlightPaySolExtendedData paySolExtendedData, int apiVersion) {
         super(amount, customerId, merchantTransactionId, statusURL, successURL, errorURL, cancelURL,awaitingURL, firstName, lastName, customerEmail, dob, prepayToken, apiVersion);
         this.paySolExtendedData = paySolExtendedData;
     }

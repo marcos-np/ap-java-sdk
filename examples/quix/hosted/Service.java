@@ -44,8 +44,8 @@ public class Service {
 
         // region Step 2 - Configure Payment Parameters
         HostedQuixService hostedQuixService = new HostedQuixService();
-        hostedQuixService.setAmount(99);
         hostedQuixService.setApiVersion(5);
+        hostedQuixService.setAmount("99");
         hostedQuixService.setCustomerId("903");
         hostedQuixService.setStatusURL(Creds.statusUrl);
         hostedQuixService.setCancelURL(Creds.cancelUrl);

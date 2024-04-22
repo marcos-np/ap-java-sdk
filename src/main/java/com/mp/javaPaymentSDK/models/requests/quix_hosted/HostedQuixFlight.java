@@ -19,7 +19,7 @@ public class HostedQuixFlight extends QuixHostedRequest {
         this.setMerchantTransactionId(Utils.getInstance().generateRandomNumber());
     }
 
-    public HostedQuixFlight(double amount, String customerId, String merchantTransactionId, String statusURL, String successURL, String errorURL, String cancelURL,String awaitingURL, String firstName, String lastName, String customerEmail, String dob, QuixFlightPaySolExtendedData paySolExtendedData, int apiVersion) {
+    public HostedQuixFlight(String amount, String customerId, String merchantTransactionId, String statusURL, String successURL, String errorURL, String cancelURL,String awaitingURL, String firstName, String lastName, String customerEmail, String dob, QuixFlightPaySolExtendedData paySolExtendedData, int apiVersion) {
         super(amount, customerId, merchantTransactionId, statusURL, successURL, errorURL, cancelURL,awaitingURL, firstName, lastName, customerEmail, dob, apiVersion);
         this.paySolExtendedData = paySolExtendedData;
     }

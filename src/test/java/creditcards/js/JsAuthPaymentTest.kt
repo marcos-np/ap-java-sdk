@@ -93,7 +93,7 @@ class JsAuthPaymentTest {
     }
 
     @Test
-    fun failMissingParameterHosted() {
+    fun failMissingParameterJS() {
         mockkConstructor(NetworkAdapter::class, recordPrivateCalls = true)
         every {
             anyConstructed<NetworkAdapter>()["sendRequest"](

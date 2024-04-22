@@ -20,7 +20,7 @@ import utils.NotificationResponses
 class RecurringSubsequentTest {
 
     @Test
-    fun successResponseRecurringPayment() {
+    fun successResponseRecurringSubsequentPayment() {
 
         val mockedSecurityUtils = mockk<SecurityUtils>()
         every { mockedSecurityUtils.generateIV() } returns ByteArray(16) { 1 }
@@ -46,7 +46,6 @@ class RecurringSubsequentTest {
         val mockedResponseListener = mockk<ResponseListener>()
         every { mockedResponseListener.onError(any(), any()) } just Runs
         every { mockedResponseListener.onResponseReceived(any(), any(), any()) } just Runs
-
 
         val credentials = Credentials()
         credentials.merchantPass = "11111111112222222222333333333344"
@@ -101,11 +100,11 @@ class RecurringSubsequentTest {
         Assertions.assertEquals(3, queryParameterSlot.captured.size)
         Assertions.assertEquals("111222", queryParameterSlot.captured["merchantId"])
         Assertions.assertEquals(
-            "8R7mQRffpbBlV84oSuBAXcqmS6xvKcOR/C3dSOSpZt/KRbA+jBGxcTMIMybhY/q9WxCPo1Ber/fVwAuHYYUv2WLrOhrtQLZYdzgMj+gzcXS0GzlGVb0yiWSI2jwzTN34SfTc20vME3WGYFjAJfmQveW+ijmD5UFyGJUmjN6a3lvn0ywN4I/cmpQSXY2BOaxOyyJA5LjUvb0Ta9EMBb6+RF2S68e3B4Z2mVp9U0HRpVnN9B5yKiPzQiDjYDxSOUDvGXlTuAh1DM1Ic3Nv03ySejgj1SjENm4xduPzy2Z1S3D627wKP4FF3UZ3EkGbI6fvI+UFJsqe3TsoO0by5YEnDbKoVHPzGu/HS9d/G3wx2hgvchusWn1hxUUxY20AOh3NhIx3aD6ViOOwaBdoWLzBQuSMwzSUXeztzcIWvAJZ7Hoo6maq2KhIhH9YWujtYasOVE9Xv0e/HoSJIkK7F8xpYzJsSEhs4W9DJL4YPIIgwZkJsH2eSGAR/3e0rPC1gdZLPqB9DPrr0wEBCH1EioUUt3Hh59tDOW78XaQIlIhPPDznxge7EF643pWIKhfkK2RrDLvsbmdSQqaCuc/M+rD1W7VMr7XVzM/3SrrlxZ795jI6EpzBDl/8bEn+uPWuScZYOOBF8LnqUlNRyNxLSi7nAQ==",
+            "7QDv+7cYdagtQmVfr38p1+HRNOMcBrftirm7FfE6+GOSF52tAfECBNLpz0a9jfI8Vlr7QWy4vIfNXFdl+saLSXIVvsH8bn31IcWKU3OeMVXo7oK9uHWbv+xCWoUVvCigNVKwnNRhH3hs4+pxifzJH0+t0lnb/P9KViOOqGRL/v7BeDN8BHaCF3rMLeUwE0q0os5MjtPjgmIC+jQVmjHlRaLBeYMcksCGGLiitoEbe2SoKnsjHZT8cs9buWpyVyLU9ggoFLvmDP+p+Q47dZMImQm4B3vbjK491m6f8XRLk3ZMzmd1ngtJeujUA0lVmoyAm/8PtsWx0VW6uYMG9HzD5bWr28YpGg1p6/QUPTxBqonmn31ZE9aWoEZ0rwUkYu2C9HjWatRi7IHwnvXIuYKW5IMK86ScCWn4Wlz21b3fTnQG9l3fpT7v84z4payy5kD4oNhEIxaQqoLwWCA/ITJEA5VMsgioL4w19FCLZtTGKZ7hUHpJEK6NrVCkJ528Hw9CMkLl6nblE6hFRC+0NkC2m29lAf0tWfOqf9Sl31DEWTz/YB0HabILapWxhh1p2dq8WhpEC3733l63vabG5H1aBJqHrX3vb7+Bv3UNtjabB4IJKyVHdY/UIyK45BmmmG9ViQjVA4nu99I0LBoEDgHviN6xb+iZZIXMJ5lR4iiByy0=",
             queryParameterSlot.captured["encrypted"]
         )
         Assertions.assertEquals(
-            "d339232ede5f640717b6f4045dbbb37a45c2a613edb71e870e46e9e6dd588dbc",
+            "c644595eb9b754d6db225554ad202defd28dac6a31cc928f0aced812a15c2a0f",
             queryParameterSlot.captured["integrityCheck"]
         )
 
@@ -141,7 +140,7 @@ class RecurringSubsequentTest {
     }
 
     @Test
-    fun missingFieldRecurringPayment() {
+    fun missingFieldRecurringSubsequentPayment() {
         val mockedResponseListener = mockk<ResponseListener>()
         every { mockedResponseListener.onError(any(), any()) } just Runs
         every { mockedResponseListener.onResponseReceived(any(), any(), any()) } just Runs
@@ -181,6 +180,50 @@ class RecurringSubsequentTest {
 
         Assertions.assertEquals(Error.MISSING_PARAMETER, errorSlot.captured)
         Assertions.assertEquals("Missing cardNumberToken", errorMessageSlot.captured)
+    }
+
+    @Test
+    fun failInvalidAmountRecurringSubsequentPayment() {
+        val mockedResponseListener = mockk<ResponseListener>()
+        every { mockedResponseListener.onError(any(), any()) } just Runs
+        every { mockedResponseListener.onResponseReceived(any(), any(), any()) } just Runs
+
+        val credentials = Credentials()
+        credentials.merchantPass = "11111111112222222222333333333344"
+        credentials.merchantKey = "11111111-1111-1111-1111-111111111111"
+        credentials.merchantId = "111222"
+        credentials.environment = Environment.STAGING
+        credentials.productId = "1112220001"
+
+        val h2HPaymentRecurrentSuccessive = H2HPaymentRecurrentSuccessive()
+
+        h2HPaymentRecurrentSuccessive.amount = "50-12"
+        h2HPaymentRecurrentSuccessive.currency = Currency.EUR
+        h2HPaymentRecurrentSuccessive.country = CountryCode.ES
+        h2HPaymentRecurrentSuccessive.customerId = "903"
+        h2HPaymentRecurrentSuccessive.chName = "First name Last name"
+        h2HPaymentRecurrentSuccessive.paymentSolution = PaymentSolutions.creditcards
+        h2HPaymentRecurrentSuccessive.cardNumberToken = "6537275043632227"
+        h2HPaymentRecurrentSuccessive.subscriptionPlan = "511845609608301"
+        h2HPaymentRecurrentSuccessive.statusURL = "https://test.com/status"
+        h2HPaymentRecurrentSuccessive.successURL = "https://test.com/success"
+        h2HPaymentRecurrentSuccessive.errorURL = "https://test.com/error"
+        h2HPaymentRecurrentSuccessive.awaitingURL = "https://test.com/waiting"
+        h2HPaymentRecurrentSuccessive.cancelURL = "https://test.com/cancel"
+        h2HPaymentRecurrentSuccessive.merchantTransactionId = "12345678"
+        h2HPaymentRecurrentSuccessive.apiVersion = 5
+
+        val h2HPaymentAdapter = H2HPaymentAdapter(credentials)
+
+        h2HPaymentAdapter.sendH2hPaymentRecurrentSuccessive(h2HPaymentRecurrentSuccessive, mockedResponseListener)
+
+        val errorSlot = slot<Error>()
+        val errorMessageSlot = slot<String>()
+
+        verify { mockedResponseListener.onError(capture(errorSlot), capture(errorMessageSlot)) }
+
+        Assertions.assertEquals(Error.INVALID_AMOUNT, errorSlot.captured)
+        Assertions.assertEquals(Error.INVALID_AMOUNT.message, errorMessageSlot.captured)
     }
 
 }

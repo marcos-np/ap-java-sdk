@@ -7,14 +7,14 @@ import com.mp.javaPaymentSDK.models.Credentials;
 import com.mp.javaPaymentSDK.utils.Utils;
 import kotlin.Pair;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 
 public class QuixJSRequest {
 
     private final Currency currency = Currency.EUR;
-    private double amount = -1;
+    private String amount = null;
     private final CountryCode country = CountryCode.ES;
     private String customerId = null;
     private String merchantTransactionId = null;
@@ -34,13 +34,13 @@ public class QuixJSRequest {
     private String dob = null;
     private String prepayToken = null;
     private int apiVersion = -1;
-    private HashMap<String, String> merchantParams = null;
+    private List<Pair<String, String>> merchantParams = null;
 
     public QuixJSRequest() {
         merchantTransactionId = Utils.getInstance().generateRandomNumber();
     }
 
-    public QuixJSRequest(double amount, String customerId, String merchantTransactionId, String statusURL, String successURL, String errorURL, String cancelURL,String awaitingURL, String firstName, String lastName, String customerEmail, String dob, String prepayToken, int apiVersion) {
+    public QuixJSRequest(String amount, String customerId, String merchantTransactionId, String statusURL, String successURL, String errorURL, String cancelURL,String awaitingURL, String firstName, String lastName, String customerEmail, String dob, String prepayToken, int apiVersion) {
         this.amount = amount;
         this.customerId = customerId;
         this.merchantTransactionId = merchantTransactionId;
@@ -61,11 +61,11 @@ public class QuixJSRequest {
         return currency;
     }
 
-    public double getAmount() {
+    public String getAmount() {
         return amount;
     }
 
-    public void setAmount(double amount) {
+    public void setAmount(String amount) {
         this.amount = amount;
     }
 
@@ -193,19 +193,24 @@ public class QuixJSRequest {
         this.apiVersion = apiVersion;
     }
 
-    public HashMap<String, String> getMerchantParams() {
-        return merchantParams;
+    public void setMerchantParameters(List<Pair<String, String>> merchantParams) {
+        if (this.merchantParams == null) {
+            this.merchantParams = merchantParams;
+        }
+        else {
+            this.merchantParams.addAll(merchantParams);
+        }
     }
 
-    public void setMerchantParams(HashMap<String, String> merchantParams) {
-        this.merchantParams = merchantParams;
+    public List<Pair<String, String>> getMerchantParameters() {
+        return merchantParams;
     }
 
     public void setMerchantParameter(String key, String value) {
         if (merchantParams == null) {
-            this.merchantParams = new HashMap<>();
+            this.merchantParams = new ArrayList<>();
         }
-        this.merchantParams.put(key, value);
+        this.merchantParams.add(new Pair<>(key, value));
     }
 
     public void setCredentials(Credentials credentials) {
@@ -218,12 +223,8 @@ public class QuixJSRequest {
             return new Pair<>(true, "Invalid apiVersion");
         }
 
-        if (amount <= 0) {
-            return new Pair<>(true, "Missing amount");
-        }
-
         List<String> mandatoryFields = Arrays.asList(
-                "currency", "country", "customerId", "merchantId",
+                "amount", "currency", "country", "customerId", "merchantId",
                 "merchantTransactionId", "paymentSolution", "statusURL", "successURL",
                 "errorURL", "cancelURL","awaitingURL", "firstName", "lastName", "productId", "customerEmail",
                 "customerCountry", "dob", "prepayToken"

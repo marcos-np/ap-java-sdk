@@ -40,8 +40,8 @@ public class Flights {
 
         // region Step 2 - Configure Payment Parameters
         JSQuixFlight jsQuixFlight = new JSQuixFlight();
-        jsQuixFlight.setAmount(99);
         jsQuixFlight.setApiVersion(5);
+        jsQuixFlight.setAmount("99");
         jsQuixFlight.setPrepayToken("daf95d2b-f5a4-41a9-ae99-ad88736e4da3");
         jsQuixFlight.setCustomerId("55");
         jsQuixFlight.setStatusURL(Creds.statusUrl);

@@ -14,6 +14,7 @@ import com.mp.javaPaymentSDK.models.requests.quix_js.JSQuixFlight;
 import com.mp.javaPaymentSDK.models.requests.quix_js.JSQuixItem;
 import com.mp.javaPaymentSDK.models.requests.quix_js.JSQuixService;
 import com.mp.javaPaymentSDK.models.responses.notification.Notification;
+import com.mp.javaPaymentSDK.utils.Utils;
 import kotlin.Pair;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
@@ -59,6 +60,13 @@ public class JSQuixPaymentAdapter {
             return;
         }
 
+        String parsedAmount = Utils.getInstance().parseAmount(jsQuixService.getAmount());
+        if (parsedAmount == null) {
+            responseListener.onError(Error.INVALID_AMOUNT, Error.INVALID_AMOUNT.getMessage());
+            return;
+        }
+        jsQuixService.setAmount(parsedAmount);
+
         List<QuixItemCartItemService> items = jsQuixService.getPaySolExtendedData().getCart().getItems();
         for (QuixItemCartItemService item : items) {
             String endDate = item.getArticle().getEndDate();
@@ -90,8 +98,8 @@ public class JSQuixPaymentAdapter {
         bodyJson.put("customerCountry", jsQuixService.getCustomerCountry());
         bodyJson.put("dob", jsQuixService.getDob());
         bodyJson.put("merchantTransactionId", jsQuixService.getMerchantTransactionId());
-        if (jsQuixService.getMerchantParams() != null && !jsQuixService.getMerchantParams().isEmpty()) {
-            bodyJson.put("merchantParams", new Gson().toJson(jsQuixService.getMerchantParams()));
+        if (jsQuixService.getMerchantParameters() != null && !jsQuixService.getMerchantParameters().isEmpty()) {
+            bodyJson.put("merchantParams", Utils.getInstance().merchantParamsQuery(jsQuixService.getMerchantParameters()));
         }
 
         String paysolExtendedData = gson.toJson(jsQuixService.getPaySolExtendedData());
@@ -162,6 +170,13 @@ public class JSQuixPaymentAdapter {
             return;
         }
 
+        String parsedAmount = Utils.getInstance().parseAmount(jsQuixFlight.getAmount());
+        if (parsedAmount == null) {
+            responseListener.onError(Error.INVALID_AMOUNT, Error.INVALID_AMOUNT.getMessage());
+            return;
+        }
+        jsQuixFlight.setAmount(parsedAmount);
+
         List<QuixItemCartItemFlight> items = jsQuixFlight.getPaySolExtendedData().getCart().getItems();
         for (QuixItemCartItemFlight item : items) {
             String customerMemberSince = item.getArticle().getCustomerMemberSince();
@@ -193,8 +208,8 @@ public class JSQuixPaymentAdapter {
         bodyJson.put("customerCountry", jsQuixFlight.getCustomerCountry());
         bodyJson.put("dob", jsQuixFlight.getDob());
         bodyJson.put("merchantTransactionId", jsQuixFlight.getMerchantTransactionId());
-        if (jsQuixFlight.getMerchantParams() != null && !jsQuixFlight.getMerchantParams().isEmpty()) {
-            bodyJson.put("merchantParams", new Gson().toJson(jsQuixFlight.getMerchantParams()));
+        if (jsQuixFlight.getMerchantParameters() != null && !jsQuixFlight.getMerchantParameters().isEmpty()) {
+            bodyJson.put("merchantParams", Utils.getInstance().merchantParamsQuery(jsQuixFlight.getMerchantParameters()));
         }
 
         String paysolExtendedData = gson.toJson(jsQuixFlight.getPaySolExtendedData());
@@ -265,6 +280,13 @@ public class JSQuixPaymentAdapter {
             return;
         }
 
+        String parsedAmount = Utils.getInstance().parseAmount(jsQuixAccommodation.getAmount());
+        if (parsedAmount == null) {
+            responseListener.onError(Error.INVALID_AMOUNT, Error.INVALID_AMOUNT.getMessage());
+            return;
+        }
+        jsQuixAccommodation.setAmount(parsedAmount);
+
         List<QuixItemCartItemAccommodation> items = jsQuixAccommodation.getPaySolExtendedData().getCart().getItems();
         for (QuixItemCartItemAccommodation item : items) {
             String checkinDate = item.getArticle().getCheckinDate();
@@ -296,8 +318,8 @@ public class JSQuixPaymentAdapter {
         bodyJson.put("customerCountry", jsQuixAccommodation.getCustomerCountry());
         bodyJson.put("dob", jsQuixAccommodation.getDob());
         bodyJson.put("merchantTransactionId", jsQuixAccommodation.getMerchantTransactionId());
-        if (jsQuixAccommodation.getMerchantParams() != null && !jsQuixAccommodation.getMerchantParams().isEmpty()) {
-            bodyJson.put("merchantParams", new Gson().toJson(jsQuixAccommodation.getMerchantParams()));
+        if (jsQuixAccommodation.getMerchantParameters() != null && !jsQuixAccommodation.getMerchantParameters().isEmpty()) {
+            bodyJson.put("merchantParams", Utils.getInstance().merchantParamsQuery(jsQuixAccommodation.getMerchantParameters()));
         }
 
         String paysolExtendedData = gson.toJson(jsQuixAccommodation.getPaySolExtendedData());
@@ -369,6 +391,13 @@ public class JSQuixPaymentAdapter {
             return;
         }
 
+        String parsedAmount = Utils.getInstance().parseAmount(jsQuixItem.getAmount());
+        if (parsedAmount == null) {
+            responseListener.onError(Error.INVALID_AMOUNT, Error.INVALID_AMOUNT.getMessage());
+            return;
+        }
+        jsQuixItem.setAmount(parsedAmount);
+
         JSONObject bodyJson = new JSONObject();
         bodyJson.put("currency", jsQuixItem.getCurrency().name());
         bodyJson.put("merchantId", jsQuixItem.getMerchantId());
@@ -388,8 +417,8 @@ public class JSQuixPaymentAdapter {
         bodyJson.put("customerCountry", jsQuixItem.getCustomerCountry());
         bodyJson.put("dob", jsQuixItem.getDob());
         bodyJson.put("merchantTransactionId", jsQuixItem.getMerchantTransactionId());
-        if (jsQuixItem.getMerchantParams() != null && !jsQuixItem.getMerchantParams().isEmpty()) {
-            bodyJson.put("merchantParams", new Gson().toJson(jsQuixItem.getMerchantParams()));
+        if (jsQuixItem.getMerchantParameters() != null && !jsQuixItem.getMerchantParameters().isEmpty()) {
+            bodyJson.put("merchantParams", Utils.getInstance().merchantParamsQuery(jsQuixItem.getMerchantParameters()));
         }
 
         String paysolExtendedData = gson.toJson(jsQuixItem.getPaySolExtendedData());

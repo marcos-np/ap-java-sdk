@@ -1,15 +1,12 @@
 package com.mp.javaPaymentSDK.models.requests.hosted;
 
-import com.mp.javaPaymentSDK.enums.CountryCode;
-import com.mp.javaPaymentSDK.enums.Currency;
-import com.mp.javaPaymentSDK.enums.OperationTypes;
-import com.mp.javaPaymentSDK.enums.PaymentSolutions;
+import com.mp.javaPaymentSDK.enums.*;
 import com.mp.javaPaymentSDK.models.Credentials;
 import com.mp.javaPaymentSDK.utils.Utils;
 import kotlin.Pair;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 
 public class HostedPaymentRecurrentInitial {
@@ -28,9 +25,11 @@ public class HostedPaymentRecurrentInitial {
     private String awaitingURL = null;
     private String productId = null;
     private OperationTypes operationType = OperationTypes.DEBIT;
-    private final String paymentRecurringType = "newCof";
+    private PaymentRecurringType paymentRecurringType = PaymentRecurringType.newCof;
     private int apiVersion = -1;
-    private HashMap<String, String> merchantParams = null;
+    private boolean forceTokenRequest = false;
+    private boolean showRememberMe = false;
+    private List<Pair<String, String>> merchantParams = null;
 
     public HostedPaymentRecurrentInitial() {
         merchantTransactionId = Utils.getInstance().generateRandomNumber();
@@ -104,10 +103,6 @@ public class HostedPaymentRecurrentInitial {
         this.paymentSolution = paymentSolution;
     }
 
-    public String getPaymentRecurringType() {
-        return paymentRecurringType;
-    }
-
     public String getStatusURL() {
         return statusURL;
     }
@@ -168,19 +163,48 @@ public class HostedPaymentRecurrentInitial {
         this.apiVersion = apiVersion;
     }
 
-    public HashMap<String, String> getMerchantParams() {
-        return merchantParams;
+    public PaymentRecurringType getPaymentRecurringType() {
+        return paymentRecurringType;
     }
 
-    public void setMerchantParams(HashMap<String, String> merchantParams) {
-        this.merchantParams = merchantParams;
+    public void setPaymentRecurringType(PaymentRecurringType paymentRecurringType) {
+        this.paymentRecurringType = paymentRecurringType;
+    }
+
+    public boolean isForceTokenRequest() {
+        return forceTokenRequest;
+    }
+
+    public void setForceTokenRequest(boolean forceTokenRequest) {
+        this.forceTokenRequest = forceTokenRequest;
+    }
+
+    public boolean isShowRememberMe() {
+        return showRememberMe;
+    }
+
+    public void setShowRememberMe(boolean showRememberMe) {
+        this.showRememberMe = showRememberMe;
+    }
+
+    public void setMerchantParameters(List<Pair<String, String>> merchantParams) {
+        if (this.merchantParams == null) {
+            this.merchantParams = merchantParams;
+        }
+        else {
+            this.merchantParams.addAll(merchantParams);
+        }
+    }
+
+    public List<Pair<String, String>> getMerchantParameters() {
+        return merchantParams;
     }
 
     public void setMerchantParameter(String key, String value) {
         if (merchantParams == null) {
-            this.merchantParams = new HashMap<>();
+            this.merchantParams = new ArrayList<>();
         }
-        this.merchantParams.put(key, value);
+        this.merchantParams.add(new Pair<>(key, value));
     }
 
     public void setCredentials(Credentials credentials) {

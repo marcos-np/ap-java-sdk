@@ -1,11 +1,8 @@
 package com.mp.javaPaymentSDK.examples.creditcards.hosted;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.mp.javaPaymentSDK.adapters.NotificationAdapter;
 import com.mp.javaPaymentSDK.adapters.ResponseListenerAdapter;
 import com.mp.javaPaymentSDK.callbacks.NotificationListener;
-import com.mp.javaPaymentSDK.callbacks.ResponseListener;
 import com.mp.javaPaymentSDK.adapters.HostedPaymentAdapter;
 import com.mp.javaPaymentSDK.adapters.SocketAdapter;
 import com.mp.javaPaymentSDK.enums.*;
@@ -35,7 +32,7 @@ public class HostedExample {
         HostedPaymentRedirection hostedPaymentRedirection = new HostedPaymentRedirection();
         hostedPaymentRedirection.setCurrency(Currency.EUR);
         hostedPaymentRedirection.setPaymentSolution(PaymentSolutions.creditcards);
-        hostedPaymentRedirection.setAmount("50");
+        hostedPaymentRedirection.setAmount("50.1234");
         hostedPaymentRedirection.setCountry(CountryCode.ES);
         hostedPaymentRedirection.setCustomerId("903");
         hostedPaymentRedirection.setStatusURL(Creds.statusUrl);
@@ -44,6 +41,10 @@ public class HostedExample {
         hostedPaymentRedirection.setAwaitingURL(Creds.awaitingUrl);
         hostedPaymentRedirection.setCancelURL(Creds.cancelUrl);
         hostedPaymentRedirection.setApiVersion(5);
+        hostedPaymentRedirection.setShowRememberMe(true);
+        hostedPaymentRedirection.setForceTokenRequest(true);
+        hostedPaymentRedirection.setMerchantParameter("name", "pablo");
+        hostedPaymentRedirection.setMerchantParameter("surname", "ferrer");
 
         // Step 3 - Send Payment Request
         HostedPaymentAdapter hostedPaymentAdapter = new HostedPaymentAdapter(credentials);

@@ -43,8 +43,8 @@ public class Accommodation {
 
         // region Step 2 - Configure Payment Parameters
         JSQuixAccommodation jsQuixAccommodation = new JSQuixAccommodation();
-        jsQuixAccommodation.setAmount(99);
         jsQuixAccommodation.setApiVersion(5);
+        jsQuixAccommodation.setAmount("99");
         jsQuixAccommodation.setCustomerId("55");
         jsQuixAccommodation.setPrepayToken("2795f021-f31c-4533-a74d-5d3d887a003b");
         jsQuixAccommodation.setStatusURL(Creds.statusUrl);

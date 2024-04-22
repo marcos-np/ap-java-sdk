@@ -23,7 +23,6 @@ import okhttp3.FormBody;
 import okhttp3.ResponseBody;
 
 import java.io.IOException;
-import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 
@@ -60,14 +59,21 @@ public class HostedQuixPaymentAdapter {
             return;
         }
 
+        String parsedAmount = Utils.getInstance().parseAmount(hostedQuixService.getAmount());
+        if (parsedAmount == null) {
+            responseListener.onError(Error.INVALID_AMOUNT, Error.INVALID_AMOUNT.getMessage());
+            return;
+        }
+        hostedQuixService.setAmount(parsedAmount);
+
         QuixHostedQuery quixHostedQuery = new QuixHostedQuery(hostedQuixService, credentials);
 
         quixHostedQuery.setPaysolExtendedData(gson.toJson(hostedQuixService.getPaySolExtendedData()));
 
         String httpQuery1 = Utils.getInstance().buildQuery(QuixHostedRequest.class, quixHostedQuery);
         String httpQuery2 = Utils.getInstance().buildQuery(QuixHostedQuery.class, quixHostedQuery);
-        String finalQueryParameter1 = URLEncoder.encode(httpQuery1, StandardCharsets.UTF_8).replace("%3D", "=").replace("%26", "&");
-        String finalQueryParameter2 = URLEncoder.encode(httpQuery2, StandardCharsets.UTF_8).replace("%3D", "=").replace("%26", "&");
+        String finalQueryParameter1 = Utils.getInstance().encodeUrl(httpQuery1);
+        String finalQueryParameter2 = Utils.getInstance().encodeUrl(httpQuery2);
         String finalQueryParameter = finalQueryParameter1 + "&" + finalQueryParameter2;
         byte[] formattedRequest = finalQueryParameter.getBytes(StandardCharsets.UTF_8);
 
@@ -153,14 +159,21 @@ public class HostedQuixPaymentAdapter {
             return;
         }
 
+        String parsedAmount = Utils.getInstance().parseAmount(hostedQuixFlight.getAmount());
+        if (parsedAmount == null) {
+            responseListener.onError(Error.INVALID_AMOUNT, Error.INVALID_AMOUNT.getMessage());
+            return;
+        }
+        hostedQuixFlight.setAmount(parsedAmount);
+
         QuixHostedQuery quixHostedQuery = new QuixHostedQuery(hostedQuixFlight, credentials);
 
         quixHostedQuery.setPaysolExtendedData(gson.toJson(hostedQuixFlight.getPaysolExtendedData()));
 
         String httpQuery1 = Utils.getInstance().buildQuery(QuixHostedRequest.class, quixHostedQuery);
         String httpQuery2 = Utils.getInstance().buildQuery(QuixHostedQuery.class, quixHostedQuery);
-        String finalQueryParameter1 = URLEncoder.encode(httpQuery1, StandardCharsets.UTF_8).replace("%3D", "=").replace("%26", "&");
-        String finalQueryParameter2 = URLEncoder.encode(httpQuery2, StandardCharsets.UTF_8).replace("%3D", "=").replace("%26", "&");
+        String finalQueryParameter1 = Utils.getInstance().encodeUrl(httpQuery1);
+        String finalQueryParameter2 = Utils.getInstance().encodeUrl(httpQuery2);
         String finalQueryParameter = finalQueryParameter1 + "&" + finalQueryParameter2;
         byte[] formattedRequest = finalQueryParameter.getBytes(StandardCharsets.UTF_8);
 
@@ -246,14 +259,21 @@ public class HostedQuixPaymentAdapter {
             return;
         }
 
+        String parsedAmount = Utils.getInstance().parseAmount(hostedQuixAccommodation.getAmount());
+        if (parsedAmount == null) {
+            responseListener.onError(Error.INVALID_AMOUNT, Error.INVALID_AMOUNT.getMessage());
+            return;
+        }
+        hostedQuixAccommodation.setAmount(parsedAmount);
+
         QuixHostedQuery quixHostedQuery = new QuixHostedQuery(hostedQuixAccommodation, credentials);
 
         quixHostedQuery.setPaysolExtendedData(gson.toJson(hostedQuixAccommodation.getPaySolExtendedData()));
 
         String httpQuery1 = Utils.getInstance().buildQuery(QuixHostedRequest.class, quixHostedQuery);
         String httpQuery2 = Utils.getInstance().buildQuery(QuixHostedQuery.class, quixHostedQuery);
-        String finalQueryParameter1 = URLEncoder.encode(httpQuery1, StandardCharsets.UTF_8).replace("%3D", "=").replace("%26", "&");
-        String finalQueryParameter2 = URLEncoder.encode(httpQuery2, StandardCharsets.UTF_8).replace("%3D", "=").replace("%26", "&");
+        String finalQueryParameter1 = Utils.getInstance().encodeUrl(httpQuery1);
+        String finalQueryParameter2 = Utils.getInstance().encodeUrl(httpQuery2);
         String finalQueryParameter = finalQueryParameter1 + "&" + finalQueryParameter2;
         byte[] formattedRequest = finalQueryParameter.getBytes(StandardCharsets.UTF_8);
 
@@ -339,14 +359,21 @@ public class HostedQuixPaymentAdapter {
             return;
         }
 
+        String parsedAmount = Utils.getInstance().parseAmount(hostedQuixItem.getAmount());
+        if (parsedAmount == null) {
+            responseListener.onError(Error.INVALID_AMOUNT, Error.INVALID_AMOUNT.getMessage());
+            return;
+        }
+        hostedQuixItem.setAmount(parsedAmount);
+
         QuixHostedQuery quixHostedQuery = new QuixHostedQuery(hostedQuixItem, credentials);
 
         quixHostedQuery.setPaysolExtendedData(gson.toJson(hostedQuixItem.getPaySolExtendedData()));
 
         String httpQuery1 = Utils.getInstance().buildQuery(QuixHostedRequest.class, quixHostedQuery);
         String httpQuery2 = Utils.getInstance().buildQuery(QuixHostedQuery.class, quixHostedQuery);
-        String finalQueryParameter1 = URLEncoder.encode(httpQuery1, StandardCharsets.UTF_8).replace("%3D", "=").replace("%26", "&");
-        String finalQueryParameter2 = URLEncoder.encode(httpQuery2, StandardCharsets.UTF_8).replace("%3D", "=").replace("%26", "&");
+        String finalQueryParameter1 = Utils.getInstance().encodeUrl(httpQuery1);
+        String finalQueryParameter2 = Utils.getInstance().encodeUrl(httpQuery2);
         String finalQueryParameter = finalQueryParameter1 + "&" + finalQueryParameter2;
         byte[] formattedRequest = finalQueryParameter.getBytes(StandardCharsets.UTF_8);
 

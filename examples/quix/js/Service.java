@@ -42,8 +42,8 @@ public class Service {
 
         // region Step 2 - Configure Payment Parameters
         JSQuixService jsQuixService = new JSQuixService();
-        jsQuixService.setAmount(99);
         jsQuixService.setApiVersion(5);
+        jsQuixService.setAmount("99");
         jsQuixService.setPrepayToken("0bcf287f-7687-40c2-ab7a-6d8e86f3d75e");
         jsQuixService.setCustomerId("55");
         jsQuixService.setStatusURL(Creds.statusUrl);
@@ -55,6 +55,8 @@ public class Service {
         jsQuixService.setDob("01-12-1999");
         jsQuixService.setFirstName("Name");
         jsQuixService.setLastName("Last Name");
+        jsQuixService.setMerchantParameter("Test1", "value1");
+        jsQuixService.setMerchantParameter("Test2", "value2");
 
         QuixArticleService quixArticleService = new QuixArticleService();
         quixArticleService.setName("Nombre del servicio 2");

@@ -9,8 +9,8 @@ import com.mp.javaPaymentSDK.models.requests.hosted.HostedPaymentRedirection;
 import com.mp.javaPaymentSDK.utils.Utils;
 import kotlin.Pair;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 
 public class JSCharge {
@@ -32,7 +32,8 @@ public class JSCharge {
     private PaymentSolutions paymentSolution = null;
     private OperationTypes operationType = OperationTypes.DEBIT;
     private int apiVersion = -1;
-    private HashMap<String, String> merchantParams = null;
+    private boolean forceTokenRequest = false;
+    private List<Pair<String, String>> merchantParams = null;
 
     public JSCharge() {
         merchantTransactionId = Utils.getInstance().generateRandomNumber();
@@ -179,19 +180,32 @@ public class JSCharge {
         this.apiVersion = apiVersion;
     }
 
-    public HashMap<String, String> getMerchantParams() {
-        return merchantParams;
+    public boolean isForceTokenRequest() {
+        return forceTokenRequest;
     }
 
-    public void setMerchantParams(HashMap<String, String> merchantParams) {
-        this.merchantParams = merchantParams;
+    public void setForceTokenRequest(boolean forceTokenRequest) {
+        this.forceTokenRequest = forceTokenRequest;
+    }
+
+    public void setMerchantParameters(List<Pair<String, String>> merchantParams) {
+        if (this.merchantParams == null) {
+            this.merchantParams = merchantParams;
+        }
+        else {
+            this.merchantParams.addAll(merchantParams);
+        }
+    }
+
+    public List<Pair<String, String>> getMerchantParameters() {
+        return merchantParams;
     }
 
     public void setMerchantParameter(String key, String value) {
         if (merchantParams == null) {
-            this.merchantParams = new HashMap<>();
+            this.merchantParams = new ArrayList<>();
         }
-        this.merchantParams.put(key, value);
+        this.merchantParams.add(new Pair<>(key, value));
     }
 
     public void setCredentials(Credentials credentials) {

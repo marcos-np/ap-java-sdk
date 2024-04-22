@@ -2,13 +2,14 @@ package com.mp.javaPaymentSDK.models.requests.h2h;
 
 import com.mp.javaPaymentSDK.enums.CountryCode;
 import com.mp.javaPaymentSDK.enums.Currency;
+import com.mp.javaPaymentSDK.enums.PaymentRecurringType;
 import com.mp.javaPaymentSDK.enums.PaymentSolutions;
 import com.mp.javaPaymentSDK.models.Credentials;
 import com.mp.javaPaymentSDK.utils.Utils;
 import kotlin.Pair;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 
 public class H2HPaymentRecurrentSuccessive {
@@ -28,9 +29,10 @@ public class H2HPaymentRecurrentSuccessive {
     private String cancelURL = null;
     private String awaitingURL = null;
     private String productId = null;
-    private final String paymentRecurringType = "cof";
+    private PaymentRecurringType paymentRecurringType = PaymentRecurringType.cof;
     private int apiVersion = -1;
-    private HashMap<String, String> merchantParams = null;
+    private boolean forceTokenRequest = false;
+    private List<Pair<String, String>> merchantParams = null;
 
     public H2HPaymentRecurrentSuccessive() {
     }
@@ -129,10 +131,6 @@ public class H2HPaymentRecurrentSuccessive {
         this.subscriptionPlan = subscriptionPlan;
     }
 
-    public String getPaymentRecurringType() {
-        return paymentRecurringType;
-    }
-
     public String getStatusURL() {
         return statusURL;
     }
@@ -185,19 +183,40 @@ public class H2HPaymentRecurrentSuccessive {
         this.apiVersion = apiVersion;
     }
 
-    public HashMap<String, String> getMerchantParams() {
-        return merchantParams;
+    public void setPaymentRecurringType(PaymentRecurringType paymentRecurringType) {
+        this.paymentRecurringType = paymentRecurringType;
     }
 
-    public void setMerchantParams(HashMap<String, String> merchantParams) {
-        this.merchantParams = merchantParams;
+    public PaymentRecurringType getPaymentRecurringType() {
+        return paymentRecurringType;
+    }
+
+    public boolean isForceTokenRequest() {
+        return forceTokenRequest;
+    }
+
+    public void setForceTokenRequest(boolean forceTokenRequest) {
+        this.forceTokenRequest = forceTokenRequest;
+    }
+
+    public void setMerchantParameters(List<Pair<String, String>> merchantParams) {
+        if (this.merchantParams == null) {
+            this.merchantParams = merchantParams;
+        }
+        else {
+            this.merchantParams.addAll(merchantParams);
+        }
+    }
+
+    public List<Pair<String, String>> getMerchantParameters() {
+        return merchantParams;
     }
 
     public void setMerchantParameter(String key, String value) {
         if (merchantParams == null) {
-            this.merchantParams = new HashMap<>();
+            this.merchantParams = new ArrayList<>();
         }
-        this.merchantParams.put(key, value);
+        this.merchantParams.add(new Pair<>(key, value));
     }
 
     public void setCredentials(Credentials credentials) {

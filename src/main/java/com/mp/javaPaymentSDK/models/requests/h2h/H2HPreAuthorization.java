@@ -8,8 +8,8 @@ import com.mp.javaPaymentSDK.models.Credentials;
 import com.mp.javaPaymentSDK.utils.Utils;
 import kotlin.Pair;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 
 public class H2HPreAuthorization {
@@ -22,7 +22,7 @@ public class H2HPreAuthorization {
     private String merchantTransactionId;
     private PaymentSolutions paymentSolution = null;
     private String chName = null;
-    private final boolean autoCapture = false;
+    private boolean autoCapture = false;
     private String cardNumber = null;
     private String expDate = null;
     private String cvnNumber = null;
@@ -33,7 +33,8 @@ public class H2HPreAuthorization {
     private String awaitingURL = null;
     private String productId = null;
     private int apiVersion = -1;
-    private HashMap<String, String> merchantParams = null;
+    private boolean forceTokenRequest = false;
+    private List<Pair<String, String>> merchantParams = null;
 
     public H2HPreAuthorization() {
         merchantTransactionId = Utils.getInstance().generateRandomNumber();
@@ -190,10 +191,6 @@ public class H2HPreAuthorization {
         return productId;
     }
 
-    public HashMap<String, String> getMerchantParams() {
-        return merchantParams;
-    }
-
     public int getApiVersion() {
         return apiVersion;
     }
@@ -202,15 +199,36 @@ public class H2HPreAuthorization {
         this.apiVersion = apiVersion;
     }
 
-    public void setMerchantParams(HashMap<String, String> merchantParams) {
-        this.merchantParams = merchantParams;
+    public void setAutoCapture(boolean autoCapture) {
+        this.autoCapture = autoCapture;
+    }
+
+    public boolean isForceTokenRequest() {
+        return forceTokenRequest;
+    }
+
+    public void setForceTokenRequest(boolean forceTokenRequest) {
+        this.forceTokenRequest = forceTokenRequest;
+    }
+
+    public void setMerchantParameters(List<Pair<String, String>> merchantParams) {
+        if (this.merchantParams == null) {
+            this.merchantParams = merchantParams;
+        }
+        else {
+            this.merchantParams.addAll(merchantParams);
+        }
+    }
+
+    public List<Pair<String, String>> getMerchantParameters() {
+        return merchantParams;
     }
 
     public void setMerchantParameter(String key, String value) {
         if (merchantParams == null) {
-            this.merchantParams = new HashMap<>();
+            this.merchantParams = new ArrayList<>();
         }
-        this.merchantParams.put(key, value);
+        this.merchantParams.add(new Pair<>(key, value));
     }
 
     public void setCredentials(Credentials credentials) {

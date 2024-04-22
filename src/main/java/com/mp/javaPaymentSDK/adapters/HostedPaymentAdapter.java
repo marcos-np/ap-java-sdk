@@ -18,7 +18,6 @@ import okhttp3.FormBody;
 import okhttp3.ResponseBody;
 
 import java.io.IOException;
-import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 
@@ -50,8 +49,15 @@ public class HostedPaymentAdapter {
             return;
         }
 
+        String parsedAmount = Utils.getInstance().parseAmount(hostedPaymentRedirection.getAmount());
+        if (parsedAmount == null) {
+            responseListener.onError(Error.INVALID_AMOUNT, Error.INVALID_AMOUNT.getMessage());
+            return;
+        }
+        hostedPaymentRedirection.setAmount(parsedAmount);
+
         String httpQuery = Utils.getInstance().buildQuery(HostedPaymentRedirection.class, hostedPaymentRedirection);
-        String finalQueryParameter = URLEncoder.encode(httpQuery, StandardCharsets.UTF_8).replace("%3D", "=").replace("%26", "&");
+        String finalQueryParameter = Utils.getInstance().encodeUrl(httpQuery);
         byte[] formattedRequest = finalQueryParameter.getBytes(StandardCharsets.UTF_8);
 
         byte[] clearIV = SecurityUtils.getInstance().generateIV();
@@ -137,8 +143,15 @@ public class HostedPaymentAdapter {
             return;
         }
 
+        String parsedAmount = Utils.getInstance().parseAmount(hostedPaymentRecurrentInitial.getAmount());
+        if (parsedAmount == null) {
+            responseListener.onError(Error.INVALID_AMOUNT, Error.INVALID_AMOUNT.getMessage());
+            return;
+        }
+        hostedPaymentRecurrentInitial.setAmount(parsedAmount);
+
         String httpQuery = Utils.getInstance().buildQuery(HostedPaymentRecurrentInitial.class, hostedPaymentRecurrentInitial);
-        String finalQueryParameter = URLEncoder.encode(httpQuery, StandardCharsets.UTF_8).replace("%3D", "=").replace("%26", "&");
+        String finalQueryParameter = Utils.getInstance().encodeUrl(httpQuery);
         byte[] formattedRequest = finalQueryParameter.getBytes(StandardCharsets.UTF_8);
 
         byte[] clearIV = SecurityUtils.getInstance().generateIV();

@@ -44,7 +44,7 @@ public class Accommodation {
 
         // region Step 2 - Configure Payment Parameters
         HostedQuixAccommodation hostedQuixAccommodation = new HostedQuixAccommodation();
-        hostedQuixAccommodation.setAmount(99);
+        hostedQuixAccommodation.setAmount("99");
         hostedQuixAccommodation.setCustomerId("903");
         hostedQuixAccommodation.setStatusURL(Creds.statusUrl);
         hostedQuixAccommodation.setCancelURL(Creds.cancelUrl);

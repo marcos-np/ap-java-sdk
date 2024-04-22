@@ -10,6 +10,10 @@ import org.apache.commons.validator.routines.UrlValidator;
 import org.json.JSONObject;
 
 import java.lang.reflect.Field;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.*;
 
 /**
@@ -18,9 +22,11 @@ import java.util.*;
 
 public class Utils {
 
-    private static Utils utils= new Utils();
+    private static final Utils utils= new Utils();
 
     private final static int RANDOM_NUMBER_SIZE = 8;
+
+    private final static String amountFormat = "0.0000";
 
     private Utils() {
     }
@@ -41,7 +47,11 @@ public class Utils {
             for (Field f : clazz.getDeclaredFields()) {
                 f.setAccessible(true);
                 if (f.get(object) != null) {
-                    queryString = queryString.concat(f.getName() + "=" + f.get(object) + "&");
+                    String value = f.get(object).toString();
+                    if (f.getName().equalsIgnoreCase("merchantParams")) {
+                        value = merchantParamsQuery((List<Pair<String, String>>) f.get(object));
+                    }
+                    queryString = queryString.concat(f.getName() + "=" + value + "&");
                 }
             }
         } catch (Exception e) {
@@ -49,6 +59,21 @@ public class Utils {
         }
 
         return queryString.substring(0, queryString.length() - 1);
+    }
+
+    public String encodeUrl(String httpQuery) {
+        return URLEncoder.encode(httpQuery, StandardCharsets.UTF_8).replace("%3D", "=").replace("%26", "&").replace("%3B", ";").replace("%3A", ":");
+    }
+
+    public String merchantParamsQuery(List<Pair<String, String>> merchantParams) {
+        StringBuilder merchantParamsQuery = new StringBuilder();
+        for (Pair<String, String> parameter : merchantParams) {
+            merchantParamsQuery.append(parameter.getFirst());
+            merchantParamsQuery.append(":");
+            merchantParamsQuery.append(parameter.getSecond());
+            merchantParamsQuery.append(";");
+        }
+        return merchantParamsQuery.substring(0, merchantParamsQuery.length() - 1);
     }
 
     /**
@@ -127,5 +152,23 @@ public class Utils {
                 .limit(RANDOM_NUMBER_SIZE)
                 .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
                 .toString();
+    }
+
+    public String parseAmount(String amount) {
+        if (amount.contains(",")) {
+            return null;
+        }
+        try {
+            double doubleAmount = Double.parseDouble(amount);
+            if (doubleAmount < 0) {
+                return null;
+            }
+            NumberFormat numberFormat = new DecimalFormat(amountFormat);
+            return numberFormat.format(doubleAmount);
+        }
+        catch (Exception exception) {
+            exception.printStackTrace();
+            return null;
+        }
     }
 }

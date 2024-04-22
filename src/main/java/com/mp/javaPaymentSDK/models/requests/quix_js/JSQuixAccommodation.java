@@ -13,7 +13,7 @@ public class JSQuixAccommodation extends QuixJSRequest {
     public JSQuixAccommodation() {
     }
 
-    public JSQuixAccommodation(double amount, String customerId, String merchantTransactionId, String statusURL, String successURL, String errorURL, String cancelURL,String awaitingURL, String firstName, String lastName, String customerEmail, String dob, String prepayToken, QuixAccommodationPaySolExtendedData paySolExtendedData, int apiVersion) {
+    public JSQuixAccommodation(String amount, String customerId, String merchantTransactionId, String statusURL, String successURL, String errorURL, String cancelURL,String awaitingURL, String firstName, String lastName, String customerEmail, String dob, String prepayToken, QuixAccommodationPaySolExtendedData paySolExtendedData, int apiVersion) {
         super(amount, customerId, merchantTransactionId, statusURL, successURL, errorURL, cancelURL,awaitingURL, firstName, lastName, customerEmail, dob, prepayToken, apiVersion);
         this.paySolExtendedData = paySolExtendedData;
     }

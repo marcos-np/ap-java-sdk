@@ -47,7 +47,6 @@ class RefundTest {
         every { mockedResponseListener.onError(any(), any()) } just Runs
         every { mockedResponseListener.onResponseReceived(any(), any(), any()) } just Runs
 
-
         val credentials = Credentials()
         credentials.merchantPass = "11111111112222222222333333333344"
         credentials.merchantKey = "11111111-1111-1111-1111-111111111111"
@@ -91,11 +90,11 @@ class RefundTest {
         Assertions.assertEquals(3, queryParameterSlot.captured.size)
         Assertions.assertEquals("111222", queryParameterSlot.captured["merchantId"])
         Assertions.assertEquals(
-            "uhzsQw3TliMk1psHjgqilU/FuErII2jtnPGTB+I9X+DVO7idXLBFnMHFmsAHa5TSxf2qI8XPKRKifFOYUH+ZMN/qzhrBBMC/yLoiTbabjUN5JgslQksflE0o0sEoPvSF2BTkzrYyU9LozoEKcDgRRmnwHn/bVeNl7eDi+ozMbf0=",
+            "1S+NMvlkfH5v6C4OsX3gVra1H0R/N8aAKgYbWk2It8R4mDEHvA+gP0rNvB2/36n7EJ88xi48FrkACGCnQbuNfdGFcgeFwkGdOUT17Ko5zmmZY1rpa/5JumbadctuelmGE+8mfsW7k6DsUqS6+absbyX9hQxc/StkqP43vjkbRSM=",
             queryParameterSlot.captured["encrypted"]
         )
         Assertions.assertEquals(
-            "1f97db93863590d7e99fc4f9937251bcd335b6b43900b1286c340a137e51f49b",
+            "a2aea6ca34d262ac98a958ead51bafe097b27a8df7c5713b3d017a745aec55d3",
             queryParameterSlot.captured["integrityCheck"]
         )
 
@@ -128,7 +127,7 @@ class RefundTest {
     }
 
     @Test
-    fun missingFieldCapture() {
+    fun missingFieldRefund() {
         val mockedResponseListener = mockk<ResponseListener>()
         every { mockedResponseListener.onError(any(), any()) } just Runs
         every { mockedResponseListener.onResponseReceived(any(), any(), any()) } just Runs
@@ -158,6 +157,40 @@ class RefundTest {
 
         Assertions.assertEquals(Error.MISSING_PARAMETER, errorSlot.captured)
         Assertions.assertEquals("Missing merchantTransactionId", errorMessageSlot.captured)
+    }
+
+    @Test
+    fun failInvalidAmountRefund() {
+        val mockedResponseListener = mockk<ResponseListener>()
+        every { mockedResponseListener.onError(any(), any()) } just Runs
+        every { mockedResponseListener.onResponseReceived(any(), any(), any()) } just Runs
+
+        val credentials = Credentials()
+        credentials.merchantPass = "11111111112222222222333333333344"
+        credentials.merchantKey = "11111111-1111-1111-1111-111111111111"
+        credentials.merchantId = "111222"
+        credentials.environment = Environment.STAGING
+        credentials.productId = "1112220001"
+
+        val h2HRefund = H2HRefund()
+
+        h2HRefund.amount = "20,2"
+        h2HRefund.paymentSolution = PaymentSolutions.creditcards
+        h2HRefund.transactionId = "7817556"
+        h2HRefund.merchantTransactionId = "12345678"
+        h2HRefund.apiVersion = 5
+
+        val h2HPaymentAdapter = H2HPaymentAdapter(credentials)
+
+        h2HPaymentAdapter.sendH2hRefundRequest(h2HRefund, mockedResponseListener)
+
+        val errorSlot = slot<Error>()
+        val errorMessageSlot = slot<String>()
+
+        verify { mockedResponseListener.onError(capture(errorSlot), capture(errorMessageSlot)) }
+
+        Assertions.assertEquals(Error.INVALID_AMOUNT, errorSlot.captured)
+        Assertions.assertEquals(Error.INVALID_AMOUNT.message, errorMessageSlot.captured)
     }
 
 }

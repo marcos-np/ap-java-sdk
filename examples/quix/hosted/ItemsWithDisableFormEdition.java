@@ -44,8 +44,8 @@ public class ItemsWithDisableFormEdition {
 
         // region Step 2 - Configure Payment Parameters
         HostedQuixItem hostedQuixItem = new HostedQuixItem();
-        hostedQuixItem.setAmount(99);
         hostedQuixItem.setApiVersion(5);
+        hostedQuixItem.setAmount("99");
         hostedQuixItem.setCustomerId("903");
         hostedQuixItem.setStatusURL(Creds.statusUrl);
         hostedQuixItem.setCancelURL(Creds.cancelUrl);

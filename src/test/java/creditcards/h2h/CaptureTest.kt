@@ -47,7 +47,6 @@ class CaptureTest {
         every { mockedResponseListener.onError(any(), any()) } just Runs
         every { mockedResponseListener.onResponseReceived(any(), any(), any()) } just Runs
 
-
         val credentials = Credentials()
         credentials.merchantPass = "11111111112222222222333333333344"
         credentials.merchantKey = "11111111-1111-1111-1111-111111111111"

@@ -15,7 +15,7 @@ public class HostedQuixAccommodation extends QuixHostedRequest {
         this.setMerchantTransactionId(Utils.getInstance().generateRandomNumber());
     }
 
-    public HostedQuixAccommodation(double amount, String customerId, String merchantTransactionId, String statusURL, String successURL, String errorURL, String cancelURL,String awaitingURL, String firstName, String lastName, String customerEmail, String dob, QuixAccommodationPaySolExtendedData paySolExtendedData, int apiVersion) {
+    public HostedQuixAccommodation(String amount, String customerId, String merchantTransactionId, String statusURL, String successURL, String errorURL, String cancelURL,String awaitingURL, String firstName, String lastName, String customerEmail, String dob, QuixAccommodationPaySolExtendedData paySolExtendedData, int apiVersion) {
         super(amount, customerId, merchantTransactionId, statusURL, successURL, errorURL, cancelURL,awaitingURL, firstName, lastName, customerEmail, dob, apiVersion);
         this.paySolExtendedData = paySolExtendedData;
     }

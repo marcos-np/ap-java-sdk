@@ -13,6 +13,7 @@ import com.mp.javaPaymentSDK.models.Credentials;
 import com.mp.javaPaymentSDK.models.requests.js.JSAuthorizationRequest;
 import com.mp.javaPaymentSDK.models.requests.js.JSCharge;
 import com.mp.javaPaymentSDK.models.responses.JSAuthorizationResponse;
+import com.mp.javaPaymentSDK.utils.Utils;
 import kotlin.Pair;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
@@ -129,6 +130,13 @@ public class JSPaymentAdapter {
             return;
         }
 
+        String parsedAmount = Utils.getInstance().parseAmount(jsCharge.getAmount());
+        if (parsedAmount == null) {
+            responseListener.onError(Error.INVALID_AMOUNT, Error.INVALID_AMOUNT.getMessage());
+            return;
+        }
+        jsCharge.setAmount(parsedAmount);
+
         JSONObject bodyJson = new JSONObject();
         bodyJson.put("currency", jsCharge.getCurrency().name());
         bodyJson.put("merchantId", jsCharge.getMerchantId());
@@ -145,6 +153,7 @@ public class JSPaymentAdapter {
         bodyJson.put("awaitingURL", jsCharge.getAwaitingURL());
         bodyJson.put("paymentSolution", jsCharge.getPaymentSolution());
         bodyJson.put("apiVersion", String.valueOf(jsCharge.getApiVersion()));
+        bodyJson.put("forceTokenRequest", String.valueOf(jsCharge.isForceTokenRequest()));
 
         RequestBody requestBody = RequestBody.create(bodyJson.toString(), MediaType.parse("application/json"));
 
@@ -212,6 +221,13 @@ public class JSPaymentAdapter {
             return;
         }
 
+        String parsedAmount = Utils.getInstance().parseAmount(jsPaymentRecurrentInitial.getAmount());
+        if (parsedAmount == null) {
+            responseListener.onError(Error.INVALID_AMOUNT, Error.INVALID_AMOUNT.getMessage());
+            return;
+        }
+        jsPaymentRecurrentInitial.setAmount(parsedAmount);
+
         JSONObject bodyJson = new JSONObject();
         bodyJson.put("currency", jsPaymentRecurrentInitial.getCurrency().name());
         bodyJson.put("merchantId", jsPaymentRecurrentInitial.getMerchantId());
@@ -225,6 +241,7 @@ public class JSPaymentAdapter {
         bodyJson.put("challengeInd", jsPaymentRecurrentInitial.getChallengeInd());
         bodyJson.put("paymentRecurringType", jsPaymentRecurrentInitial.getPaymentRecurringType());
         bodyJson.put("apiVersion", String.valueOf(jsPaymentRecurrentInitial.getApiVersion()));
+        bodyJson.put("forceTokenRequest", String.valueOf(jsPaymentRecurrentInitial.isForceTokenRequest()));
 
         RequestBody requestBody = RequestBody.create(bodyJson.toString(), MediaType.parse("application/json"));
 

@@ -13,6 +13,10 @@ import com.mp.javaPaymentSDK.models.requests.h2h.H2HRedirection;
 import com.mp.javaPaymentSDK.models.responses.notification.Notification;
 import com.mp.javaPaymentSDK.models.Credentials;
 import com.mp.javaPaymentSDK.utils.Creds;
+import kotlin.Pair;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class H2HExample {
 
@@ -33,7 +37,7 @@ public class H2HExample {
 
         // Step 2 - Configure Payment Parameters
         H2HRedirection h2HRedirection = new H2HRedirection();
-        h2HRedirection.setAmount("50");
+        h2HRedirection.setAmount("50.4321222");
         h2HRedirection.setCurrency(Currency.EUR);
         h2HRedirection.setCountry(CountryCode.ES);
         h2HRedirection.setCardNumber("4907270002222227");
@@ -48,6 +52,17 @@ public class H2HExample {
         h2HRedirection.setAwaitingURL(Creds.awaitingUrl);
         h2HRedirection.setCancelURL(Creds.cancelUrl);
         h2HRedirection.setApiVersion(5);
+
+        List<Pair<String, String>> merchantParams = new ArrayList<>();
+        merchantParams.add(new Pair<>("name", "pablo"));
+        merchantParams.add(new Pair<>("surname", "ferrer"));
+
+        h2HRedirection.setMerchantParameters(merchantParams);
+
+        System.out.println("Merchant Parameters:");
+        h2HRedirection.getMerchantParameters().forEach(parameter -> {
+            System.out.println("- key = " + parameter.getFirst() + ", value = " + parameter.getSecond());
+        });
 
         // Step 3 - Send Payment Request
         H2HPaymentAdapter h2HPaymentAdapter = new H2HPaymentAdapter(credentials);

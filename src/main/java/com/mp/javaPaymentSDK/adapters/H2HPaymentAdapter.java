@@ -15,7 +15,6 @@ import okhttp3.FormBody;
 import okhttp3.ResponseBody;
 
 import java.io.IOException;
-import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 
@@ -50,8 +49,15 @@ public class H2HPaymentAdapter {
             return;
         }
 
+        String parsedAmount = Utils.getInstance().parseAmount(h2HRedirection.getAmount());
+        if (parsedAmount == null) {
+            responseListener.onError(Error.INVALID_AMOUNT, Error.INVALID_AMOUNT.getMessage());
+            return;
+        }
+        h2HRedirection.setAmount(parsedAmount);
+
         String httpQuery = Utils.getInstance().buildQuery(H2HRedirection.class, h2HRedirection);
-        String finalQueryParameter = URLEncoder.encode(httpQuery, StandardCharsets.UTF_8).replace("%3D", "=").replace("%26", "&");
+        String finalQueryParameter = Utils.getInstance().encodeUrl(httpQuery);
         byte[] formattedRequest = finalQueryParameter.getBytes(StandardCharsets.UTF_8);
 
         byte[] clearIV = SecurityUtils.getInstance().generateIV();
@@ -135,8 +141,15 @@ public class H2HPaymentAdapter {
             return;
         }
 
+        String parsedAmount = Utils.getInstance().parseAmount(h2HPreAuthorization.getAmount());
+        if (parsedAmount == null) {
+            responseListener.onError(Error.INVALID_AMOUNT, Error.INVALID_AMOUNT.getMessage());
+            return;
+        }
+        h2HPreAuthorization.setAmount(parsedAmount);
+
         String httpQuery = Utils.getInstance().buildQuery(H2HPreAuthorization.class, h2HPreAuthorization);
-        String finalQueryParameter = URLEncoder.encode(httpQuery, StandardCharsets.UTF_8).replace("%3D", "=").replace("%26", "&");
+        String finalQueryParameter = Utils.getInstance().encodeUrl(httpQuery);
         byte[] formattedRequest = finalQueryParameter.getBytes(StandardCharsets.UTF_8);
 
         byte[] clearIV = SecurityUtils.getInstance().generateIV();
@@ -220,7 +233,7 @@ public class H2HPaymentAdapter {
         }
 
         String httpQuery = Utils.getInstance().buildQuery(H2HPreAuthorizationCapture.class, h2HPreAuthorizationCapture);
-        String finalQueryParameter = URLEncoder.encode(httpQuery, StandardCharsets.UTF_8).replace("%3D", "=").replace("%26", "&");
+        String finalQueryParameter = Utils.getInstance().encodeUrl(httpQuery);
         byte[] formattedRequest = finalQueryParameter.getBytes(StandardCharsets.UTF_8);
 
         byte[] clearIV = SecurityUtils.getInstance().generateIV();
@@ -302,8 +315,15 @@ public class H2HPaymentAdapter {
             return;
         }
 
+        String parsedAmount = Utils.getInstance().parseAmount(h2HPaymentRecurrentInitial.getAmount());
+        if (parsedAmount == null) {
+            responseListener.onError(Error.INVALID_AMOUNT, Error.INVALID_AMOUNT.getMessage());
+            return;
+        }
+        h2HPaymentRecurrentInitial.setAmount(parsedAmount);
+
         String httpQuery = Utils.getInstance().buildQuery(H2HPaymentRecurrentInitial.class, h2HPaymentRecurrentInitial);
-        String finalQueryParameter = URLEncoder.encode(httpQuery, StandardCharsets.UTF_8).replace("%3D", "=").replace("%26", "&");
+        String finalQueryParameter = Utils.getInstance().encodeUrl(httpQuery);
         byte[] formattedRequest = finalQueryParameter.getBytes(StandardCharsets.UTF_8);
 
         byte[] clearIV = SecurityUtils.getInstance().generateIV();
@@ -386,8 +406,15 @@ public class H2HPaymentAdapter {
             return;
         }
 
+        String parsedAmount = Utils.getInstance().parseAmount(h2HPaymentRecurrentSuccessive.getAmount());
+        if (parsedAmount == null) {
+            responseListener.onError(Error.INVALID_AMOUNT, Error.INVALID_AMOUNT.getMessage());
+            return;
+        }
+        h2HPaymentRecurrentSuccessive.setAmount(parsedAmount);
+
         String httpQuery = Utils.getInstance().buildQuery(H2HPaymentRecurrentSuccessive.class, h2HPaymentRecurrentSuccessive);
-        String finalQueryParameter = URLEncoder.encode(httpQuery, StandardCharsets.UTF_8).replace("%3D", "=").replace("%26", "&");
+        String finalQueryParameter = Utils.getInstance().encodeUrl(httpQuery);
         byte[] formattedRequest = finalQueryParameter.getBytes(StandardCharsets.UTF_8);
 
         byte[] clearIV = SecurityUtils.getInstance().generateIV();
@@ -472,7 +499,7 @@ public class H2HPaymentAdapter {
         }
 
         String httpQuery = Utils.getInstance().buildQuery(H2HVoid.class, h2HVoid);
-        String finalQueryParameter = URLEncoder.encode(httpQuery, StandardCharsets.UTF_8).replace("%3D", "=").replace("%26", "&");
+        String finalQueryParameter = Utils.getInstance().encodeUrl(httpQuery);
         byte[] formattedRequest = finalQueryParameter.getBytes(StandardCharsets.UTF_8);
 
         byte[] clearIV = SecurityUtils.getInstance().generateIV();
@@ -555,8 +582,15 @@ public class H2HPaymentAdapter {
             return;
         }
 
+        String parsedAmount = Utils.getInstance().parseAmount(h2HRefund.getAmount());
+        if (parsedAmount == null) {
+            responseListener.onError(Error.INVALID_AMOUNT, Error.INVALID_AMOUNT.getMessage());
+            return;
+        }
+        h2HRefund.setAmount(parsedAmount);
+
         String httpQuery = Utils.getInstance().buildQuery(H2HRefund.class, h2HRefund);
-        String finalQueryParameter = URLEncoder.encode(httpQuery, StandardCharsets.UTF_8).replace("%3D", "=").replace("%26", "&");
+        String finalQueryParameter = Utils.getInstance().encodeUrl(httpQuery);
         byte[] formattedRequest = finalQueryParameter.getBytes(StandardCharsets.UTF_8);
 
         byte[] clearIV = SecurityUtils.getInstance().generateIV();

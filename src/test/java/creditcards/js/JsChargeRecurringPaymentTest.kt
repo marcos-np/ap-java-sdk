@@ -19,7 +19,7 @@ import utils.NotificationResponses
 class JsChargeRecurringPaymentTest {
 
     @Test
-    fun successHostedNotification() {
+    fun successJSRecurringNotification() {
         mockkConstructor(NetworkAdapter::class, recordPrivateCalls = true)
         every {
             anyConstructed<NetworkAdapter>()["sendRequest"](
@@ -107,7 +107,7 @@ class JsChargeRecurringPaymentTest {
     }
 
     @Test
-    fun failMissingParameterHosted() {
+    fun failMissingParameterJSRecurring() {
         mockkConstructor(NetworkAdapter::class, recordPrivateCalls = true)
         every {
             anyConstructed<NetworkAdapter>()["sendRequest"](
@@ -156,5 +156,58 @@ class JsChargeRecurringPaymentTest {
 
         assertEquals(Error.MISSING_PARAMETER, errorSlot.captured)
         assertEquals("Missing prepayToken", errorMessageSlot.captured)
+    }
+
+    @Test
+    fun failInvalidAmountJSRecurring() {
+        mockkConstructor(NetworkAdapter::class, recordPrivateCalls = true)
+        every {
+            anyConstructed<NetworkAdapter>()["sendRequest"](
+                any<HashMap<String, String>>(),
+                any<HashMap<String, String>>(),
+                any<RequestBody>(),
+                any<String>(),
+                any<RequestListener>()
+            )
+        } answers { }
+
+        val mockedResponseListener = mockk<ResponseListenerAdapter>();
+        every { mockedResponseListener.onError(any(), any()) } just Runs
+        every { mockedResponseListener.onRedirectionURLReceived(any()) } just Runs
+        every { mockedResponseListener.onResponseReceived(any(), any(), any()) } just Runs
+
+        val credentials = Credentials()
+        credentials.merchantPass = "11111111112222222222333333333344"
+        credentials.merchantKey = "11111111-1111-1111-1111-111111111111"
+        credentials.merchantId = "111222"
+        credentials.environment = Environment.STAGING
+        credentials.productId = "1112220001"
+
+        val jsPaymentRecurrentInitial = JSPaymentRecurrentInitial()
+
+        jsPaymentRecurrentInitial.amount = "30,123.123"
+        jsPaymentRecurrentInitial.prepayToken = "2795f021-f31c-4533-a74d-5d3d887a003b"
+        jsPaymentRecurrentInitial.country = CountryCode.ES
+        jsPaymentRecurrentInitial.customerId = "55"
+        jsPaymentRecurrentInitial.currency = Currency.EUR
+        jsPaymentRecurrentInitial.operationType = OperationTypes.DEBIT
+        jsPaymentRecurrentInitial.paymentSolution = PaymentSolutions.creditcards
+        jsPaymentRecurrentInitial.statusURL = "https://test.com/paymentNotification"
+        jsPaymentRecurrentInitial.successURL = "https://test.com/success"
+        jsPaymentRecurrentInitial.errorURL = "https://test.com/error"
+        jsPaymentRecurrentInitial.awaitingURL = "https://test.com/awaiting"
+        jsPaymentRecurrentInitial.cancelURL = "https://test.com/cancel"
+        jsPaymentRecurrentInitial.apiVersion = 5
+
+        val jsPaymentAdapter = JSPaymentAdapter(credentials)
+        jsPaymentAdapter.sendJSPaymentRecurrentInitial(jsPaymentRecurrentInitial, mockedResponseListener)
+
+        val errorSlot = slot<Error>()
+        val errorMessageSlot = slot<String>()
+
+        verify { mockedResponseListener.onError(capture(errorSlot), capture(errorMessageSlot)) }
+
+        assertEquals(Error.INVALID_AMOUNT, errorSlot.captured)
+        assertEquals(Error.INVALID_AMOUNT.message, errorMessageSlot.captured)
     }
 }

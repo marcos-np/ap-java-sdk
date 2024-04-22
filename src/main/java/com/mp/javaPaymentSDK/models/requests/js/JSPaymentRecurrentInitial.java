@@ -1,15 +1,12 @@
 package com.mp.javaPaymentSDK.models.requests.js;
 
-import com.mp.javaPaymentSDK.enums.CountryCode;
-import com.mp.javaPaymentSDK.enums.OperationTypes;
-import com.mp.javaPaymentSDK.enums.PaymentSolutions;
+import com.mp.javaPaymentSDK.enums.*;
 import com.mp.javaPaymentSDK.models.Credentials;
 import com.mp.javaPaymentSDK.utils.Utils;
-import com.mp.javaPaymentSDK.enums.Currency;
 import kotlin.Pair;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 
 public class JSPaymentRecurrentInitial {
@@ -30,10 +27,11 @@ public class JSPaymentRecurrentInitial {
     private String awaitingURL = null;
     private PaymentSolutions paymentSolution = PaymentSolutions.creditcards;
     private OperationTypes operationType = OperationTypes.DEBIT;
-    private final String paymentRecurringType = "newCof";
-    private final String challengeInd = "04";
+    private PaymentRecurringType paymentRecurringType = PaymentRecurringType.newCof;
+    private String challengeInd = ChallengeInd._04.getValue();
     private int apiVersion = -1;
-    private HashMap<String, String> merchantParams = null;
+    private boolean forceTokenRequest = false;
+    private List<Pair<String, String>> merchantParams = null;
 
     public JSPaymentRecurrentInitial() {
         merchantTransactionId = Utils.getInstance().generateRandomNumber();
@@ -124,14 +122,6 @@ public class JSPaymentRecurrentInitial {
         return paymentSolution;
     }
 
-    public String getPaymentRecurringType() {
-        return paymentRecurringType;
-    }
-
-    public String getChallengeInd() {
-        return challengeInd;
-    }
-
     public String getMerchantKey() {
         return merchantKey;
     }
@@ -188,19 +178,48 @@ public class JSPaymentRecurrentInitial {
         this.apiVersion = apiVersion;
     }
 
-    public HashMap<String, String> getMerchantParams() {
-        return merchantParams;
+    public PaymentRecurringType getPaymentRecurringType() {
+        return paymentRecurringType;
     }
 
-    public void setMerchantParams(HashMap<String, String> merchantParams) {
-        this.merchantParams = merchantParams;
+    public void setPaymentRecurringType(PaymentRecurringType paymentRecurringType) {
+        this.paymentRecurringType = paymentRecurringType;
+    }
+
+    public void setChallengeInd(ChallengeInd challengeInd) {
+        this.challengeInd = challengeInd.getValue();
+    }
+
+    public ChallengeInd getChallengeInd() {
+        return ChallengeInd.getChallengeInd(challengeInd);
+    }
+
+    public boolean isForceTokenRequest() {
+        return forceTokenRequest;
+    }
+
+    public void setForceTokenRequest(boolean forceTokenRequest) {
+        this.forceTokenRequest = forceTokenRequest;
+    }
+
+    public void setMerchantParameters(List<Pair<String, String>> merchantParams) {
+        if (this.merchantParams == null) {
+            this.merchantParams = merchantParams;
+        }
+        else {
+            this.merchantParams.addAll(merchantParams);
+        }
+    }
+
+    public List<Pair<String, String>> getMerchantParameters() {
+        return merchantParams;
     }
 
     public void setMerchantParameter(String key, String value) {
         if (merchantParams == null) {
-            this.merchantParams = new HashMap<>();
+            this.merchantParams = new ArrayList<>();
         }
-        this.merchantParams.put(key, value);
+        this.merchantParams.add(new Pair<>(key, value));
     }
 
     public void setCredentials(Credentials credentials) {

@@ -13,7 +13,7 @@ public class JSQuixItem extends QuixJSRequest {
     public JSQuixItem() {
     }
 
-    public JSQuixItem(double amount, String customerId, String merchantTransactionId, String statusURL, String successURL, String errorURL, String cancelURL,String awaitingURL, String firstName, String lastName, String customerEmail, String dob, String prepayToken, QuixItemPaySolExtendedData paySolExtendedData, int apiVersion) {
+    public JSQuixItem(String amount, String customerId, String merchantTransactionId, String statusURL, String successURL, String errorURL, String cancelURL,String awaitingURL, String firstName, String lastName, String customerEmail, String dob, String prepayToken, QuixItemPaySolExtendedData paySolExtendedData, int apiVersion) {
         super(amount, customerId, merchantTransactionId, statusURL, successURL, errorURL, cancelURL,awaitingURL, firstName, lastName, customerEmail, dob, prepayToken, apiVersion);
         this.paySolExtendedData = paySolExtendedData;
     }

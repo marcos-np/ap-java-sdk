@@ -5,8 +5,8 @@ import com.mp.javaPaymentSDK.models.Credentials;
 import com.mp.javaPaymentSDK.utils.Utils;
 import kotlin.Pair;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 
 public class H2HRefund {
@@ -16,7 +16,7 @@ public class H2HRefund {
     private PaymentSolutions paymentSolution = null;
     private String transactionId = null;
     private int apiVersion = -1;
-    private HashMap<String, String> merchantParams = null;
+    private List<Pair<String, String>> merchantParams = null;
 
     public H2HRefund() {
     }
@@ -73,20 +73,24 @@ public class H2HRefund {
         this.apiVersion = apiVersion;
     }
 
-
-    public HashMap<String, String> getMerchantParams() {
-        return merchantParams;
+    public void setMerchantParameters(List<Pair<String, String>> merchantParams) {
+        if (this.merchantParams == null) {
+            this.merchantParams = merchantParams;
+        }
+        else {
+            this.merchantParams.addAll(merchantParams);
+        }
     }
 
-    public void setMerchantParams(HashMap<String, String> merchantParams) {
-        this.merchantParams = merchantParams;
+    public List<Pair<String, String>> getMerchantParameters() {
+        return merchantParams;
     }
 
     public void setMerchantParameter(String key, String value) {
         if (merchantParams == null) {
-            this.merchantParams = new HashMap<>();
+            this.merchantParams = new ArrayList<>();
         }
-        this.merchantParams.put(key, value);
+        this.merchantParams.add(new Pair<>(key, value));
     }
 
     public void setCredentials(Credentials credentials) {
