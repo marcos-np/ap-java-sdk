@@ -62,7 +62,7 @@ public class Utils {
     }
 
     public String encodeUrl(String httpQuery) {
-        return URLEncoder.encode(httpQuery, StandardCharsets.UTF_8).replace("%3D", "=").replace("%26", "&").replace("%3B", ";").replace("%3A", ":");
+        return URLEncoder.encode(httpQuery, StandardCharsets.UTF_8).replace("%3D", "=").replace("%26", "&").replace("%3B", ";").replace("%3A", ":").replace("%2C", ",");
     }
 
     public String merchantParamsQuery(List<Pair<String, String>> merchantParams) {
@@ -163,8 +163,9 @@ public class Utils {
             if (doubleAmount < 0) {
                 return null;
             }
-            NumberFormat numberFormat = new DecimalFormat(amountFormat);
-            return numberFormat.format(doubleAmount);
+            DecimalFormat decimalFormat = (DecimalFormat) DecimalFormat.getInstance(Locale.US);
+            decimalFormat.applyPattern(amountFormat);
+            return decimalFormat.format(doubleAmount);
         }
         catch (Exception exception) {
             exception.printStackTrace();

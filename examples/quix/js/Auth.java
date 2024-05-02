@@ -25,7 +25,7 @@ public class Auth {
         credentials.setMerchantId(Creds.merchantId);
         credentials.setMerchantKey(Creds.merchantKey);
         credentials.setEnvironment(Creds.environment);
-        credentials.setProductId(Creds.productId);
+        credentials.setProductId(Creds.productIdItem);
 
         // Step 2 - Configure Payment Parameters
         JSAuthorizationRequest jsAuthorizationRequest = new JSAuthorizationRequest();

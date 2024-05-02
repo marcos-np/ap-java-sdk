@@ -2,9 +2,19 @@ package utils
 
 import com.mp.javaPaymentSDK.utils.Utils
 import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import java.util.Locale
 
 class Utils {
+
+    companion object {
+        @BeforeAll
+        @JvmStatic
+        fun setUp() {
+            Locale.setDefault(Locale.Builder().setLanguage("es").setRegion("ES").build())
+        }
+    }
 
     @Test
     fun parseAmountTest() {
