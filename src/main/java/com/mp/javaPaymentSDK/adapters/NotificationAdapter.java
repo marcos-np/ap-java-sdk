@@ -11,6 +11,7 @@ public class NotificationAdapter {
     public static Notification parseNotification(String notificationString) throws Exception {
         Gson gson = new GsonBuilder().disableHtmlEscaping().create();
         XmlMapper xmlMapper = new XmlMapper();
+        System.out.println("Notification received \n" + notificationString);
 
         if (notificationString.startsWith("{")) {
             JSONObject jsonObject = new JSONObject(notificationString);

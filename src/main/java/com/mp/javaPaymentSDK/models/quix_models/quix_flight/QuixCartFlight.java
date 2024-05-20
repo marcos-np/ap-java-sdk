@@ -1,7 +1,7 @@
 package com.mp.javaPaymentSDK.models.quix_models.quix_flight;
 
 import com.mp.javaPaymentSDK.enums.Currency;
-import com.mp.javaPaymentSDK.models.quix_models.quix_accommodation.QuixItemCartItemAccommodation;
+import com.mp.javaPaymentSDK.utils.Utils;
 import kotlin.Pair;
 
 import java.util.ArrayList;
@@ -35,7 +35,7 @@ public class QuixCartFlight {
     }
 
     public void setTotal_price_with_tax(double total_price_with_tax) {
-        this.total_price_with_tax = total_price_with_tax;
+        this.total_price_with_tax = Double.parseDouble(Utils.getInstance().roundAmount(total_price_with_tax));
     }
 
     public List<QuixItemCartItemFlight> getItems() {

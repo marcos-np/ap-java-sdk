@@ -2,7 +2,6 @@ package com.mp.javaPaymentSDK.models.requests.h2h;
 
 import com.mp.javaPaymentSDK.enums.CountryCode;
 import com.mp.javaPaymentSDK.enums.Currency;
-import com.mp.javaPaymentSDK.enums.Error;
 import com.mp.javaPaymentSDK.enums.PaymentSolutions;
 import com.mp.javaPaymentSDK.models.Credentials;
 import com.mp.javaPaymentSDK.utils.Utils;

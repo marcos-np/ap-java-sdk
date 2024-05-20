@@ -4,8 +4,6 @@ import com.google.gson.annotations.SerializedName;
 import com.mp.javaPaymentSDK.utils.Utils;
 import kotlin.Pair;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 
@@ -60,7 +58,7 @@ public class QuixArticleService {
     }
 
     public void setUnit_price_with_tax(double unit_price_with_tax) {
-        this.unit_price_with_tax = unit_price_with_tax;
+        this.unit_price_with_tax = Double.parseDouble(Utils.getInstance().roundAmount(unit_price_with_tax));
     }
 
     public String getStartDate() {

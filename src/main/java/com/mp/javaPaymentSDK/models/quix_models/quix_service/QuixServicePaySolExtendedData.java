@@ -1,7 +1,6 @@
 package com.mp.javaPaymentSDK.models.quix_models.quix_service;
 
 import com.mp.javaPaymentSDK.models.quix_models.QuixBilling;
-import com.mp.javaPaymentSDK.models.quix_models.quix_accommodation.QuixAccommodationPaySolExtendedData;
 import com.mp.javaPaymentSDK.utils.Utils;
 import kotlin.Pair;
 

@@ -71,6 +71,7 @@ class RecurringSubsequentTest {
         h2HPaymentRecurrentSuccessive.cancelURL = "https://test.com/cancel"
         h2HPaymentRecurrentSuccessive.merchantTransactionId = "12345678"
         h2HPaymentRecurrentSuccessive.apiVersion = 5
+        h2HPaymentRecurrentSuccessive.merchantExemptionsSca = MerchantExemptionsSca.MIT
 
         val h2HPaymentAdapter = H2HPaymentAdapter(credentials)
 
@@ -100,11 +101,11 @@ class RecurringSubsequentTest {
         Assertions.assertEquals(3, queryParameterSlot.captured.size)
         Assertions.assertEquals("111222", queryParameterSlot.captured["merchantId"])
         Assertions.assertEquals(
-            "7QDv+7cYdagtQmVfr38p1+HRNOMcBrftirm7FfE6+GOSF52tAfECBNLpz0a9jfI8Vlr7QWy4vIfNXFdl+saLSXIVvsH8bn31IcWKU3OeMVXo7oK9uHWbv+xCWoUVvCigNVKwnNRhH3hs4+pxifzJH0+t0lnb/P9KViOOqGRL/v7BeDN8BHaCF3rMLeUwE0q0os5MjtPjgmIC+jQVmjHlRaLBeYMcksCGGLiitoEbe2SoKnsjHZT8cs9buWpyVyLU9ggoFLvmDP+p+Q47dZMImQm4B3vbjK491m6f8XRLk3ZMzmd1ngtJeujUA0lVmoyAm/8PtsWx0VW6uYMG9HzD5bWr28YpGg1p6/QUPTxBqonmn31ZE9aWoEZ0rwUkYu2C9HjWatRi7IHwnvXIuYKW5IMK86ScCWn4Wlz21b3fTnQG9l3fpT7v84z4payy5kD4oNhEIxaQqoLwWCA/ITJEA5VMsgioL4w19FCLZtTGKZ7hUHpJEK6NrVCkJ528Hw9CMkLl6nblE6hFRC+0NkC2m29lAf0tWfOqf9Sl31DEWTz/YB0HabILapWxhh1p2dq8WhpEC3733l63vabG5H1aBJqHrX3vb7+Bv3UNtjabB4IJKyVHdY/UIyK45BmmmG9ViQjVA4nu99I0LBoEDgHviN6xb+iZZIXMJ5lR4iiByy0=",
+            "7QDv+7cYdagtQmVfr38p1+HRNOMcBrftirm7FfE6+GOSF52tAfECBNLpz0a9jfI8Vlr7QWy4vIfNXFdl+saLSXIVvsH8bn31IcWKU3OeMVXo7oK9uHWbv+xCWoUVvCigNVKwnNRhH3hs4+pxifzJH0+t0lnb/P9KViOOqGRL/v7BeDN8BHaCF3rMLeUwE0q0os5MjtPjgmIC+jQVmjHlRaLBeYMcksCGGLiitoEbe2SoKnsjHZT8cs9buWpyVyLU9ggoFLvmDP+p+Q47dZMImQm4B3vbjK491m6f8XRLk3ZMzmd1ngtJeujUA0lVmoyAm/8PtsWx0VW6uYMG9HzD5bWr28YpGg1p6/QUPTxBqonmn31ZE9aWoEZ0rwUkYu2C9HjWatRi7IHwnvXIuYKW5IMK86ScCWn4Wlz21b3fTnQG9l3fpT7v84z4payy5kD4oNhEIxaQqoLwWCA/ITJEA5VMsgioL4w19FCLZtTGKZ7hUHpJEK6NrVCkJ528Hw9CMkLl6nblE6hFRC+0NkC2m29lAf0tWfOqf9Sl31DEWTz/YB0HabILapWxhh1p2dq8WhpEC3733l63vabG5H1aBJqHrX3vb7+Bv3UNtjabB4IJKyVHdY/UIyK45BmmmG9ViQjVA4nu99I0LBoEDgHviORHT1oBRFqpfM0utLXZDRafyYCZkswZpiQsUejj7NAMXherNSMD3Pz/p1WB7ZadVA==",
             queryParameterSlot.captured["encrypted"]
         )
         Assertions.assertEquals(
-            "c644595eb9b754d6db225554ad202defd28dac6a31cc928f0aced812a15c2a0f",
+            "d8b0b6f5c828b472b893d5ad9da0efae0fe35e9fae1b238c5f511d17dad0fea9",
             queryParameterSlot.captured["integrityCheck"]
         )
 
@@ -168,6 +169,7 @@ class RecurringSubsequentTest {
         h2HPaymentRecurrentSuccessive.cancelURL = "https://test.com/cancel"
         h2HPaymentRecurrentSuccessive.merchantTransactionId = "12345678"
         h2HPaymentRecurrentSuccessive.apiVersion = 5
+        h2HPaymentRecurrentSuccessive.merchantExemptionsSca = MerchantExemptionsSca.MIT
 
         val h2HPaymentAdapter = H2HPaymentAdapter(credentials)
 
@@ -212,6 +214,7 @@ class RecurringSubsequentTest {
         h2HPaymentRecurrentSuccessive.cancelURL = "https://test.com/cancel"
         h2HPaymentRecurrentSuccessive.merchantTransactionId = "12345678"
         h2HPaymentRecurrentSuccessive.apiVersion = 5
+        h2HPaymentRecurrentSuccessive.merchantExemptionsSca = MerchantExemptionsSca.MIT
 
         val h2HPaymentAdapter = H2HPaymentAdapter(credentials)
 

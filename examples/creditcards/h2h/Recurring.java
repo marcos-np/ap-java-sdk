@@ -39,7 +39,7 @@ public class Recurring {
         h2HPaymentRecurrentInitial.setCurrency(Currency.EUR);
         h2HPaymentRecurrentInitial.setCountry(CountryCode.ES);
         h2HPaymentRecurrentInitial.setCardNumber("4907270002222227");
-        h2HPaymentRecurrentInitial.setCustomerId("903");
+        h2HPaymentRecurrentInitial.setCustomerId("55");
         h2HPaymentRecurrentInitial.setChName("First name Last name");
         h2HPaymentRecurrentInitial.setCvnNumber("123");
         h2HPaymentRecurrentInitial.setExpDate("0625");

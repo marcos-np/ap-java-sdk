@@ -1,7 +1,5 @@
 package com.mp.javaPaymentSDK.models.requests.quix_js;
 
-import com.mp.javaPaymentSDK.enums.CountryCode;
-import com.mp.javaPaymentSDK.enums.Currency;
 import com.mp.javaPaymentSDK.models.quix_models.quix_product.QuixItemPaySolExtendedData;
 import com.mp.javaPaymentSDK.models.quix_models.QuixJSRequest;
 import kotlin.Pair;

@@ -1,6 +1,7 @@
 package com.mp.javaPaymentSDK.adapters;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.mp.javaPaymentSDK.callbacks.ResponseListener;
 import com.mp.javaPaymentSDK.enums.Endpoints;
 import com.mp.javaPaymentSDK.enums.Error;
@@ -8,7 +9,6 @@ import com.mp.javaPaymentSDK.models.requests.js.JSPaymentRecurrentInitial;
 import com.mp.javaPaymentSDK.models.responses.notification.Notification;
 import com.mp.javaPaymentSDK.callbacks.JSPaymentListener;
 import com.mp.javaPaymentSDK.callbacks.RequestListener;
-import com.mp.javaPaymentSDK.enums.TransactionResult;
 import com.mp.javaPaymentSDK.models.Credentials;
 import com.mp.javaPaymentSDK.models.requests.js.JSAuthorizationRequest;
 import com.mp.javaPaymentSDK.models.requests.js.JSCharge;
@@ -27,6 +27,7 @@ public class JSPaymentAdapter {
 
     private Credentials credentials;
 
+    private Gson gson = new GsonBuilder().disableHtmlEscaping().create();
 
     private final NetworkAdapter networkAdapter = new NetworkAdapter();
 
@@ -52,15 +53,7 @@ public class JSPaymentAdapter {
             return;
         }
 
-        JSONObject bodyJson = new JSONObject();
-        bodyJson.put("currency", jsAuthorizationRequest.getCurrency().name());
-        bodyJson.put("merchantId", jsAuthorizationRequest.getMerchantId());
-        bodyJson.put("merchantKey", credentials.getMerchantKey());
-        bodyJson.put("productId", jsAuthorizationRequest.getProductId());
-        bodyJson.put("country", jsAuthorizationRequest.getCountry());
-        bodyJson.put("customerId", jsAuthorizationRequest.getCustomerId());
-        bodyJson.put("operationType", jsAuthorizationRequest.getOperationType());
-        bodyJson.put("apiVersion", String.valueOf(jsAuthorizationRequest.getApiVersion()));
+        JSONObject bodyJson = new JSONObject(gson.toJson(jsAuthorizationRequest));
 
         RequestBody requestBody = RequestBody.create(bodyJson.toString(), MediaType.parse("application/json"));
 
@@ -137,23 +130,8 @@ public class JSPaymentAdapter {
         }
         jsCharge.setAmount(parsedAmount);
 
-        JSONObject bodyJson = new JSONObject();
-        bodyJson.put("currency", jsCharge.getCurrency().name());
-        bodyJson.put("merchantId", jsCharge.getMerchantId());
-        bodyJson.put("productId", jsCharge.getProductId());
-        bodyJson.put("country", jsCharge.getCountry());
-        bodyJson.put("customerId", jsCharge.getCustomerId());
-        bodyJson.put("operationType", jsCharge.getOperationType());
-        bodyJson.put("amount", jsCharge.getAmount());
-        bodyJson.put("merchantTransactionId", jsCharge.getMerchantTransactionId());
-        bodyJson.put("statusURL", jsCharge.getStatusURL());
-        bodyJson.put("successURL", jsCharge.getSuccessURL());
-        bodyJson.put("errorURL", jsCharge.getErrorURL());
-        bodyJson.put("cancelURL", jsCharge.getCancelURL());
-        bodyJson.put("awaitingURL", jsCharge.getAwaitingURL());
-        bodyJson.put("paymentSolution", jsCharge.getPaymentSolution());
-        bodyJson.put("apiVersion", String.valueOf(jsCharge.getApiVersion()));
-        bodyJson.put("forceTokenRequest", String.valueOf(jsCharge.isForceTokenRequest()));
+        JSONObject bodyJson = new JSONObject(gson.toJson(jsCharge));
+        bodyJson.remove("prepayToken");
 
         RequestBody requestBody = RequestBody.create(bodyJson.toString(), MediaType.parse("application/json"));
 
@@ -228,20 +206,8 @@ public class JSPaymentAdapter {
         }
         jsPaymentRecurrentInitial.setAmount(parsedAmount);
 
-        JSONObject bodyJson = new JSONObject();
-        bodyJson.put("currency", jsPaymentRecurrentInitial.getCurrency().name());
-        bodyJson.put("merchantId", jsPaymentRecurrentInitial.getMerchantId());
-        bodyJson.put("productId", jsPaymentRecurrentInitial.getProductId());
-        bodyJson.put("country", jsPaymentRecurrentInitial.getCountry());
-        bodyJson.put("customerId", jsPaymentRecurrentInitial.getCustomerId());
-        bodyJson.put("operationType", jsPaymentRecurrentInitial.getOperationType());
-        bodyJson.put("amount", jsPaymentRecurrentInitial.getAmount());
-        bodyJson.put("merchantTransactionId", jsPaymentRecurrentInitial.getMerchantTransactionId());
-        bodyJson.put("paymentSolution", jsPaymentRecurrentInitial.getPaymentSolution());
-        bodyJson.put("challengeInd", jsPaymentRecurrentInitial.getChallengeInd());
-        bodyJson.put("paymentRecurringType", jsPaymentRecurrentInitial.getPaymentRecurringType());
-        bodyJson.put("apiVersion", String.valueOf(jsPaymentRecurrentInitial.getApiVersion()));
-        bodyJson.put("forceTokenRequest", String.valueOf(jsPaymentRecurrentInitial.isForceTokenRequest()));
+        JSONObject bodyJson = new JSONObject(gson.toJson(jsPaymentRecurrentInitial));
+        bodyJson.remove("prepayToken");
 
         RequestBody requestBody = RequestBody.create(bodyJson.toString(), MediaType.parse("application/json"));
 

@@ -51,7 +51,7 @@ public class QuixArticleProduct {
     }
 
     public void setUnit_price_with_tax(double unit_price_with_tax) {
-        this.unit_price_with_tax = unit_price_with_tax;
+        this.unit_price_with_tax = Double.parseDouble(Utils.getInstance().roundAmount(unit_price_with_tax));
     }
 
     public Pair<Boolean, String> isMissingFields() {

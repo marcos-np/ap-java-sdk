@@ -1,15 +1,12 @@
 package com.mp.javaPaymentSDK.adapters;
 
-import com.mp.javaPaymentSDK.callbacks.NotificationListener;
 import com.mp.javaPaymentSDK.callbacks.ResponseListener;
 import com.mp.javaPaymentSDK.callbacks.RequestListener;
 import com.mp.javaPaymentSDK.enums.Endpoints;
 import com.mp.javaPaymentSDK.enums.Error;
-import com.mp.javaPaymentSDK.enums.TransactionResult;
 import com.mp.javaPaymentSDK.models.Credentials;
 import com.mp.javaPaymentSDK.models.requests.hosted.HostedPaymentRecurrentInitial;
 import com.mp.javaPaymentSDK.models.requests.hosted.HostedPaymentRedirection;
-import com.mp.javaPaymentSDK.models.responses.notification.Notification;
 import com.mp.javaPaymentSDK.utils.HexUtils;
 import com.mp.javaPaymentSDK.utils.SecurityUtils;
 import com.mp.javaPaymentSDK.utils.Utils;

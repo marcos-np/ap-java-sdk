@@ -1,15 +1,9 @@
 package com.mp.javaPaymentSDK.models.requests.quix_hosted;
 
-import com.mp.javaPaymentSDK.enums.CountryCode;
-import com.mp.javaPaymentSDK.models.Credentials;
 import com.mp.javaPaymentSDK.models.quix_models.QuixHostedRequest;
 import com.mp.javaPaymentSDK.models.quix_models.quix_service.QuixServicePaySolExtendedData;
 import com.mp.javaPaymentSDK.utils.Utils;
-import com.mp.javaPaymentSDK.enums.Currency;
 import kotlin.Pair;
-
-import java.util.Arrays;
-import java.util.List;
 
 public class HostedQuixService extends QuixHostedRequest {
 

@@ -1,6 +1,4 @@
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import com.mp.javaPaymentSDK.models.responses.notification.Notification;
 import org.junit.jupiter.api.Test;
 
 import java.text.DecimalFormat;

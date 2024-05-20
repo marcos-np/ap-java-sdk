@@ -1,12 +1,10 @@
 package com.mp.javaPaymentSDK.adapters;
 
-import com.mp.javaPaymentSDK.callbacks.NotificationListener;
+import com.google.gson.GsonBuilder;
 import com.mp.javaPaymentSDK.callbacks.ResponseListener;
 import com.mp.javaPaymentSDK.enums.Endpoints;
 import com.mp.javaPaymentSDK.enums.Error;
-import com.mp.javaPaymentSDK.enums.TransactionResult;
 import com.mp.javaPaymentSDK.models.quix_models.QuixHostedRequest;
-import com.mp.javaPaymentSDK.models.responses.notification.Notification;
 import com.mp.javaPaymentSDK.utils.HexUtils;
 import com.mp.javaPaymentSDK.utils.SecurityUtils;
 import com.mp.javaPaymentSDK.utils.Utils;
@@ -32,7 +30,7 @@ public class HostedQuixPaymentAdapter {
 
     private final NetworkAdapter networkAdapter = new NetworkAdapter();
 
-    private final Gson gson = new Gson();
+    private final Gson gson = new GsonBuilder().disableHtmlEscaping().create();
 
     public HostedQuixPaymentAdapter(Credentials credentials) {
         this.credentials = credentials;
@@ -275,6 +273,7 @@ public class HostedQuixPaymentAdapter {
         String finalQueryParameter1 = Utils.getInstance().encodeUrl(httpQuery1);
         String finalQueryParameter2 = Utils.getInstance().encodeUrl(httpQuery2);
         String finalQueryParameter = finalQueryParameter1 + "&" + finalQueryParameter2;
+        System.out.println("finalQueryParameter = " + finalQueryParameter);
         byte[] formattedRequest = finalQueryParameter.getBytes(StandardCharsets.UTF_8);
 
         byte[] clearIV = SecurityUtils.getInstance().generateIV();

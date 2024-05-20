@@ -5,7 +5,6 @@ import com.mp.javaPaymentSDK.enums.Currency;
 import com.mp.javaPaymentSDK.enums.OperationTypes;
 import com.mp.javaPaymentSDK.enums.PaymentSolutions;
 import com.mp.javaPaymentSDK.models.Credentials;
-import com.mp.javaPaymentSDK.models.requests.hosted.HostedPaymentRedirection;
 import com.mp.javaPaymentSDK.utils.Utils;
 import kotlin.Pair;
 

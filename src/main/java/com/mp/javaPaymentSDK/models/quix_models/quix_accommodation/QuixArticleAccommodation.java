@@ -5,8 +5,6 @@ import com.mp.javaPaymentSDK.models.quix_models.QuixAddress;
 import com.mp.javaPaymentSDK.utils.Utils;
 import kotlin.Pair;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 
@@ -68,7 +66,7 @@ public class QuixArticleAccommodation {
     }
 
     public void setUnit_price_with_tax(double unit_price_with_tax) {
-        this.unit_price_with_tax = unit_price_with_tax;
+        this.unit_price_with_tax = Double.parseDouble(Utils.getInstance().roundAmount(unit_price_with_tax));
     }
 
     public String getCheckinDate() {

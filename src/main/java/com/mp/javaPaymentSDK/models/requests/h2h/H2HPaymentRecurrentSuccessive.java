@@ -1,9 +1,6 @@
 package com.mp.javaPaymentSDK.models.requests.h2h;
 
-import com.mp.javaPaymentSDK.enums.CountryCode;
-import com.mp.javaPaymentSDK.enums.Currency;
-import com.mp.javaPaymentSDK.enums.PaymentRecurringType;
-import com.mp.javaPaymentSDK.enums.PaymentSolutions;
+import com.mp.javaPaymentSDK.enums.*;
 import com.mp.javaPaymentSDK.models.Credentials;
 import com.mp.javaPaymentSDK.utils.Utils;
 import kotlin.Pair;
@@ -32,12 +29,14 @@ public class H2HPaymentRecurrentSuccessive {
     private PaymentRecurringType paymentRecurringType = PaymentRecurringType.cof;
     private int apiVersion = -1;
     private boolean forceTokenRequest = false;
+    private MerchantExemptionsSca merchantExemptionsSca;
     private List<Pair<String, String>> merchantParams = null;
 
     public H2HPaymentRecurrentSuccessive() {
+        merchantTransactionId = Utils.getInstance().generateRandomNumber();
     }
 
-    public H2HPaymentRecurrentSuccessive(String amount, CountryCode country, Currency currency, String customerId, String merchantTransactionId, PaymentSolutions paymentSolution, String chName, String cardNumberToken, String subscriptionPlan, String statusURL, String successURL, String errorURL, String cancelURL, String awaitingURL, int apiVersion) {
+    public H2HPaymentRecurrentSuccessive(String amount, CountryCode country, Currency currency, String customerId, String merchantTransactionId, PaymentSolutions paymentSolution, String chName, String cardNumberToken, String subscriptionPlan, String statusURL, String successURL, String errorURL, String cancelURL, String awaitingURL, int apiVersion, MerchantExemptionsSca merchantExemptionsSca) {
         this.amount = amount;
         this.country = country;
         this.currency = currency;
@@ -53,6 +52,7 @@ public class H2HPaymentRecurrentSuccessive {
         this.cancelURL = cancelURL;
         this.awaitingURL = awaitingURL;
         this.apiVersion = apiVersion;
+        this.merchantExemptionsSca = merchantExemptionsSca;
     }
 
     public String getAmount() {
@@ -199,6 +199,14 @@ public class H2HPaymentRecurrentSuccessive {
         this.forceTokenRequest = forceTokenRequest;
     }
 
+    public MerchantExemptionsSca getMerchantExemptionsSca() {
+        return merchantExemptionsSca;
+    }
+
+    public void setMerchantExemptionsSca(MerchantExemptionsSca merchantExemptionsSca) {
+        this.merchantExemptionsSca = merchantExemptionsSca;
+    }
+
     public void setMerchantParameters(List<Pair<String, String>> merchantParams) {
         if (this.merchantParams == null) {
             this.merchantParams = merchantParams;
@@ -233,7 +241,8 @@ public class H2HPaymentRecurrentSuccessive {
                 "amount", "country", "currency", "customerId",
                 "merchantId","productId", "merchantTransactionId", "paymentSolution",
                 "chName", "cardNumberToken", "subscriptionPlan", "statusURL",
-                "successURL", "errorURL", "cancelURL", "awaitingURL", "paymentRecurringType"
+                "successURL", "errorURL", "cancelURL", "awaitingURL", "paymentRecurringType",
+                "merchantExemptionsSca"
         );
 
         return Utils.getInstance().containsNull(

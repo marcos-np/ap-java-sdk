@@ -52,6 +52,7 @@ public class H2HExample {
         h2HRedirection.setAwaitingURL(Creds.awaitingUrl);
         h2HRedirection.setCancelURL(Creds.cancelUrl);
         h2HRedirection.setApiVersion(5);
+        h2HRedirection.setForceTokenRequest(false);
 
         List<Pair<String, String>> merchantParams = new ArrayList<>();
         merchantParams.add(new Pair<>("name", "pablo"));

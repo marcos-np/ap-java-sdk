@@ -1,7 +1,5 @@
 package com.mp.javaPaymentSDK.models.quix_models;
 
-import com.mp.javaPaymentSDK.enums.CountryCode;
-import com.mp.javaPaymentSDK.enums.Currency;
 import com.mp.javaPaymentSDK.models.Credentials;
 
 public class QuixHostedQuery extends QuixHostedRequest {

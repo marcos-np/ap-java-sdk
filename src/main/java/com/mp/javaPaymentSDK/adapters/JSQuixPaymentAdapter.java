@@ -1,6 +1,7 @@
 package com.mp.javaPaymentSDK.adapters;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.mp.javaPaymentSDK.callbacks.RequestListener;
 import com.mp.javaPaymentSDK.callbacks.ResponseListener;
 import com.mp.javaPaymentSDK.enums.Endpoints;
@@ -33,7 +34,7 @@ public class JSQuixPaymentAdapter {
 
     private final NetworkAdapter networkAdapter = new NetworkAdapter();
 
-    private final Gson gson = new Gson();
+    private final Gson gson = new GsonBuilder().disableHtmlEscaping().create();
 
     public JSQuixPaymentAdapter(Credentials credentials) {
         this.credentials = credentials;
@@ -79,33 +80,15 @@ public class JSQuixPaymentAdapter {
             }
         }
 
-        JSONObject bodyJson = new JSONObject();
-        bodyJson.put("currency", jsQuixService.getCurrency().name());
-        bodyJson.put("merchantId", jsQuixService.getMerchantId());
-        bodyJson.put("productId", jsQuixService.getProductId());
-        bodyJson.put("country", jsQuixService.getCountry());
-        bodyJson.put("paymentSolution", jsQuixService.getPaymentSolution());
-        bodyJson.put("customerId", jsQuixService.getCustomerId());
-        bodyJson.put("statusURL", jsQuixService.getStatusURL());
-        bodyJson.put("successURL", jsQuixService.getSuccessURL());
-        bodyJson.put("errorURL", jsQuixService.getErrorURL());
-        bodyJson.put("cancelURL", jsQuixService.getCancelURL());
-        bodyJson.put("awaiting", jsQuixService.getAwaitingURL());
-        bodyJson.put("amount", jsQuixService.getAmount());
-        bodyJson.put("firstName", jsQuixService.getFirstName());
-        bodyJson.put("lastName", jsQuixService.getLastName());
-        bodyJson.put("customerEmail", jsQuixService.getCustomerEmail());
-        bodyJson.put("customerCountry", jsQuixService.getCustomerCountry());
-        bodyJson.put("dob", jsQuixService.getDob());
-        bodyJson.put("merchantTransactionId", jsQuixService.getMerchantTransactionId());
+        JSONObject bodyJson = new JSONObject(gson.toJson(jsQuixService));
+        bodyJson.remove("paysolExtendedData");
+        bodyJson.remove("merchantParams");
+        bodyJson.remove("prepayToken");
         if (jsQuixService.getMerchantParameters() != null && !jsQuixService.getMerchantParameters().isEmpty()) {
             bodyJson.put("merchantParams", Utils.getInstance().merchantParamsQuery(jsQuixService.getMerchantParameters()));
         }
 
-        String paysolExtendedData = gson.toJson(jsQuixService.getPaySolExtendedData());
-        bodyJson.put("paysolExtendedData", paysolExtendedData);
-        bodyJson.put("apiVersion", String.valueOf(jsQuixService.getApiVersion()));
-
+        bodyJson.put("paysolExtendedData", gson.toJson(jsQuixService.getPaySolExtendedData()));
 
         RequestBody requestBody = RequestBody.create(bodyJson.toString(), MediaType.parse("application/json"));
 
@@ -189,33 +172,15 @@ public class JSQuixPaymentAdapter {
             }
         }
 
-        JSONObject bodyJson = new JSONObject();
-        bodyJson.put("currency", jsQuixFlight.getCurrency().name());
-        bodyJson.put("merchantId", jsQuixFlight.getMerchantId());
-        bodyJson.put("productId", jsQuixFlight.getProductId());
-        bodyJson.put("country", jsQuixFlight.getCountry());
-        bodyJson.put("paymentSolution", jsQuixFlight.getPaymentSolution());
-        bodyJson.put("customerId", jsQuixFlight.getCustomerId());
-        bodyJson.put("statusURL", jsQuixFlight.getStatusURL());
-        bodyJson.put("successURL", jsQuixFlight.getSuccessURL());
-        bodyJson.put("errorURL", jsQuixFlight.getErrorURL());
-        bodyJson.put("cancelURL", jsQuixFlight.getCancelURL());
-        bodyJson.put("awaitingURL", jsQuixFlight.getAwaitingURL());
-        bodyJson.put("amount", jsQuixFlight.getAmount());
-        bodyJson.put("firstName", jsQuixFlight.getFirstName());
-        bodyJson.put("lastName", jsQuixFlight.getLastName());
-        bodyJson.put("customerEmail", jsQuixFlight.getCustomerEmail());
-        bodyJson.put("customerCountry", jsQuixFlight.getCustomerCountry());
-        bodyJson.put("dob", jsQuixFlight.getDob());
-        bodyJson.put("merchantTransactionId", jsQuixFlight.getMerchantTransactionId());
+        JSONObject bodyJson = new JSONObject(gson.toJson(jsQuixFlight));
+        bodyJson.remove("paysolExtendedData");
+        bodyJson.remove("merchantParams");
+        bodyJson.remove("prepayToken");
         if (jsQuixFlight.getMerchantParameters() != null && !jsQuixFlight.getMerchantParameters().isEmpty()) {
             bodyJson.put("merchantParams", Utils.getInstance().merchantParamsQuery(jsQuixFlight.getMerchantParameters()));
         }
 
-        String paysolExtendedData = gson.toJson(jsQuixFlight.getPaySolExtendedData());
-        bodyJson.put("paysolExtendedData", paysolExtendedData);
-        bodyJson.put("apiVersion", String.valueOf(jsQuixFlight.getApiVersion()));
-
+        bodyJson.put("paysolExtendedData", gson.toJson(jsQuixFlight.getPaySolExtendedData()));
 
         RequestBody requestBody = RequestBody.create(bodyJson.toString(), MediaType.parse("application/json"));
 
@@ -299,33 +264,16 @@ public class JSQuixPaymentAdapter {
             }
         }
 
-        JSONObject bodyJson = new JSONObject();
-        bodyJson.put("currency", jsQuixAccommodation.getCurrency().name());
-        bodyJson.put("merchantId", jsQuixAccommodation.getMerchantId());
-        bodyJson.put("productId", jsQuixAccommodation.getProductId());
-        bodyJson.put("country", jsQuixAccommodation.getCountry());
-        bodyJson.put("paymentSolution", jsQuixAccommodation.getPaymentSolution());
-        bodyJson.put("customerId", jsQuixAccommodation.getCustomerId());
-        bodyJson.put("statusURL", jsQuixAccommodation.getStatusURL());
-        bodyJson.put("successURL", jsQuixAccommodation.getSuccessURL());
-        bodyJson.put("errorURL", jsQuixAccommodation.getErrorURL());
-        bodyJson.put("cancelURL", jsQuixAccommodation.getCancelURL());
-        bodyJson.put("awaitingURL", jsQuixAccommodation.getAwaitingURL());
-        bodyJson.put("amount", jsQuixAccommodation.getAmount());
-        bodyJson.put("firstName", jsQuixAccommodation.getFirstName());
-        bodyJson.put("lastName", jsQuixAccommodation.getLastName());
-        bodyJson.put("customerEmail", jsQuixAccommodation.getCustomerEmail());
-        bodyJson.put("customerCountry", jsQuixAccommodation.getCustomerCountry());
-        bodyJson.put("dob", jsQuixAccommodation.getDob());
-        bodyJson.put("merchantTransactionId", jsQuixAccommodation.getMerchantTransactionId());
+        JSONObject bodyJson = new JSONObject(gson.toJson(jsQuixAccommodation));
+        bodyJson.remove("paysolExtendedData");
+        bodyJson.remove("merchantParams");
+        bodyJson.remove("prepayToken");
         if (jsQuixAccommodation.getMerchantParameters() != null && !jsQuixAccommodation.getMerchantParameters().isEmpty()) {
             bodyJson.put("merchantParams", Utils.getInstance().merchantParamsQuery(jsQuixAccommodation.getMerchantParameters()));
         }
 
-        String paysolExtendedData = gson.toJson(jsQuixAccommodation.getPaySolExtendedData());
-        bodyJson.put("paysolExtendedData", paysolExtendedData);
-        bodyJson.put("apiVersion", String.valueOf(jsQuixAccommodation.getApiVersion()));
-
+        bodyJson.put("paysolExtendedData", gson.toJson(jsQuixAccommodation.getPaySolExtendedData()));
+        System.out.println("bodyJson \n" + bodyJson);
 
         RequestBody requestBody = RequestBody.create(bodyJson.toString(), MediaType.parse("application/json"));
 
@@ -398,33 +346,15 @@ public class JSQuixPaymentAdapter {
         }
         jsQuixItem.setAmount(parsedAmount);
 
-        JSONObject bodyJson = new JSONObject();
-        bodyJson.put("currency", jsQuixItem.getCurrency().name());
-        bodyJson.put("merchantId", jsQuixItem.getMerchantId());
-        bodyJson.put("productId", jsQuixItem.getProductId());
-        bodyJson.put("country", jsQuixItem.getCountry());
-        bodyJson.put("paymentSolution", jsQuixItem.getPaymentSolution());
-        bodyJson.put("customerId", jsQuixItem.getCustomerId());
-        bodyJson.put("statusURL", jsQuixItem.getStatusURL());
-        bodyJson.put("successURL", jsQuixItem.getSuccessURL());
-        bodyJson.put("errorURL", jsQuixItem.getErrorURL());
-        bodyJson.put("cancelURL", jsQuixItem.getCancelURL());
-        bodyJson.put("awaiting", jsQuixItem.getAwaitingURL());
-        bodyJson.put("amount", jsQuixItem.getAmount());
-        bodyJson.put("firstName", jsQuixItem.getFirstName());
-        bodyJson.put("lastName", jsQuixItem.getLastName());
-        bodyJson.put("customerEmail", jsQuixItem.getCustomerEmail());
-        bodyJson.put("customerCountry", jsQuixItem.getCustomerCountry());
-        bodyJson.put("dob", jsQuixItem.getDob());
-        bodyJson.put("merchantTransactionId", jsQuixItem.getMerchantTransactionId());
+        JSONObject bodyJson = new JSONObject(jsQuixItem);
+        bodyJson.remove("paysolExtendedData");
+        bodyJson.remove("merchantParams");
+        bodyJson.remove("prepayToken");
         if (jsQuixItem.getMerchantParameters() != null && !jsQuixItem.getMerchantParameters().isEmpty()) {
             bodyJson.put("merchantParams", Utils.getInstance().merchantParamsQuery(jsQuixItem.getMerchantParameters()));
         }
 
-        String paysolExtendedData = gson.toJson(jsQuixItem.getPaySolExtendedData());
-        bodyJson.put("paysolExtendedData", paysolExtendedData);
-        bodyJson.put("apiVersion", String.valueOf(jsQuixItem.getApiVersion()));
-
+        bodyJson.put("paysolExtendedData", gson.toJson(jsQuixItem.getPaySolExtendedData()));
 
         RequestBody requestBody = RequestBody.create(bodyJson.toString(), MediaType.parse("application/json"));
 

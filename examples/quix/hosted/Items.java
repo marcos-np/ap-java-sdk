@@ -9,7 +9,6 @@ import com.mp.javaPaymentSDK.adapters.HostedQuixPaymentAdapter;
 import com.mp.javaPaymentSDK.adapters.SocketAdapter;
 import com.mp.javaPaymentSDK.enums.CountryCode;
 import com.mp.javaPaymentSDK.enums.Currency;
-import com.mp.javaPaymentSDK.enums.Environment;
 import com.mp.javaPaymentSDK.enums.Error;
 import com.mp.javaPaymentSDK.models.Credentials;
 import com.mp.javaPaymentSDK.models.quix_models.*;

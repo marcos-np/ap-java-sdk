@@ -1,6 +1,7 @@
 package com.mp.javaPaymentSDK.models.quix_models.quix_product;
 
 import com.mp.javaPaymentSDK.models.quix_models.quix_product.QuixArticleProduct;
+import com.mp.javaPaymentSDK.utils.Utils;
 import kotlin.Pair;
 
 public class QuixItemCartItemProduct {
@@ -41,7 +42,7 @@ public class QuixItemCartItemProduct {
     }
 
     public void setTotal_price_with_tax(double total_price_with_tax) {
-        this.total_price_with_tax = total_price_with_tax;
+        this.total_price_with_tax = Double.parseDouble(Utils.getInstance().roundAmount(total_price_with_tax));
     }
 
     public boolean isAuto_shipping() {

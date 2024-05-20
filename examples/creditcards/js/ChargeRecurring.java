@@ -10,7 +10,6 @@ import com.mp.javaPaymentSDK.callbacks.NotificationListener;
 import com.mp.javaPaymentSDK.enums.*;
 import com.mp.javaPaymentSDK.enums.Error;
 import com.mp.javaPaymentSDK.models.Credentials;
-import com.mp.javaPaymentSDK.models.requests.js.JSCharge;
 import com.mp.javaPaymentSDK.models.requests.js.JSPaymentRecurrentInitial;
 import com.mp.javaPaymentSDK.models.responses.notification.Notification;
 import com.mp.javaPaymentSDK.utils.Creds;
@@ -35,7 +34,7 @@ public class ChargeRecurring {
         // Step 2 - Configure Payment Parameters
         JSPaymentRecurrentInitial jsPaymentRecurrentInitial = new JSPaymentRecurrentInitial();
         jsPaymentRecurrentInitial.setAmount("30");
-        jsPaymentRecurrentInitial.setPrepayToken("56c9942b-d303-4421-b637-286d29b26dc3");
+        jsPaymentRecurrentInitial.setPrepayToken("972c352e-06cc-4ff3-8e1a-60aabd9ff2f2");
         jsPaymentRecurrentInitial.setCountry(CountryCode.ES);
         jsPaymentRecurrentInitial.setCustomerId("55");
         jsPaymentRecurrentInitial.setCurrency(Currency.EUR);
@@ -46,6 +45,7 @@ public class ChargeRecurring {
         jsPaymentRecurrentInitial.setErrorURL(Creds.errorUrl);
         jsPaymentRecurrentInitial.setAwaitingURL(Creds.awaitingUrl);
         jsPaymentRecurrentInitial.setCancelURL(Creds.cancelUrl);
+        jsPaymentRecurrentInitial.setPaymentRecurringType(PaymentRecurringType.newSubscription);
         jsPaymentRecurrentInitial.setApiVersion(5);
 
         // Step 3 - Send Payment Request

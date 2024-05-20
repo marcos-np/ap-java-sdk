@@ -22,16 +22,18 @@ public class JSAuthorizationRequest {
     private OperationTypes operationType = null;
     private int apiVersion = -1;
     private List<Pair<String, String>> merchantParams = null;
+    private boolean anonymousCustomer = false;
 
     public JSAuthorizationRequest() {
     }
 
-    public JSAuthorizationRequest(Currency currency, CountryCode country, String customerId, OperationTypes operationType, int apiVersion) {
+    public JSAuthorizationRequest(Currency currency, CountryCode country, String customerId, OperationTypes operationType, int apiVersion, boolean anonymousCustomer) {
         this.currency = currency;
         this.country = country;
         this.customerId = customerId;
         this.operationType = operationType;
         this.apiVersion = apiVersion;
+        this.anonymousCustomer = anonymousCustomer;
     }
 
     public Currency getCurrency() {
@@ -84,6 +86,14 @@ public class JSAuthorizationRequest {
 
     public void setApiVersion(int apiVersion) {
         this.apiVersion = apiVersion;
+    }
+
+    public boolean isAnonymousCustomer() {
+        return anonymousCustomer;
+    }
+
+    public void setAnonymousCustomer(boolean anonymousCustomer) {
+        this.anonymousCustomer = anonymousCustomer;
     }
 
     public void setMerchantParameters(List<Pair<String, String>> merchantParams) {

@@ -100,11 +100,11 @@ class RecurringTest {
         Assertions.assertEquals(3, queryParameterSlot.captured.size)
         Assertions.assertEquals("111222", queryParameterSlot.captured["merchantId"])
         Assertions.assertEquals(
-            "7QDv+7cYdagtQmVfr38p19LXAC7V747KKHceeSdEoxrMJV88ISU1YBv47F+zGTbBQRAxNvsqKgIqQ+GRWcl4SApIA7eK2pihFOfdoDQ9xSAvLB/oY31Bv1OGpToC/L0sJ8mqAOB3vo2cI1Lf0Q34FdD81pE9LpUotPuPKI6oXFBT2pJ7RF2uhhQslEVHnicLmtPCgDmKAg/svckRxZoOrpcE0bteymRpRibu1pIdMDZ7epUk/AB65+kQ6kMuwJNCRCNnlUWvEWize7wc2hKkMLuE1+IvHVOiMJw2WLWeWcQno8UEmhItPJpPJXt/Bk4CG8f867NPAnDqDG2+w/hwqwYVRTiTzLivzVdzZijxyo8DHvFg79K3vMK5Lw1KCG3tRwDCWovWTrIe0F5Q6uFxo3uCf+fuG56LLGQ4svFlxfW/6UnEWmt2NLi9k98LAzcAJjS3Zdg2Xj57OPNPKVh1Ze71LLQy5V4wLhMpJvavy0wzTHIiXY0Px9YltVqoA+ME8zce7B5zjDofW2Oh/Pbhc2Byka4cfvvQucf1yE/BJTcjuEwzQW97eh9fXnypYou8RA2VuWjlhqBkOyJvRzayqLNx6/+5CEfVQopmPhZaaVKVEA3f6fTC2s9w84S5ZfjGqt46QTctEACCFTYuSghkUW8rj/boRhRrDMirnZIfO3CcUCHcWlHeQllqwp0r+3rsZv4Izq449l+vfFbHVs8cKg==",
+            "7QDv+7cYdagtQmVfr38p19LXAC7V747KKHceeSdEoxrMJV88ISU1YBv47F+zGTbBQRAxNvsqKgIqQ+GRWcl4SApIA7eK2pihFOfdoDQ9xSAvLB/oY31Bv1OGpToC/L0sJ8mqAOB3vo2cI1Lf0Q34FdD81pE9LpUotPuPKI6oXFBT2pJ7RF2uhhQslEVHnicLmtPCgDmKAg/svckRxZoOrpcE0bteymRpRibu1pIdMDZ7epUk/AB65+kQ6kMuwJNCRCNnlUWvEWize7wc2hKkMLuE1+IvHVOiMJw2WLWeWcQno8UEmhItPJpPJXt/Bk4CG8f867NPAnDqDG2+w/hwqwYVRTiTzLivzVdzZijxyo8DHvFg79K3vMK5Lw1KCG3tRwDCWovWTrIe0F5Q6uFxo3uCf+fuG56LLGQ4svFlxfW/6UnEWmt2NLi9k98LAzcAJjS3Zdg2Xj57OPNPKVh1Ze71LLQy5V4wLhMpJvavy0wzTHIiXY0Px9YltVqoA+ME8zce7B5zjDofW2Oh/Pbhc2Byka4cfvvQucf1yE/BJTcjuEwzQW97eh9fXnypYou8RA2VuWjlhqBkOyJvRzayqLNx6/+5CEfVQopmPhZaaVKVEA3f6fTC2s9w84S5ZfjGqt46QTctEACCFTYuSghkUXsA6KSzDSVDtgnKtdcjy/UzcpMzvOZT69WXnjhcPyljhA/FuD42L+5ghkO0UWItkw==",
             queryParameterSlot.captured["encrypted"]
         )
         Assertions.assertEquals(
-            "44d232da729203529f458d157aeccf9bef6b252bd72ee02613930486e211a407",
+            "4d1267ac45f79dbd0de1ed74a49fecaf4572063190f809a8c0f5b10912c651bc",
             queryParameterSlot.captured["integrityCheck"]
         )
 

@@ -1,19 +1,12 @@
 package com.mp.javaPaymentSDK.utils;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.mp.javaPaymentSDK.models.responses.notification.Notification;
 import kotlin.Pair;
 import org.apache.commons.validator.routines.UrlValidator;
-import org.json.JSONObject;
 
 import java.lang.reflect.Field;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.util.*;
 
 /**
@@ -163,13 +156,18 @@ public class Utils {
             if (doubleAmount < 0) {
                 return null;
             }
-            DecimalFormat decimalFormat = (DecimalFormat) DecimalFormat.getInstance(Locale.US);
-            decimalFormat.applyPattern(amountFormat);
-            return decimalFormat.format(doubleAmount);
+            return roundAmount(doubleAmount);
         }
         catch (Exception exception) {
             exception.printStackTrace();
             return null;
         }
+    }
+
+    public String roundAmount(double doubleAmount)
+    {
+        DecimalFormat decimalFormat = (DecimalFormat) DecimalFormat.getInstance(Locale.US);
+        decimalFormat.applyPattern(amountFormat);
+        return decimalFormat.format(doubleAmount);
     }
 }

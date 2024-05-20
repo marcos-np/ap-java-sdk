@@ -34,6 +34,7 @@ public class Auth {
         jsAuthorizationRequest.setCurrency(Currency.EUR);
         jsAuthorizationRequest.setOperationType(OperationTypes.DEBIT);
         jsAuthorizationRequest.setApiVersion(5);
+        jsAuthorizationRequest.setAnonymousCustomer(false);
 
         // Step 3 - Send Payment Request
         JSPaymentAdapter jsPaymentAdapter = new JSPaymentAdapter(credentials);

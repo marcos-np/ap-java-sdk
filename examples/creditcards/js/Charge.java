@@ -34,7 +34,7 @@ public class Charge {
         // Step 2 - Configure Payment Parameters
         JSCharge jsCharge = new JSCharge();
         jsCharge.setAmount("30");
-        jsCharge.setPrepayToken("56c9942b-d303-4421-b637-286d29b26dc3");
+        jsCharge.setPrepayToken("9049a7cd-7538-4311-aba0-16e1984bf0b5");
         jsCharge.setCountry(CountryCode.ES);
         jsCharge.setCustomerId("55");
         jsCharge.setCurrency(Currency.EUR);

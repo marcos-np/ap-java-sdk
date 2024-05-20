@@ -38,17 +38,18 @@ public class RecurringSubsequent {
         h2HPaymentRecurrentSuccessive.setAmount("50");
         h2HPaymentRecurrentSuccessive.setCurrency(Currency.EUR);
         h2HPaymentRecurrentSuccessive.setCountry(CountryCode.ES);
-        h2HPaymentRecurrentSuccessive.setMerchantTransactionId("80004931");
-        h2HPaymentRecurrentSuccessive.setCustomerId("903");
+        h2HPaymentRecurrentSuccessive.setCustomerId("55");
         h2HPaymentRecurrentSuccessive.setChName("First name Last name");
         h2HPaymentRecurrentSuccessive.setPaymentSolution(PaymentSolutions.creditcards);
-        h2HPaymentRecurrentSuccessive.setCardNumberToken("6537275043632227");
-        h2HPaymentRecurrentSuccessive.setSubscriptionPlan("511845609608301");
+        h2HPaymentRecurrentSuccessive.setCardNumberToken("6529405841342227");
+        h2HPaymentRecurrentSuccessive.setSubscriptionPlan("909962402862445");
         h2HPaymentRecurrentSuccessive.setStatusURL(Creds.statusUrl);
         h2HPaymentRecurrentSuccessive.setSuccessURL(Creds.successUrl);
         h2HPaymentRecurrentSuccessive.setErrorURL(Creds.errorUrl);
         h2HPaymentRecurrentSuccessive.setAwaitingURL(Creds.awaitingUrl);
         h2HPaymentRecurrentSuccessive.setCancelURL(Creds.cancelUrl);
+        h2HPaymentRecurrentSuccessive.setPaymentRecurringType(PaymentRecurringType.cof);
+        h2HPaymentRecurrentSuccessive.setMerchantExemptionsSca(MerchantExemptionsSca.MIT);
         h2HPaymentRecurrentSuccessive.setApiVersion(5);
 
         // Step 3 - Send Payment Request
