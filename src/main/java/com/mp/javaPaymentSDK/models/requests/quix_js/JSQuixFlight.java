@@ -9,11 +9,7 @@ public class JSQuixFlight extends QuixJSRequest {
     private QuixFlightPaySolExtendedData paySolExtendedData;
 
     public JSQuixFlight() {
-    }
-
-    public JSQuixFlight(String amount, String customerId, String merchantTransactionId, String statusURL, String successURL, String errorURL, String cancelURL,String awaitingURL, String firstName, String lastName, String customerEmail, String dob, String prepayToken, QuixFlightPaySolExtendedData paySolExtendedData, int apiVersion) {
-        super(amount, customerId, merchantTransactionId, statusURL, successURL, errorURL, cancelURL,awaitingURL, firstName, lastName, customerEmail, dob, prepayToken, apiVersion);
-        this.paySolExtendedData = paySolExtendedData;
+        super();
     }
 
     public QuixFlightPaySolExtendedData getPaySolExtendedData() {
@@ -26,7 +22,7 @@ public class JSQuixFlight extends QuixJSRequest {
 
     public Pair<Boolean, String> isMissingFields() {
         if (paySolExtendedData == null) {
-            return new Pair<>(true, "Missing paySolExtendedData");
+            return new Pair<>(true, "paySolExtendedData");
         }
 
         Pair<Boolean, String> missingField = paySolExtendedData.isMissingField();

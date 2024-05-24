@@ -5,6 +5,8 @@ import com.mp.javaPaymentSDK.adapters.NetworkAdapter
 import com.mp.javaPaymentSDK.adapters.ResponseListenerAdapter
 import com.mp.javaPaymentSDK.callbacks.RequestListener
 import com.mp.javaPaymentSDK.enums.*
+import com.mp.javaPaymentSDK.exceptions.InvalidFieldException
+import com.mp.javaPaymentSDK.exceptions.MissingFieldException
 import com.mp.javaPaymentSDK.models.Credentials
 import com.mp.javaPaymentSDK.models.requests.js.JSPaymentRecurrentInitial
 import com.mp.javaPaymentSDK.models.responses.notification.Notification
@@ -14,6 +16,7 @@ import okhttp3.ResponseBody
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import utils.NotificationResponses
 
 class JsChargeRecurringPaymentTest {
@@ -42,6 +45,7 @@ class JsChargeRecurringPaymentTest {
         credentials.merchantId = "111222"
         credentials.environment = Environment.STAGING
         credentials.productId = "1112220001"
+        credentials.apiVersion = 5
 
         val jsPaymentRecurrentInitial = JSPaymentRecurrentInitial()
 
@@ -130,6 +134,7 @@ class JsChargeRecurringPaymentTest {
         credentials.merchantId = "111222"
         credentials.environment = Environment.STAGING
         credentials.productId = "1112220001"
+        credentials.apiVersion = 5
 
         val jsPaymentRecurrentInitial = JSPaymentRecurrentInitial()
 
@@ -147,15 +152,11 @@ class JsChargeRecurringPaymentTest {
         jsPaymentRecurrentInitial.apiVersion = 5
 
         val jsPaymentAdapter = JSPaymentAdapter(credentials)
-        jsPaymentAdapter.sendJSPaymentRecurrentInitial(jsPaymentRecurrentInitial, mockedResponseListener)
+        val exception = assertThrows<MissingFieldException> {
+            jsPaymentAdapter.sendJSPaymentRecurrentInitial(jsPaymentRecurrentInitial, mockedResponseListener)
+        }
 
-        val errorSlot = slot<Error>()
-        val errorMessageSlot = slot<String>()
-
-        verify { mockedResponseListener.onError(capture(errorSlot), capture(errorMessageSlot)) }
-
-        assertEquals(Error.MISSING_PARAMETER, errorSlot.captured)
-        assertEquals("Missing prepayToken", errorMessageSlot.captured)
+        assertEquals("Missing prepayToken", exception.message)
     }
 
     @Test
@@ -182,32 +183,14 @@ class JsChargeRecurringPaymentTest {
         credentials.merchantId = "111222"
         credentials.environment = Environment.STAGING
         credentials.productId = "1112220001"
+        credentials.apiVersion = 5
 
         val jsPaymentRecurrentInitial = JSPaymentRecurrentInitial()
 
-        jsPaymentRecurrentInitial.amount = "30,123.123"
-        jsPaymentRecurrentInitial.prepayToken = "2795f021-f31c-4533-a74d-5d3d887a003b"
-        jsPaymentRecurrentInitial.country = CountryCode.ES
-        jsPaymentRecurrentInitial.customerId = "55"
-        jsPaymentRecurrentInitial.currency = Currency.EUR
-        jsPaymentRecurrentInitial.operationType = OperationTypes.DEBIT
-        jsPaymentRecurrentInitial.paymentSolution = PaymentSolutions.creditcards
-        jsPaymentRecurrentInitial.statusURL = "https://test.com/paymentNotification"
-        jsPaymentRecurrentInitial.successURL = "https://test.com/success"
-        jsPaymentRecurrentInitial.errorURL = "https://test.com/error"
-        jsPaymentRecurrentInitial.awaitingURL = "https://test.com/awaiting"
-        jsPaymentRecurrentInitial.cancelURL = "https://test.com/cancel"
-        jsPaymentRecurrentInitial.apiVersion = 5
+        val exception = assertThrows<InvalidFieldException> {
+            jsPaymentRecurrentInitial.amount = "30,123.123"
+        }
 
-        val jsPaymentAdapter = JSPaymentAdapter(credentials)
-        jsPaymentAdapter.sendJSPaymentRecurrentInitial(jsPaymentRecurrentInitial, mockedResponseListener)
-
-        val errorSlot = slot<Error>()
-        val errorMessageSlot = slot<String>()
-
-        verify { mockedResponseListener.onError(capture(errorSlot), capture(errorMessageSlot)) }
-
-        assertEquals(Error.INVALID_AMOUNT, errorSlot.captured)
-        assertEquals(Error.INVALID_AMOUNT.message, errorMessageSlot.captured)
+        assertEquals("amount: Should Follow Format #.#### And Be Between 0 And 1000000", exception.message)
     }
 }

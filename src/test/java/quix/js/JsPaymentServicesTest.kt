@@ -2,10 +2,11 @@ package quix.js
 
 import com.mp.javaPaymentSDK.adapters.JSQuixPaymentAdapter
 import com.mp.javaPaymentSDK.adapters.NetworkAdapter
-import com.mp.javaPaymentSDK.adapters.SocketAdapter
 import com.mp.javaPaymentSDK.callbacks.RequestListener
 import com.mp.javaPaymentSDK.callbacks.ResponseListener
 import com.mp.javaPaymentSDK.enums.*
+import com.mp.javaPaymentSDK.exceptions.InvalidFieldException
+import com.mp.javaPaymentSDK.exceptions.MissingFieldException
 import com.mp.javaPaymentSDK.models.Credentials
 import com.mp.javaPaymentSDK.models.quix_models.QuixAddress
 import com.mp.javaPaymentSDK.models.quix_models.QuixBilling
@@ -21,6 +22,7 @@ import okhttp3.RequestBody
 import okhttp3.ResponseBody
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import utils.NotificationResponses
 
 class JsPaymentServicesTest {
@@ -49,6 +51,7 @@ class JsPaymentServicesTest {
         credentials.merchantId = "111222"
         credentials.environment = Environment.STAGING
         credentials.productId = "1112220001"
+        credentials.apiVersion = 5
 
         val jsQuixService = JSQuixService()
         jsQuixService.amount = "99.0"
@@ -63,20 +66,21 @@ class JsPaymentServicesTest {
         jsQuixService.dob = "01-12-1999"
         jsQuixService.firstName = "Name"
         jsQuixService.lastName = "Last Name"
-        jsQuixService.apiVersion = 5
+        jsQuixService.ipAddress = "0.0.0.0"
 
         val quixArticleService = QuixArticleService()
         quixArticleService.name = "Nombre del servicio 2"
         quixArticleService.reference = "4912345678903"
         quixArticleService.startDate = "2024-10-30T00:00:00+01:00"
         quixArticleService.endDate = "2024-12-31T23:59:59+01:00"
-        quixArticleService.unit_price_with_tax = 99.0
+        quixArticleService.unitPriceWithTax = 99.0
+        quixArticleService.category = Category.digital
 
         val quixItemCartItemService = QuixItemCartItemService()
         quixItemCartItemService.article = quixArticleService
         quixItemCartItemService.units = 1
-        quixItemCartItemService.isAuto_shipping = true
-        quixItemCartItemService.total_price_with_tax = 99.0
+        quixItemCartItemService.isAutoShipping = true
+        quixItemCartItemService.totalPriceWithTax = 99.0
 
         val items: MutableList<QuixItemCartItemService> = java.util.ArrayList()
         items.add(quixItemCartItemService)
@@ -84,18 +88,18 @@ class JsPaymentServicesTest {
         val quixCartService = QuixCartService()
         quixCartService.currency = Currency.EUR
         quixCartService.items = items
-        quixCartService.total_price_with_tax = 99.0
+        quixCartService.totalPriceWithTax = 99.0
 
         val quixAddress = QuixAddress()
         quixAddress.city = "Barcelona"
         quixAddress.setCountry(CountryCode.ES)
-        quixAddress.street_address = "Nombre de la vía y nº"
-        quixAddress.postal_code = "28003"
+        quixAddress.streetAddress = "Nombre de la vía y nº"
+        quixAddress.postalCode = "28003"
 
         val quixBilling = QuixBilling()
         quixBilling.address = quixAddress
-        quixBilling.first_name = "Nombre"
-        quixBilling.last_name = "Apellido"
+        quixBilling.firstName = "Nombre"
+        quixBilling.lastName = "Apellido"
 
         val quixServicePaySolExtendedData = QuixServicePaySolExtendedData()
         quixServicePaySolExtendedData.cart = quixCartService
@@ -155,18 +159,13 @@ class JsPaymentServicesTest {
 
     @Test
     fun failMissingParameterJS() {
-        mockkConstructor(SocketAdapter::class, recordPrivateCalls = true)
-        every { anyConstructed<SocketAdapter>().connect(any(), any()) } just Runs
-
-        val mockedSecurityUtils = mockk<SecurityUtils>()
-        every { mockedSecurityUtils.generateIV() } returns ByteArray(16) { 1 }
-        every { mockedSecurityUtils.hash256(any()) } answers { callOriginal() }
-        every { mockedSecurityUtils.base64Encode(any()) } answers { callOriginal() }
-        every { mockedSecurityUtils.applyAESPadding(any()) } answers { callOriginal() }
-        every { mockedSecurityUtils.cbcEncryption(any(), any(), any(), any()) } answers { callOriginal() }
 
         mockkStatic(SecurityUtils::class)
-        every { SecurityUtils.getInstance() } returns mockedSecurityUtils
+        every { SecurityUtils.generateIV() } returns ByteArray(16) { 1 }
+        every { SecurityUtils.hash256(any()) } answers { callOriginal() }
+        every { SecurityUtils.base64Encode(any()) } answers { callOriginal() }
+        every { SecurityUtils.applyAESPadding(any()) } answers { callOriginal() }
+        every { SecurityUtils.cbcEncryption(any(), any(), any(), any()) } answers { callOriginal() }
 
         mockkConstructor(NetworkAdapter::class, recordPrivateCalls = true)
         every {
@@ -190,6 +189,7 @@ class JsPaymentServicesTest {
         credentials.merchantId = "111222"
         credentials.environment = Environment.STAGING
         credentials.productId = "1112220001"
+        credentials.apiVersion = 5
 
         val jsQuixService = JSQuixService()
         jsQuixService.amount = "99.0"
@@ -203,19 +203,18 @@ class JsPaymentServicesTest {
         jsQuixService.dob = "01-12-1999"
         jsQuixService.firstName = "Name"
         jsQuixService.lastName = "Last Name"
-        jsQuixService.apiVersion = 5
 
         val quixArticleService = QuixArticleService()
         quixArticleService.name = "Nombre del servicio 2"
         quixArticleService.reference = "4912345678903"
         quixArticleService.startDate = "2024-10-30T00:00:00+01:00"
         quixArticleService.endDate = "2024-12-31T23:59:59+01:00"
-        quixArticleService.unit_price_with_tax = 99.0
+        quixArticleService.unitPriceWithTax = 99.0
 
         val quixItemCartItemService = QuixItemCartItemService()
         quixItemCartItemService.article = quixArticleService
-        quixItemCartItemService.isAuto_shipping = true
-        quixItemCartItemService.total_price_with_tax = 99.0
+        quixItemCartItemService.isAutoShipping = true
+        quixItemCartItemService.totalPriceWithTax = 99.0
 
         val items: MutableList<QuixItemCartItemService> = java.util.ArrayList()
         items.add(quixItemCartItemService)
@@ -223,18 +222,18 @@ class JsPaymentServicesTest {
         val quixCartService = QuixCartService()
         quixCartService.currency = Currency.EUR
         quixCartService.items = items
-        quixCartService.total_price_with_tax = 99.0
+        quixCartService.totalPriceWithTax = 99.0
 
         val quixAddress = QuixAddress()
         quixAddress.city = "Barcelona"
         quixAddress.setCountry(CountryCode.ES)
-        quixAddress.street_address = "Nombre de la vía y nº"
-        quixAddress.postal_code = "28003"
+        quixAddress.streetAddress = "Nombre de la vía y nº"
+        quixAddress.postalCode = "28003"
 
         val quixBilling = QuixBilling()
         quixBilling.address = quixAddress
-        quixBilling.first_name = "Nombre"
-        quixBilling.last_name = "Apellido"
+        quixBilling.firstName = "Nombre"
+        quixBilling.lastName = "Apellido"
 
         val quixServicePaySolExtendedData = QuixServicePaySolExtendedData()
         quixServicePaySolExtendedData.cart = quixCartService
@@ -244,31 +243,23 @@ class JsPaymentServicesTest {
         jsQuixService.paySolExtendedData = quixServicePaySolExtendedData
 
         val jsQuixPaymentAdapter = JSQuixPaymentAdapter(credentials)
-        jsQuixPaymentAdapter.sendJSQuixServiceRequest(jsQuixService, mockedResponseListener)
 
-        val errorSlot = slot<Error>()
-        val errorMessageSlot = slot<String>()
+        val exception = assertThrows<MissingFieldException> {
+            jsQuixPaymentAdapter.sendJSQuixServiceRequest(jsQuixService, mockedResponseListener)
+        }
 
-        verify { mockedResponseListener.onError(capture(errorSlot), capture(errorMessageSlot)) }
-
-        assertEquals(Error.MISSING_PARAMETER, errorSlot.captured)
-        assertEquals("Missing units", errorMessageSlot.captured)
+        assertEquals("Missing units", exception.message)
     }
 
     @Test
     fun failInvalidAmountJS() {
-        mockkConstructor(SocketAdapter::class, recordPrivateCalls = true)
-        every { anyConstructed<SocketAdapter>().connect(any(), any()) } just Runs
-
-        val mockedSecurityUtils = mockk<SecurityUtils>()
-        every { mockedSecurityUtils.generateIV() } returns ByteArray(16) { 1 }
-        every { mockedSecurityUtils.hash256(any()) } answers { callOriginal() }
-        every { mockedSecurityUtils.base64Encode(any()) } answers { callOriginal() }
-        every { mockedSecurityUtils.applyAESPadding(any()) } answers { callOriginal() }
-        every { mockedSecurityUtils.cbcEncryption(any(), any(), any(), any()) } answers { callOriginal() }
 
         mockkStatic(SecurityUtils::class)
-        every { SecurityUtils.getInstance() } returns mockedSecurityUtils
+        every { SecurityUtils.generateIV() } returns ByteArray(16) { 1 }
+        every { SecurityUtils.hash256(any()) } answers { callOriginal() }
+        every { SecurityUtils.base64Encode(any()) } answers { callOriginal() }
+        every { SecurityUtils.applyAESPadding(any()) } answers { callOriginal() }
+        every { SecurityUtils.cbcEncryption(any(), any(), any(), any()) } answers { callOriginal() }
 
         mockkConstructor(NetworkAdapter::class, recordPrivateCalls = true)
         every {
@@ -292,70 +283,14 @@ class JsPaymentServicesTest {
         credentials.merchantId = "111222"
         credentials.environment = Environment.STAGING
         credentials.productId = "1112220001"
+        credentials.apiVersion = 5
 
         val jsQuixService = JSQuixService()
-        jsQuixService.amount = "test"
-        jsQuixService.prepayToken = "2795f021-f31c-4533-a74d-5d3d887a003b"
-        jsQuixService.customerId = "55"
-        jsQuixService.statusURL = "https://test.com/paymentNotification"
-        jsQuixService.cancelURL = "https://test.com/cancel"
-        jsQuixService.errorURL = "https://test.com/error"
-        jsQuixService.successURL = "https://test.com/success"
-        jsQuixService.awaitingURL = "https://test.com/awaiting"
-        jsQuixService.customerEmail = "test@mail.com"
-        jsQuixService.dob = "01-12-1999"
-        jsQuixService.firstName = "Name"
-        jsQuixService.lastName = "Last Name"
-        jsQuixService.apiVersion = 5
 
-        val quixArticleService = QuixArticleService()
-        quixArticleService.name = "Nombre del servicio 2"
-        quixArticleService.reference = "4912345678903"
-        quixArticleService.startDate = "2024-10-30T00:00:00+01:00"
-        quixArticleService.endDate = "2024-12-31T23:59:59+01:00"
-        quixArticleService.unit_price_with_tax = 99.0
+        val exception = assertThrows<InvalidFieldException> {
+            jsQuixService.amount = "test"
+        }
 
-        val quixItemCartItemService = QuixItemCartItemService()
-        quixItemCartItemService.article = quixArticleService
-        quixItemCartItemService.units = 1
-        quixItemCartItemService.isAuto_shipping = true
-        quixItemCartItemService.total_price_with_tax = 99.0
-
-        val items: MutableList<QuixItemCartItemService> = java.util.ArrayList()
-        items.add(quixItemCartItemService)
-
-        val quixCartService = QuixCartService()
-        quixCartService.currency = Currency.EUR
-        quixCartService.items = items
-        quixCartService.total_price_with_tax = 99.0
-
-        val quixAddress = QuixAddress()
-        quixAddress.city = "Barcelona"
-        quixAddress.setCountry(CountryCode.ES)
-        quixAddress.street_address = "Nombre de la vía y nº"
-        quixAddress.postal_code = "28003"
-
-        val quixBilling = QuixBilling()
-        quixBilling.address = quixAddress
-        quixBilling.first_name = "Nombre"
-        quixBilling.last_name = "Apellido"
-
-        val quixServicePaySolExtendedData = QuixServicePaySolExtendedData()
-        quixServicePaySolExtendedData.cart = quixCartService
-        quixServicePaySolExtendedData.billing = quixBilling
-        quixServicePaySolExtendedData.product = "instalments"
-
-        jsQuixService.paySolExtendedData = quixServicePaySolExtendedData
-
-        val jsQuixPaymentAdapter = JSQuixPaymentAdapter(credentials)
-        jsQuixPaymentAdapter.sendJSQuixServiceRequest(jsQuixService, mockedResponseListener)
-
-        val errorSlot = slot<Error>()
-        val errorMessageSlot = slot<String>()
-
-        verify { mockedResponseListener.onError(capture(errorSlot), capture(errorMessageSlot)) }
-
-        assertEquals(Error.INVALID_AMOUNT, errorSlot.captured)
-        assertEquals(Error.INVALID_AMOUNT.message, errorMessageSlot.captured)
+        assertEquals("amount: Should Follow Format #.#### And Be Between 0 And 1000000", exception.message)
     }
 }

@@ -1,5 +1,6 @@
 package com.mp.javaPaymentSDK.models.quix_models;
 
+import com.google.gson.annotations.SerializedName;
 import com.mp.javaPaymentSDK.utils.Utils;
 import kotlin.Pair;
 
@@ -8,33 +9,28 @@ import java.util.List;
 
 public class QuixBilling {
 
-    private String first_name;
-    private String last_name;
+    @SerializedName("first_name")
+    private String firstName;
+    @SerializedName("last_name")
+    private String lastName;
     private QuixAddress address;
+    @SerializedName("corporate_id_number")
+    private String corporateIdNumber = null;
 
-    public QuixBilling() {
+    public String getFirstName() {
+        return firstName;
     }
 
-    public QuixBilling(String first_name, String last_name, QuixAddress address) {
-        this.first_name = first_name;
-        this.last_name = last_name;
-        this.address = address;
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
     }
 
-    public String getFirst_name() {
-        return first_name;
+    public String getLastName() {
+        return lastName;
     }
 
-    public void setFirst_name(String first_name) {
-        this.first_name = first_name;
-    }
-
-    public String getLast_name() {
-        return last_name;
-    }
-
-    public void setLast_name(String last_name) {
-        this.last_name = last_name;
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
     }
 
     public QuixAddress getAddress() {
@@ -45,11 +41,19 @@ public class QuixBilling {
         this.address = address;
     }
 
+    public String getCorporateIdNumber() {
+        return corporateIdNumber;
+    }
+
+    public void setCorporateIdNumber(String corporateIdNumber) {
+        this.corporateIdNumber = corporateIdNumber;
+    }
+
     public Pair<Boolean, String> isMissingField() {
         List<String> mandatoryFields = Arrays.asList(
-                "first_name", "last_name", "address"
+                "firstName", "lastName", "address"
         );
-        Pair<Boolean, String> missingField = Utils.getInstance().containsNull(QuixBilling.class, this, mandatoryFields);
+        Pair<Boolean, String> missingField = Utils.containsNull(QuixBilling.class, this, mandatoryFields);
         if (missingField.getFirst()) {
             return missingField;
         }

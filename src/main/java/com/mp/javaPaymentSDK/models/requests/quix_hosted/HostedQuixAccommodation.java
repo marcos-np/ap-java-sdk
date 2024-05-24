@@ -10,12 +10,7 @@ public class HostedQuixAccommodation extends QuixHostedRequest {
     private QuixAccommodationPaySolExtendedData paySolExtendedData = null;
 
     public HostedQuixAccommodation() {
-        this.setMerchantTransactionId(Utils.getInstance().generateRandomNumber());
-    }
-
-    public HostedQuixAccommodation(String amount, String customerId, String merchantTransactionId, String statusURL, String successURL, String errorURL, String cancelURL,String awaitingURL, String firstName, String lastName, String customerEmail, String dob, QuixAccommodationPaySolExtendedData paySolExtendedData, int apiVersion) {
-        super(amount, customerId, merchantTransactionId, statusURL, successURL, errorURL, cancelURL,awaitingURL, firstName, lastName, customerEmail, dob, apiVersion);
-        this.paySolExtendedData = paySolExtendedData;
+        super();
     }
 
     public QuixAccommodationPaySolExtendedData getPaySolExtendedData() {
@@ -28,7 +23,7 @@ public class HostedQuixAccommodation extends QuixHostedRequest {
 
     public Pair<Boolean, String> isMissingFields() {
         if (paySolExtendedData == null) {
-            return new Pair<>(true, "Missing paySolExtendedData");
+            return new Pair<>(true, "paySolExtendedData");
         }
 
         Pair<Boolean, String> missingField = paySolExtendedData.isMissingField();

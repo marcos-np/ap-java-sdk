@@ -1,5 +1,8 @@
 package com.mp.javaPaymentSDK.models.quix_models.quix_product;
 
+import com.google.gson.annotations.SerializedName;
+import com.mp.javaPaymentSDK.models.quix_models.ConfirmationCartData;
+import com.mp.javaPaymentSDK.models.quix_models.Customer;
 import com.mp.javaPaymentSDK.models.quix_models.QuixBilling;
 import com.mp.javaPaymentSDK.utils.Utils;
 import kotlin.Pair;
@@ -10,18 +13,27 @@ import java.util.List;
 public class QuixItemPaySolExtendedData {
 
     private String product;
+    private boolean disableFormEdition = false;
+    @SerializedName("confirmation_card_data")
+    private ConfirmationCartData confirmationCardData = null;
+    private Customer customer = null;
     private QuixBilling billing;
     private QuixCartProduct cart;
-    private boolean disableFormEdition = false;
 
-    public QuixItemPaySolExtendedData() {
+    public ConfirmationCartData getConfirmationCardData() {
+        return confirmationCardData;
     }
 
-    public QuixItemPaySolExtendedData(String product, QuixBilling billing, QuixCartProduct cart, boolean disableFormEdition) {
-        this.product = product;
-        this.billing = billing;
-        this.cart = cart;
-        this.disableFormEdition = disableFormEdition;
+    public void setConfirmationCardData(ConfirmationCartData confirmationCardData) {
+        this.confirmationCardData = confirmationCardData;
+    }
+
+    public Customer getCustomer() {
+        return customer;
+    }
+
+    public void setCustomer(Customer customer) {
+        this.customer = customer;
     }
 
     public String getProduct() {
@@ -61,7 +73,7 @@ public class QuixItemPaySolExtendedData {
                 "product", "billing", "cart"
         );
 
-        Pair<Boolean, String> missingField = Utils.getInstance().containsNull(
+        Pair<Boolean, String> missingField = Utils.containsNull(
                 this.getClass(), this, mandatoryFields
         );
         if (missingField.getFirst()) {

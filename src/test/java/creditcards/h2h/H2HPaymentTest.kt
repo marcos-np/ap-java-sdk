@@ -5,6 +5,8 @@ import com.mp.javaPaymentSDK.adapters.NetworkAdapter
 import com.mp.javaPaymentSDK.callbacks.RequestListener
 import com.mp.javaPaymentSDK.callbacks.ResponseListener
 import com.mp.javaPaymentSDK.enums.*
+import com.mp.javaPaymentSDK.exceptions.InvalidFieldException
+import com.mp.javaPaymentSDK.exceptions.MissingFieldException
 import com.mp.javaPaymentSDK.models.Credentials
 import com.mp.javaPaymentSDK.models.requests.h2h.H2HRedirection
 import com.mp.javaPaymentSDK.models.responses.notification.Notification
@@ -15,6 +17,7 @@ import okhttp3.ResponseBody
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import utils.NotificationResponses
 
 class H2HPaymentTest {
@@ -22,15 +25,12 @@ class H2HPaymentTest {
     @Test
     fun successResponseH2HPayment() {
 
-        val mockedSecurityUtils = mockk<SecurityUtils>()
-        every { mockedSecurityUtils.generateIV() } returns ByteArray(16) { 1 }
-        every { mockedSecurityUtils.hash256(any()) } answers { callOriginal() }
-        every { mockedSecurityUtils.base64Encode(any()) } answers { callOriginal() }
-        every { mockedSecurityUtils.applyAESPadding(any()) } answers { callOriginal() }
-        every { mockedSecurityUtils.cbcEncryption(any(), any(), any(), any()) } answers { callOriginal() }
-
         mockkStatic(SecurityUtils::class)
-        every { SecurityUtils.getInstance() } returns mockedSecurityUtils
+        every { SecurityUtils.generateIV() } returns ByteArray(16) { 1 }
+        every { SecurityUtils.hash256(any()) } answers { callOriginal() }
+        every { SecurityUtils.base64Encode(any()) } answers { callOriginal() }
+        every { SecurityUtils.applyAESPadding(any()) } answers { callOriginal() }
+        every { SecurityUtils.cbcEncryption(any(), any(), any(), any()) } answers { callOriginal() }
 
         mockkConstructor(NetworkAdapter::class, recordPrivateCalls = true)
         every {
@@ -53,6 +53,7 @@ class H2HPaymentTest {
         credentials.merchantId = "111222"
         credentials.environment = Environment.STAGING
         credentials.productId = "1112220001"
+        credentials.apiVersion = 5
 
         val h2HRedirection = H2HRedirection()
         h2HRedirection.amount = "50"
@@ -70,7 +71,6 @@ class H2HPaymentTest {
         h2HRedirection.awaitingURL = "https://test.com/waiting"
         h2HRedirection.cancelURL = "https://test.com/cancel"
         h2HRedirection.merchantTransactionId = "12345678"
-        h2HRedirection.apiVersion = 5
 
         val h2HPaymentAdapter = H2HPaymentAdapter(credentials)
 
@@ -100,11 +100,11 @@ class H2HPaymentTest {
         assertEquals(3, queryParameterSlot.captured.size)
         assertEquals("111222", queryParameterSlot.captured["merchantId"])
         assertEquals(
-            "7QDv+7cYdagtQmVfr38p1+HRNOMcBrftirm7FfE6+GOSF52tAfECBNLpz0a9jfI8Vlr7QWy4vIfNXFdl+saLSXIVvsH8bn31IcWKU3OeMVXo7oK9uHWbv+xCWoUVvCigNVKwnNRhH3hs4+pxifzJH0+t0lnb/P9KViOOqGRL/v7BeDN8BHaCF3rMLeUwE0q0os5MjtPjgmIC+jQVmjHlRb2KE+RhLewh/oazUTgOIMo75uj4DHuvlj9qhfRdU/iLhqgZd7P2jeQ0/zMa0Uv+N34NE4dzfeMNQ+leBbsbCiXKH15RubBngQ3MbT3OVd0+qfQE4bKc3ibITXuexUX/y/AufxXCvhX2hRGUxAaQeD0V1pmYkVAdzzIdQz0feLuZyLSY0QlxRRaME6lE1Re+fiWAik1ryPPY1EsBTDIF1/RgeMfH31KkLa1rgyNAv8G3kO4DNxV1ROmELsILCX4jDApkAlME+3Zx6gc/1BeDiRSwY+yssSBXZ6fJniAX39UzqaEsLeywtjdMadlYyjlvIKkh+x70gpiNIqfoYqVMV4Sr6CHzaMSaivIyWTttcYV+n4rUZDJbfP1NZ3puZ61R7eSBqxKzer23CHYH1un7um6JIrky7hkBbBo0SVCO5SFH",
+            "7QDv+7cYdagtQmVfr38p1+HRNOMcBrftirm7FfE6+GOSF52tAfECBNLpz0a9jfI8Vlr7QWy4vIfNXFdl+saLSXIVvsH8bn31IcWKU3OeMVXo7oK9uHWbv+xCWoUVvCigNVKwnNRhH3hs4+pxifzJH0+t0lnb/P9KViOOqGRL/v7BeDN8BHaCF3rMLeUwE0q0os5MjtPjgmIC+jQVmjHlRb2KE+RhLewh/oazUTgOIMo75uj4DHuvlj9qhfRdU/iLhqgZd7P2jeQ0/zMa0Uv+N34NE4dzfeMNQ+leBbsbCiXKH15RubBngQ3MbT3OVd0+qfQE4bKc3ibITXuexUX/y/AufxXCvhX2hRGUxAaQeD0V1pmYkVAdzzIdQz0feLuZyLSY0QlxRRaME6lE1Re+fiWAik1ryPPY1EsBTDIF1/RgeMfH31KkLa1rgyNAv8G3kO4DNxV1ROmELsILCX4jDApkAlME+3Zx6gc/1BeDiRSwY+yssSBXZ6fJniAX39UzqaEsLeywtjdMadlYyjlvIKkh+x70gpiNIqfoYqVMV4Sr6CHzaMSaivIyWTttcYV+BmrvcbmTdRhKlI8QmwLmccQm0i655HFkmlIqm3Fqszbx2NfynZz0mB7MGLWwpmvB7dGl1rkVBTIr9RMc6uQqupsuukYDYvCfrEz0zcnmqMVI5CvBJQx7Vsj3sH6Rqwtj",
             queryParameterSlot.captured["encrypted"]
         )
         assertEquals(
-            "c798dd66929a412f5da1346332c0b708da426a550967871beea867b8dd882792",
+            "cc2453521d7e5ab37ac96f580afbcf72e7f6a42530c3e9e5295cd3fc3122d58f",
             queryParameterSlot.captured["integrityCheck"]
         )
 
@@ -148,6 +148,7 @@ class H2HPaymentTest {
         credentials.merchantId = "111222"
         credentials.environment = Environment.STAGING
         credentials.productId = "1112220001"
+        credentials.apiVersion = 5
 
         val h2HRedirection = H2HRedirection()
         h2HRedirection.currency = Currency.EUR
@@ -164,19 +165,14 @@ class H2HPaymentTest {
         h2HRedirection.awaitingURL = "https://test.com/waiting"
         h2HRedirection.cancelURL = "https://test.com/cancel"
         h2HRedirection.merchantTransactionId = "12345678"
-        h2HRedirection.apiVersion = 5
 
         val h2HPaymentAdapter = H2HPaymentAdapter(credentials)
 
-        h2HPaymentAdapter.sendH2hPaymentRequest(h2HRedirection, mockedResponseListener)
+        val exception = assertThrows<MissingFieldException> {
+            h2HPaymentAdapter.sendH2hPaymentRequest(h2HRedirection, mockedResponseListener)
+        }
 
-        val errorSlot = slot<Error>()
-        val errorMessageSlot = slot<String>()
-
-        verify { mockedResponseListener.onError(capture(errorSlot), capture(errorMessageSlot)) }
-
-        assertEquals(Error.MISSING_PARAMETER, errorSlot.captured)
-        assertEquals("Missing amount", errorMessageSlot.captured)
+        assertEquals("Missing amount", exception.message)
     }
 
     @Test
@@ -191,35 +187,14 @@ class H2HPaymentTest {
         credentials.merchantId = "111222"
         credentials.environment = Environment.STAGING
         credentials.productId = "1112220001"
+        credentials.apiVersion = 5
 
         val h2HRedirection = H2HRedirection()
-        h2HRedirection.amount = "50,9"
-        h2HRedirection.currency = Currency.EUR
-        h2HRedirection.country = CountryCode.ES
-        h2HRedirection.cardNumber = "4907270002222227"
-        h2HRedirection.customerId = "903"
-        h2HRedirection.chName = "First name Last name"
-        h2HRedirection.cvnNumber = "123"
-        h2HRedirection.expDate = "0625"
-        h2HRedirection.paymentSolution = PaymentSolutions.creditcards
-        h2HRedirection.statusURL = "https://test.com/status"
-        h2HRedirection.successURL = "https://test.com/success"
-        h2HRedirection.errorURL = "https://test.com/error"
-        h2HRedirection.awaitingURL = "https://test.com/waiting"
-        h2HRedirection.cancelURL = "https://test.com/cancel"
-        h2HRedirection.merchantTransactionId = "12345678"
-        h2HRedirection.apiVersion = 5
 
-        val h2HPaymentAdapter = H2HPaymentAdapter(credentials)
+        val exception = assertThrows<InvalidFieldException> {
+            h2HRedirection.amount = "50,9"
+        }
 
-        h2HPaymentAdapter.sendH2hPaymentRequest(h2HRedirection, mockedResponseListener)
-
-        val errorSlot = slot<Error>()
-        val errorMessageSlot = slot<String>()
-
-        verify { mockedResponseListener.onError(capture(errorSlot), capture(errorMessageSlot)) }
-
-        assertEquals(Error.INVALID_AMOUNT, errorSlot.captured)
-        assertEquals(Error.INVALID_AMOUNT.message, errorMessageSlot.captured)
+        assertEquals("amount: Should Follow Format #.#### And Be Between 0 And 1000000", exception.message)
     }
 }

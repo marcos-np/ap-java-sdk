@@ -14,15 +14,6 @@ public class QuixSegmentFlight {
     @SerializedName("iata_destination_code")
     private String iataDestinationCode = null;
 
-    public QuixSegmentFlight() {
-
-    }
-
-    public QuixSegmentFlight(String iataDepartureCode, String iataDestinationCode) {
-        this.iataDepartureCode = iataDepartureCode;
-        this.iataDestinationCode = iataDestinationCode;
-    }
-
     public String getIataDepartureCode() {
         return iataDepartureCode;
     }
@@ -43,7 +34,7 @@ public class QuixSegmentFlight {
         List<String> mandatoryFields = Arrays.asList(
                 "iataDepartureCode", "iataDestinationCode"
         );
-        return Utils.getInstance().containsNull(
+        return Utils.containsNull(
                 this.getClass(), this, mandatoryFields
         );
     }

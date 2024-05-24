@@ -5,8 +5,9 @@ import com.mp.javaPaymentSDK.adapters.NetworkAdapter
 import com.mp.javaPaymentSDK.callbacks.RequestListener
 import com.mp.javaPaymentSDK.callbacks.ResponseListener
 import com.mp.javaPaymentSDK.enums.*
+import com.mp.javaPaymentSDK.exceptions.InvalidFieldException
+import com.mp.javaPaymentSDK.exceptions.MissingFieldException
 import com.mp.javaPaymentSDK.models.Credentials
-import com.mp.javaPaymentSDK.models.requests.h2h.H2HPreAuthorizationCapture
 import com.mp.javaPaymentSDK.models.requests.h2h.H2HRefund
 import com.mp.javaPaymentSDK.models.responses.notification.Notification
 import com.mp.javaPaymentSDK.utils.SecurityUtils
@@ -15,6 +16,7 @@ import okhttp3.RequestBody
 import okhttp3.ResponseBody
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import utils.NotificationResponses
 
 class RefundTest {
@@ -22,15 +24,12 @@ class RefundTest {
     @Test
     fun successResponseRefund() {
 
-        val mockedSecurityUtils = mockk<SecurityUtils>()
-        every { mockedSecurityUtils.generateIV() } returns ByteArray(16) { 1 }
-        every { mockedSecurityUtils.hash256(any()) } answers { callOriginal() }
-        every { mockedSecurityUtils.base64Encode(any()) } answers { callOriginal() }
-        every { mockedSecurityUtils.applyAESPadding(any()) } answers { callOriginal() }
-        every { mockedSecurityUtils.cbcEncryption(any(), any(), any(), any()) } answers { callOriginal() }
-
         mockkStatic(SecurityUtils::class)
-        every { SecurityUtils.getInstance() } returns mockedSecurityUtils
+        every { SecurityUtils.generateIV() } returns ByteArray(16) { 1 }
+        every { SecurityUtils.hash256(any()) } answers { callOriginal() }
+        every { SecurityUtils.base64Encode(any()) } answers { callOriginal() }
+        every { SecurityUtils.applyAESPadding(any()) } answers { callOriginal() }
+        every { SecurityUtils.cbcEncryption(any(), any(), any(), any()) } answers { callOriginal() }
 
         mockkConstructor(NetworkAdapter::class, recordPrivateCalls = true)
         every {
@@ -53,6 +52,7 @@ class RefundTest {
         credentials.merchantId = "111222"
         credentials.environment = Environment.STAGING
         credentials.productId = "1112220001"
+        credentials.apiVersion = 5
 
         val h2HRefund = H2HRefund()
 
@@ -60,7 +60,6 @@ class RefundTest {
         h2HRefund.paymentSolution = PaymentSolutions.creditcards
         h2HRefund.transactionId = "7817556"
         h2HRefund.merchantTransactionId = "12345678"
-        h2HRefund.apiVersion = 5
 
         val h2HPaymentAdapter = H2HPaymentAdapter(credentials)
 
@@ -90,11 +89,11 @@ class RefundTest {
         Assertions.assertEquals(3, queryParameterSlot.captured.size)
         Assertions.assertEquals("111222", queryParameterSlot.captured["merchantId"])
         Assertions.assertEquals(
-            "1S+NMvlkfH5v6C4OsX3gVra1H0R/N8aAKgYbWk2It8R4mDEHvA+gP0rNvB2/36n7EJ88xi48FrkACGCnQbuNfdGFcgeFwkGdOUT17Ko5zmmZY1rpa/5JumbadctuelmGE+8mfsW7k6DsUqS6+absbyX9hQxc/StkqP43vjkbRSM=",
+            "1S+NMvlkfH5v6C4OsX3gVra1H0R/N8aAKgYbWk2It8QT6pI7D7XKvHfuSXsziXxx0/ZjHhe4vDZdwZ+xezj8qb6Ilq1TYzFAAyiWzNTilkHtkxawFjfEfTrzqUCGKDzxzHDtnM+KUKb+hHZBvKxstTA4sI1Wh5TD0uNUxmXc4gk=",
             queryParameterSlot.captured["encrypted"]
         )
         Assertions.assertEquals(
-            "a2aea6ca34d262ac98a958ead51bafe097b27a8df7c5713b3d017a745aec55d3",
+            "4a812af8fa99e0ee2024a56157c0dbc751bba3a4c37aee1db1ccdf565c8e5a79",
             queryParameterSlot.captured["integrityCheck"]
         )
 
@@ -111,9 +110,9 @@ class RefundTest {
 
         verify {
             mockedResponseListener.onResponseReceived(
-                    capture(rawResponseSlot),
-                    capture(notificationSlot),
-                    capture(transactionResult)
+                capture(rawResponseSlot),
+                capture(notificationSlot),
+                capture(transactionResult)
             )
         }
 
@@ -122,7 +121,10 @@ class RefundTest {
             rawResponseSlot.captured
         )
         Assertions.assertEquals(1, notificationSlot.captured.operations.size)
-        Assertions.assertEquals(PaymentSolutions.caixapucpuce, notificationSlot.captured.operations.last().paymentSolution)
+        Assertions.assertEquals(
+            PaymentSolutions.caixapucpuce,
+            notificationSlot.captured.operations.last().paymentSolution
+        )
         Assertions.assertEquals("SUCCESS", notificationSlot.captured.operations.last().status)
     }
 
@@ -138,25 +140,20 @@ class RefundTest {
         credentials.merchantId = "111222"
         credentials.environment = Environment.STAGING
         credentials.productId = "1112220001"
+        credentials.apiVersion = 5
 
         val h2HRefund = H2HRefund()
 
         h2HRefund.amount = "20"
         h2HRefund.paymentSolution = PaymentSolutions.creditcards
-        h2HRefund.transactionId = "7817556"
-        h2HRefund.apiVersion = 5
 
         val h2HPaymentAdapter = H2HPaymentAdapter(credentials)
 
-        h2HPaymentAdapter.sendH2hRefundRequest(h2HRefund, mockedResponseListener)
+        val exception = assertThrows<MissingFieldException> {
+            h2HPaymentAdapter.sendH2hRefundRequest(h2HRefund, mockedResponseListener)
+        }
 
-        val errorSlot = slot<Error>()
-        val errorMessageSlot = slot<String>()
-
-        verify { mockedResponseListener.onError(capture(errorSlot), capture(errorMessageSlot)) }
-
-        Assertions.assertEquals(Error.MISSING_PARAMETER, errorSlot.captured)
-        Assertions.assertEquals("Missing merchantTransactionId", errorMessageSlot.captured)
+        Assertions.assertEquals("Missing transactionId", exception.message)
     }
 
     @Test
@@ -171,26 +168,15 @@ class RefundTest {
         credentials.merchantId = "111222"
         credentials.environment = Environment.STAGING
         credentials.productId = "1112220001"
+        credentials.apiVersion = 5
 
         val h2HRefund = H2HRefund()
 
-        h2HRefund.amount = "20,2"
-        h2HRefund.paymentSolution = PaymentSolutions.creditcards
-        h2HRefund.transactionId = "7817556"
-        h2HRefund.merchantTransactionId = "12345678"
-        h2HRefund.apiVersion = 5
+        val exception = assertThrows<InvalidFieldException> {
+            h2HRefund.amount = "20,2"
+        }
 
-        val h2HPaymentAdapter = H2HPaymentAdapter(credentials)
-
-        h2HPaymentAdapter.sendH2hRefundRequest(h2HRefund, mockedResponseListener)
-
-        val errorSlot = slot<Error>()
-        val errorMessageSlot = slot<String>()
-
-        verify { mockedResponseListener.onError(capture(errorSlot), capture(errorMessageSlot)) }
-
-        Assertions.assertEquals(Error.INVALID_AMOUNT, errorSlot.captured)
-        Assertions.assertEquals(Error.INVALID_AMOUNT.message, errorMessageSlot.captured)
+        Assertions.assertEquals("amount: Should Follow Format #.#### And Be Between 0 And 1000000", exception.message)
     }
 
 }

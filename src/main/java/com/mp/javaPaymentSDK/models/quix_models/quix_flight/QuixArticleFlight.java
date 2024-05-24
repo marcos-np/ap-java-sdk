@@ -1,6 +1,7 @@
 package com.mp.javaPaymentSDK.models.quix_models.quix_flight;
 
 import com.google.gson.annotations.SerializedName;
+import com.mp.javaPaymentSDK.enums.Category;
 import com.mp.javaPaymentSDK.utils.Utils;
 import kotlin.Pair;
 
@@ -11,28 +12,14 @@ public class QuixArticleFlight {
 
     private String name = null;
     private final String type = "flight";
-    private final String category = "physical";
+    private Category category = null;
     private String reference = null;
-    private double unit_price_with_tax = -1;
-    @SerializedName("customer_member_since")
-    private String customerMemberSince = null;
+    @SerializedName("unit_price_with_tax")
+    private double unitPriceWithTax = -1;
+    private List<QuixPassengerFlight> passengers = null;
     @SerializedName("departure_date")
     private String departureDate = null;
-    private List<QuixPassengerFlight> passengers = null;
     private List<QuixSegmentFlight> segments = null;
-
-    public QuixArticleFlight() {
-    }
-
-    public QuixArticleFlight(String name, String reference, double unit_price_with_tax, String customerMemberSince, String departureDate, List<QuixPassengerFlight> passengers, List<QuixSegmentFlight> segments) {
-        this.name = name;
-        this.reference = reference;
-        this.unit_price_with_tax = unit_price_with_tax;
-        this.customerMemberSince = customerMemberSince;
-        this.departureDate = departureDate;
-        this.passengers = passengers;
-        this.segments = segments;
-    }
 
     public String getName() {
         return name;
@@ -46,8 +33,12 @@ public class QuixArticleFlight {
         return type;
     }
 
-    public String getCategory() {
+    public Category getCategory() {
         return category;
+    }
+
+    public void setCategory(Category category) {
+        this.category = category;
     }
 
     public String getReference() {
@@ -58,20 +49,12 @@ public class QuixArticleFlight {
         this.reference = reference;
     }
 
-    public double getUnit_price_with_tax() {
-        return unit_price_with_tax;
+    public double getUnitPriceWithTax() {
+        return unitPriceWithTax;
     }
 
-    public void setUnit_price_with_tax(double unit_price_with_tax) {
-        this.unit_price_with_tax = Double.parseDouble(Utils.getInstance().roundAmount(unit_price_with_tax));
-    }
-
-    public String getCustomerMemberSince() {
-        return customerMemberSince;
-    }
-
-    public void setCustomerMemberSince(String customerMemberSince) {
-        this.customerMemberSince = customerMemberSince;
+    public void setUnitPriceWithTax(double unitPriceWithTax) {
+        this.unitPriceWithTax = Double.parseDouble(Utils.roundAmount(unitPriceWithTax));
     }
 
     public String getDepartureDate() {
@@ -99,17 +82,17 @@ public class QuixArticleFlight {
     }
 
     public Pair<Boolean, String> isMissingFields() {
-        if (unit_price_with_tax <= 0) {
-            return new Pair<>(true, "Missing unit_price_with_tax");
+        if (unitPriceWithTax <= 0) {
+            return new Pair<>(true, "unitPriceWithTax");
         }
 
         List<String> mandatoryFields = Arrays.asList(
                 "name", "type", "category",
-                "reference", "customerMemberSince", "departureDate",
+                "reference", "departureDate",
                 "passengers", "segments"
         );
 
-        Pair<Boolean, String> missingField = Utils.getInstance().containsNull(
+        Pair<Boolean, String> missingField = Utils.containsNull(
                 this.getClass(), this, mandatoryFields
         );
         if (missingField.getFirst()) {
@@ -117,10 +100,10 @@ public class QuixArticleFlight {
         }
 
         if (passengers.isEmpty()) {
-            return new Pair<>(true, "Missing passengers");
+            return new Pair<>(true, "passengers");
         }
         if (segments.isEmpty()) {
-            return new Pair<>(true, "Missing passengers");
+            return new Pair<>(true, "passengers");
         }
 
         for (QuixPassengerFlight item : passengers) {

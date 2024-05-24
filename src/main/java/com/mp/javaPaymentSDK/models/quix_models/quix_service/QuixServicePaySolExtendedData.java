@@ -1,5 +1,8 @@
 package com.mp.javaPaymentSDK.models.quix_models.quix_service;
 
+import com.google.gson.annotations.SerializedName;
+import com.mp.javaPaymentSDK.models.quix_models.ConfirmationCartData;
+import com.mp.javaPaymentSDK.models.quix_models.Customer;
 import com.mp.javaPaymentSDK.models.quix_models.QuixBilling;
 import com.mp.javaPaymentSDK.utils.Utils;
 import kotlin.Pair;
@@ -10,19 +13,13 @@ import java.util.List;
 public class QuixServicePaySolExtendedData {
 
     private String product;
+    private boolean disableFormEdition = false;
+    @SerializedName("confirmation_card_data")
+    private ConfirmationCartData confirmationCardData = null;
+    private Customer customer = null;
     private QuixBilling billing;
     private QuixCartService cart;
-    private boolean disableFormEdition = false;
 
-    public QuixServicePaySolExtendedData() {
-    }
-
-    public QuixServicePaySolExtendedData(String product, QuixBilling billing, QuixCartService cart, boolean disableFormEdition) {
-        this.product = product;
-        this.billing = billing;
-        this.cart = cart;
-        this.disableFormEdition = disableFormEdition;
-    }
 
     public String getProduct() {
         return product;
@@ -56,12 +53,28 @@ public class QuixServicePaySolExtendedData {
         this.disableFormEdition = disableFormEdition;
     }
 
+    public ConfirmationCartData getConfirmationCardData() {
+        return confirmationCardData;
+    }
+
+    public void setConfirmationCardData(ConfirmationCartData confirmationCardData) {
+        this.confirmationCardData = confirmationCardData;
+    }
+
+    public Customer getCustomer() {
+        return customer;
+    }
+
+    public void setCustomer(Customer customer) {
+        this.customer = customer;
+    }
+
     public Pair<Boolean, String> isMissingField() {
         List<String> mandatoryFields = Arrays.asList(
                 "product", "billing", "cart"
         );
 
-        Pair<Boolean, String> missingField = Utils.getInstance().containsNull(
+        Pair<Boolean, String> missingField = Utils.containsNull(
                 this.getClass(), this, mandatoryFields
         );
         if (missingField.getFirst()) {

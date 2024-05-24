@@ -1,21 +1,21 @@
 package com.mp.javaPaymentSDK.adapters;
 
+import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.mp.javaPaymentSDK.callbacks.RequestListener;
 import com.mp.javaPaymentSDK.callbacks.ResponseListener;
 import com.mp.javaPaymentSDK.enums.Endpoints;
 import com.mp.javaPaymentSDK.enums.Error;
-import com.mp.javaPaymentSDK.models.quix_models.QuixHostedRequest;
-import com.mp.javaPaymentSDK.utils.HexUtils;
-import com.mp.javaPaymentSDK.utils.SecurityUtils;
-import com.mp.javaPaymentSDK.utils.Utils;
-import com.mp.javaPaymentSDK.callbacks.RequestListener;
-import com.google.gson.Gson;
+import com.mp.javaPaymentSDK.exceptions.MissingFieldException;
 import com.mp.javaPaymentSDK.models.Credentials;
-import com.mp.javaPaymentSDK.models.quix_models.QuixHostedQuery;
+import com.mp.javaPaymentSDK.models.quix_models.QuixHostedRequest;
 import com.mp.javaPaymentSDK.models.requests.quix_hosted.HostedQuixAccommodation;
 import com.mp.javaPaymentSDK.models.requests.quix_hosted.HostedQuixFlight;
 import com.mp.javaPaymentSDK.models.requests.quix_hosted.HostedQuixItem;
 import com.mp.javaPaymentSDK.models.requests.quix_hosted.HostedQuixService;
+import com.mp.javaPaymentSDK.utils.HexUtils;
+import com.mp.javaPaymentSDK.utils.SecurityUtils;
+import com.mp.javaPaymentSDK.utils.Utils;
 import kotlin.Pair;
 import okhttp3.FormBody;
 import okhttp3.ResponseBody;
@@ -40,11 +40,10 @@ public class HostedQuixPaymentAdapter {
         this.credentials = credentials;
     }
 
-    public void sendHostedQuixServiceRequest(HostedQuixService hostedQuixService, ResponseListener responseListener) {
+    public void sendHostedQuixServiceRequest(HostedQuixService hostedQuixService, ResponseListener responseListener) throws MissingFieldException {
         Pair<Boolean, String> isMissingCred = hostedQuixService.checkCredentials(credentials);
         if (isMissingCred.getFirst()) {
-            responseListener.onError(Error.MISSING_PARAMETER, isMissingCred.getSecond());
-            return;
+            throw new MissingFieldException(MissingFieldException.createMessage(isMissingCred.getSecond(), true));
         }
 
         hostedQuixService.setCredentials(credentials);
@@ -53,48 +52,36 @@ public class HostedQuixPaymentAdapter {
 
         Pair<Boolean, String> missingField = hostedQuixService.isMissingFields();
         if (missingField.getFirst()) {
-            responseListener.onError(Error.MISSING_PARAMETER, missingField.getSecond());
-            return;
+            throw new MissingFieldException(MissingFieldException.createMessage(missingField.getSecond(), false));
         }
 
-        String parsedAmount = Utils.getInstance().parseAmount(hostedQuixService.getAmount());
-        if (parsedAmount == null) {
-            responseListener.onError(Error.INVALID_AMOUNT, Error.INVALID_AMOUNT.getMessage());
-            return;
-        }
-        hostedQuixService.setAmount(parsedAmount);
-
-        QuixHostedQuery quixHostedQuery = new QuixHostedQuery(hostedQuixService, credentials);
-
-        quixHostedQuery.setPaysolExtendedData(gson.toJson(hostedQuixService.getPaySolExtendedData()));
-
-        String httpQuery1 = Utils.getInstance().buildQuery(QuixHostedRequest.class, quixHostedQuery);
-        String httpQuery2 = Utils.getInstance().buildQuery(QuixHostedQuery.class, quixHostedQuery);
-        String finalQueryParameter1 = Utils.getInstance().encodeUrl(httpQuery1);
-        String finalQueryParameter2 = Utils.getInstance().encodeUrl(httpQuery2);
-        String finalQueryParameter = finalQueryParameter1 + "&" + finalQueryParameter2;
+        String httpQuery = Utils.buildQuery(QuixHostedRequest.class, hostedQuixService);
+        httpQuery += "&paysolExtendedData=" + gson.toJson(hostedQuixService.getPaySolExtendedData());
+        System.out.println("Clear Query = " + httpQuery);
+        String finalQueryParameter = Utils.encodeUrl(httpQuery);
+        System.out.println("Encoded Query = " + finalQueryParameter);
         byte[] formattedRequest = finalQueryParameter.getBytes(StandardCharsets.UTF_8);
 
-        byte[] clearIV = SecurityUtils.getInstance().generateIV();
+        byte[] clearIV = SecurityUtils.generateIV();
 
-        byte[] encryptedRequest = SecurityUtils.getInstance().cbcEncryption(
+        byte[] encryptedRequest = SecurityUtils.cbcEncryption(
                 formattedRequest, // formatted request
                 credentials.getMerchantPass().getBytes(),
                 clearIV,
                 true
         );
 
-        byte[] signature = SecurityUtils.getInstance().hash256(formattedRequest);
+        byte[] signature = SecurityUtils.hash256(formattedRequest);
 
         HashMap<String, String> headers = new HashMap<>();
-        headers.put("apiVersion", String.valueOf(quixHostedQuery.getApiVersion()));
+        headers.put("apiVersion", String.valueOf(credentials.getApiVersion()));
         headers.put("encryptionMode", "CBC");
-        headers.put("iv", SecurityUtils.getInstance().base64Encode(clearIV));
+        headers.put("iv", SecurityUtils.base64Encode(clearIV));
 
         HashMap<String, String> queryParameters = new HashMap<>();
         queryParameters.put("merchantId", String.valueOf(hostedQuixService.getMerchantId()));
-        queryParameters.put("encrypted", SecurityUtils.getInstance().base64Encode(encryptedRequest));
-        queryParameters.put("integrityCheck", HexUtils.getInstance().bytesToHex(signature).toLowerCase());
+        queryParameters.put("encrypted", SecurityUtils.base64Encode(encryptedRequest));
+        queryParameters.put("integrityCheck", HexUtils.bytesToHex(signature).toLowerCase());
 
         networkAdapter.sendRequest(headers, queryParameters, new FormBody.Builder().build(), endpoint, new RequestListener() {
             @Override
@@ -108,7 +95,8 @@ public class HostedQuixPaymentAdapter {
                 if (code == 200 || code == 307) {
                     try {
                         String url = responseBody.string();
-                        if (Utils.getInstance().isValidURL(url)) {
+                        System.out.println(url);
+                        if (Utils.isValidURL(url)) {
                             responseListener.onRedirectionURLReceived(url);
                         } else {
                             responseListener.onError(Error.INVALID_RESPONSE_RECEIVED, Error.INVALID_RESPONSE_RECEIVED.getMessage());
@@ -121,8 +109,8 @@ public class HostedQuixPaymentAdapter {
                     String errorMessage = Error.CLIENT_ERROR.getMessage();
                     try {
                         errorMessage = responseBody.string();
-                    }
-                    catch (IOException exception) {
+                        System.out.println("Error Received = " + errorMessage);
+                    } catch (IOException exception) {
                         exception.printStackTrace();
                     }
                     responseListener.onError(Error.CLIENT_ERROR, errorMessage);
@@ -130,8 +118,8 @@ public class HostedQuixPaymentAdapter {
                     String errorMessage = Error.SERVER_ERROR.getMessage();
                     try {
                         errorMessage = responseBody.string();
-                    }
-                    catch (IOException exception) {
+                        System.out.println("Error Received = " + errorMessage);
+                    } catch (IOException exception) {
                         exception.printStackTrace();
                     }
                     responseListener.onError(Error.SERVER_ERROR, errorMessage);
@@ -140,11 +128,10 @@ public class HostedQuixPaymentAdapter {
         });
     }
 
-    public void sendHostedQuixFlightRequest(HostedQuixFlight hostedQuixFlight, ResponseListener responseListener) {
+    public void sendHostedQuixFlightRequest(HostedQuixFlight hostedQuixFlight, ResponseListener responseListener) throws MissingFieldException {
         Pair<Boolean, String> isMissingCred = hostedQuixFlight.checkCredentials(credentials);
         if (isMissingCred.getFirst()) {
-            responseListener.onError(Error.MISSING_PARAMETER, isMissingCred.getSecond());
-            return;
+            throw new MissingFieldException(MissingFieldException.createMessage(isMissingCred.getSecond(), true));
         }
 
         hostedQuixFlight.setCredentials(credentials);
@@ -153,48 +140,36 @@ public class HostedQuixPaymentAdapter {
 
         Pair<Boolean, String> missingField = hostedQuixFlight.isMissingFields();
         if (missingField.getFirst()) {
-            responseListener.onError(Error.MISSING_PARAMETER, missingField.getSecond());
-            return;
+            throw new MissingFieldException(MissingFieldException.createMessage(missingField.getSecond(), false));
         }
 
-        String parsedAmount = Utils.getInstance().parseAmount(hostedQuixFlight.getAmount());
-        if (parsedAmount == null) {
-            responseListener.onError(Error.INVALID_AMOUNT, Error.INVALID_AMOUNT.getMessage());
-            return;
-        }
-        hostedQuixFlight.setAmount(parsedAmount);
-
-        QuixHostedQuery quixHostedQuery = new QuixHostedQuery(hostedQuixFlight, credentials);
-
-        quixHostedQuery.setPaysolExtendedData(gson.toJson(hostedQuixFlight.getPaysolExtendedData()));
-
-        String httpQuery1 = Utils.getInstance().buildQuery(QuixHostedRequest.class, quixHostedQuery);
-        String httpQuery2 = Utils.getInstance().buildQuery(QuixHostedQuery.class, quixHostedQuery);
-        String finalQueryParameter1 = Utils.getInstance().encodeUrl(httpQuery1);
-        String finalQueryParameter2 = Utils.getInstance().encodeUrl(httpQuery2);
-        String finalQueryParameter = finalQueryParameter1 + "&" + finalQueryParameter2;
+        String httpQuery = Utils.buildQuery(QuixHostedRequest.class, hostedQuixFlight);
+        httpQuery += "&paysolExtendedData=" + gson.toJson(hostedQuixFlight.getPaySolExtendedData());
+        System.out.println("Clear Query = " + httpQuery);
+        String finalQueryParameter = Utils.encodeUrl(httpQuery);
+        System.out.println("Encoded Query = " + finalQueryParameter);
         byte[] formattedRequest = finalQueryParameter.getBytes(StandardCharsets.UTF_8);
 
-        byte[] clearIV = SecurityUtils.getInstance().generateIV();
+        byte[] clearIV = SecurityUtils.generateIV();
 
-        byte[] encryptedRequest = SecurityUtils.getInstance().cbcEncryption(
+        byte[] encryptedRequest = SecurityUtils.cbcEncryption(
                 formattedRequest, // formatted request
                 credentials.getMerchantPass().getBytes(),
                 clearIV,
                 true
         );
 
-        byte[] signature = SecurityUtils.getInstance().hash256(formattedRequest);
+        byte[] signature = SecurityUtils.hash256(formattedRequest);
 
         HashMap<String, String> headers = new HashMap<>();
-        headers.put("apiVersion", String.valueOf(quixHostedQuery.getApiVersion()));
+        headers.put("apiVersion", String.valueOf(credentials.getApiVersion()));
         headers.put("encryptionMode", "CBC");
-        headers.put("iv", SecurityUtils.getInstance().base64Encode(clearIV));
+        headers.put("iv", SecurityUtils.base64Encode(clearIV));
 
         HashMap<String, String> queryParameters = new HashMap<>();
         queryParameters.put("merchantId", String.valueOf(hostedQuixFlight.getMerchantId()));
-        queryParameters.put("encrypted", SecurityUtils.getInstance().base64Encode(encryptedRequest));
-        queryParameters.put("integrityCheck", HexUtils.getInstance().bytesToHex(signature).toLowerCase());
+        queryParameters.put("encrypted", SecurityUtils.base64Encode(encryptedRequest));
+        queryParameters.put("integrityCheck", HexUtils.bytesToHex(signature).toLowerCase());
 
         networkAdapter.sendRequest(headers, queryParameters, new FormBody.Builder().build(), endpoint, new RequestListener() {
             @Override
@@ -208,7 +183,8 @@ public class HostedQuixPaymentAdapter {
                 if (code == 200) {
                     try {
                         String url = responseBody.string();
-                        if (Utils.getInstance().isValidURL(url)) {
+                        System.out.println(url);
+                        if (Utils.isValidURL(url)) {
                             responseListener.onRedirectionURLReceived(url);
                         } else {
                             responseListener.onError(Error.INVALID_RESPONSE_RECEIVED, Error.INVALID_RESPONSE_RECEIVED.getMessage());
@@ -221,8 +197,8 @@ public class HostedQuixPaymentAdapter {
                     String errorMessage = Error.CLIENT_ERROR.getMessage();
                     try {
                         errorMessage = responseBody.string();
-                    }
-                    catch (IOException exception) {
+                        System.out.println("Error Received = " + errorMessage);
+                    } catch (IOException exception) {
                         exception.printStackTrace();
                     }
                     responseListener.onError(Error.CLIENT_ERROR, errorMessage);
@@ -230,8 +206,8 @@ public class HostedQuixPaymentAdapter {
                     String errorMessage = Error.SERVER_ERROR.getMessage();
                     try {
                         errorMessage = responseBody.string();
-                    }
-                    catch (IOException exception) {
+                        System.out.println("Error Received = " + errorMessage);
+                    } catch (IOException exception) {
                         exception.printStackTrace();
                     }
                     responseListener.onError(Error.SERVER_ERROR, errorMessage);
@@ -240,11 +216,10 @@ public class HostedQuixPaymentAdapter {
         });
     }
 
-    public void sendHostedQuixAccommodationRequest(HostedQuixAccommodation hostedQuixAccommodation, ResponseListener responseListener) {
+    public void sendHostedQuixAccommodationRequest(HostedQuixAccommodation hostedQuixAccommodation, ResponseListener responseListener) throws MissingFieldException {
         Pair<Boolean, String> isMissingCred = hostedQuixAccommodation.checkCredentials(credentials);
         if (isMissingCred.getFirst()) {
-            responseListener.onError(Error.MISSING_PARAMETER, isMissingCred.getSecond());
-            return;
+            throw new MissingFieldException(MissingFieldException.createMessage(isMissingCred.getSecond(), true));
         }
 
         hostedQuixAccommodation.setCredentials(credentials);
@@ -253,49 +228,36 @@ public class HostedQuixPaymentAdapter {
 
         Pair<Boolean, String> missingField = hostedQuixAccommodation.isMissingFields();
         if (missingField.getFirst()) {
-            responseListener.onError(Error.MISSING_PARAMETER, missingField.getSecond());
-            return;
+            throw new MissingFieldException(MissingFieldException.createMessage(missingField.getSecond(), false));
         }
 
-        String parsedAmount = Utils.getInstance().parseAmount(hostedQuixAccommodation.getAmount());
-        if (parsedAmount == null) {
-            responseListener.onError(Error.INVALID_AMOUNT, Error.INVALID_AMOUNT.getMessage());
-            return;
-        }
-        hostedQuixAccommodation.setAmount(parsedAmount);
-
-        QuixHostedQuery quixHostedQuery = new QuixHostedQuery(hostedQuixAccommodation, credentials);
-
-        quixHostedQuery.setPaysolExtendedData(gson.toJson(hostedQuixAccommodation.getPaySolExtendedData()));
-
-        String httpQuery1 = Utils.getInstance().buildQuery(QuixHostedRequest.class, quixHostedQuery);
-        String httpQuery2 = Utils.getInstance().buildQuery(QuixHostedQuery.class, quixHostedQuery);
-        String finalQueryParameter1 = Utils.getInstance().encodeUrl(httpQuery1);
-        String finalQueryParameter2 = Utils.getInstance().encodeUrl(httpQuery2);
-        String finalQueryParameter = finalQueryParameter1 + "&" + finalQueryParameter2;
-        System.out.println("finalQueryParameter = " + finalQueryParameter);
+        String httpQuery = Utils.buildQuery(QuixHostedRequest.class, hostedQuixAccommodation);
+        httpQuery += "&paysolExtendedData=" + gson.toJson(hostedQuixAccommodation.getPaySolExtendedData());
+        System.out.println("Clear Query = " + httpQuery);
+        String finalQueryParameter = Utils.encodeUrl(httpQuery);
+        System.out.println("Encoded Query = " + finalQueryParameter);
         byte[] formattedRequest = finalQueryParameter.getBytes(StandardCharsets.UTF_8);
 
-        byte[] clearIV = SecurityUtils.getInstance().generateIV();
+        byte[] clearIV = SecurityUtils.generateIV();
 
-        byte[] encryptedRequest = SecurityUtils.getInstance().cbcEncryption(
+        byte[] encryptedRequest = SecurityUtils.cbcEncryption(
                 formattedRequest, // formatted request
                 credentials.getMerchantPass().getBytes(),
                 clearIV,
                 true
         );
 
-        byte[] signature = SecurityUtils.getInstance().hash256(formattedRequest);
+        byte[] signature = SecurityUtils.hash256(formattedRequest);
 
         HashMap<String, String> headers = new HashMap<>();
-        headers.put("apiVersion", String.valueOf(quixHostedQuery.getApiVersion()));
+        headers.put("apiVersion", String.valueOf(credentials.getApiVersion()));
         headers.put("encryptionMode", "CBC");
-        headers.put("iv", SecurityUtils.getInstance().base64Encode(clearIV));
+        headers.put("iv", SecurityUtils.base64Encode(clearIV));
 
         HashMap<String, String> queryParameters = new HashMap<>();
         queryParameters.put("merchantId", String.valueOf(hostedQuixAccommodation.getMerchantId()));
-        queryParameters.put("encrypted", SecurityUtils.getInstance().base64Encode(encryptedRequest));
-        queryParameters.put("integrityCheck", HexUtils.getInstance().bytesToHex(signature).toLowerCase());
+        queryParameters.put("encrypted", SecurityUtils.base64Encode(encryptedRequest));
+        queryParameters.put("integrityCheck", HexUtils.bytesToHex(signature).toLowerCase());
 
         networkAdapter.sendRequest(headers, queryParameters, new FormBody.Builder().build(), endpoint, new RequestListener() {
             @Override
@@ -309,7 +271,8 @@ public class HostedQuixPaymentAdapter {
                 if (code == 200) {
                     try {
                         String url = responseBody.string();
-                        if (Utils.getInstance().isValidURL(url)) {
+                        System.out.println(url);
+                        if (Utils.isValidURL(url)) {
                             responseListener.onRedirectionURLReceived(url);
                         } else {
                             responseListener.onError(Error.INVALID_RESPONSE_RECEIVED, Error.INVALID_RESPONSE_RECEIVED.getMessage());
@@ -322,8 +285,8 @@ public class HostedQuixPaymentAdapter {
                     String errorMessage = Error.CLIENT_ERROR.getMessage();
                     try {
                         errorMessage = responseBody.string();
-                    }
-                    catch (IOException exception) {
+                        System.out.println("Error Received = " + errorMessage);
+                    } catch (IOException exception) {
                         exception.printStackTrace();
                     }
                     responseListener.onError(Error.CLIENT_ERROR, errorMessage);
@@ -331,8 +294,8 @@ public class HostedQuixPaymentAdapter {
                     String errorMessage = Error.SERVER_ERROR.getMessage();
                     try {
                         errorMessage = responseBody.string();
-                    }
-                    catch (IOException exception) {
+                        System.out.println("Error Received = " + errorMessage);
+                    } catch (IOException exception) {
                         exception.printStackTrace();
                     }
                     responseListener.onError(Error.SERVER_ERROR, errorMessage);
@@ -341,11 +304,10 @@ public class HostedQuixPaymentAdapter {
         });
     }
 
-    public void sendHostedQuixItemRequest(HostedQuixItem hostedQuixItem, ResponseListener responseListener) {
+    public void sendHostedQuixItemRequest(HostedQuixItem hostedQuixItem, ResponseListener responseListener) throws MissingFieldException {
         Pair<Boolean, String> isMissingCred = hostedQuixItem.checkCredentials(credentials);
         if (isMissingCred.getFirst()) {
-            responseListener.onError(Error.MISSING_PARAMETER, isMissingCred.getSecond());
-            return;
+            throw new MissingFieldException(MissingFieldException.createMessage(isMissingCred.getSecond(), true));
         }
 
         hostedQuixItem.setCredentials(credentials);
@@ -354,48 +316,36 @@ public class HostedQuixPaymentAdapter {
 
         Pair<Boolean, String> missingField = hostedQuixItem.isMissingFields();
         if (missingField.getFirst()) {
-            responseListener.onError(Error.MISSING_PARAMETER, missingField.getSecond());
-            return;
+            throw new MissingFieldException(MissingFieldException.createMessage(missingField.getSecond(), false));
         }
 
-        String parsedAmount = Utils.getInstance().parseAmount(hostedQuixItem.getAmount());
-        if (parsedAmount == null) {
-            responseListener.onError(Error.INVALID_AMOUNT, Error.INVALID_AMOUNT.getMessage());
-            return;
-        }
-        hostedQuixItem.setAmount(parsedAmount);
-
-        QuixHostedQuery quixHostedQuery = new QuixHostedQuery(hostedQuixItem, credentials);
-
-        quixHostedQuery.setPaysolExtendedData(gson.toJson(hostedQuixItem.getPaySolExtendedData()));
-
-        String httpQuery1 = Utils.getInstance().buildQuery(QuixHostedRequest.class, quixHostedQuery);
-        String httpQuery2 = Utils.getInstance().buildQuery(QuixHostedQuery.class, quixHostedQuery);
-        String finalQueryParameter1 = Utils.getInstance().encodeUrl(httpQuery1);
-        String finalQueryParameter2 = Utils.getInstance().encodeUrl(httpQuery2);
-        String finalQueryParameter = finalQueryParameter1 + "&" + finalQueryParameter2;
+        String httpQuery = Utils.buildQuery(QuixHostedRequest.class, hostedQuixItem);
+        httpQuery += "&paysolExtendedData=" + gson.toJson(hostedQuixItem.getPaySolExtendedData());
+        System.out.println("Clear Query = " + httpQuery);
+        String finalQueryParameter = Utils.encodeUrl(httpQuery);
+        System.out.println("Encoded Query = " + finalQueryParameter);
         byte[] formattedRequest = finalQueryParameter.getBytes(StandardCharsets.UTF_8);
 
-        byte[] clearIV = SecurityUtils.getInstance().generateIV();
+        byte[] clearIV = SecurityUtils.generateIV();
 
-        byte[] encryptedRequest = SecurityUtils.getInstance().cbcEncryption(
+        byte[] encryptedRequest = SecurityUtils.cbcEncryption(
                 formattedRequest, // formatted request
                 credentials.getMerchantPass().getBytes(),
                 clearIV,
                 true
         );
 
-        byte[] signature = SecurityUtils.getInstance().hash256(formattedRequest);
+        byte[] signature = SecurityUtils.hash256(formattedRequest);
 
         HashMap<String, String> headers = new HashMap<>();
-        headers.put("apiVersion", String.valueOf(quixHostedQuery.getApiVersion()));
+        headers.put("apiVersion", String.valueOf(credentials.getApiVersion()));
         headers.put("encryptionMode", "CBC");
-        headers.put("iv", SecurityUtils.getInstance().base64Encode(clearIV));
+        headers.put("iv", SecurityUtils.base64Encode(clearIV));
 
         HashMap<String, String> queryParameters = new HashMap<>();
         queryParameters.put("merchantId", String.valueOf(hostedQuixItem.getMerchantId()));
-        queryParameters.put("encrypted", SecurityUtils.getInstance().base64Encode(encryptedRequest));
-        queryParameters.put("integrityCheck", HexUtils.getInstance().bytesToHex(signature).toLowerCase());
+        queryParameters.put("encrypted", SecurityUtils.base64Encode(encryptedRequest));
+        queryParameters.put("integrityCheck", HexUtils.bytesToHex(signature).toLowerCase());
 
         networkAdapter.sendRequest(headers, queryParameters, new FormBody.Builder().build(), endpoint, new RequestListener() {
             @Override
@@ -409,7 +359,8 @@ public class HostedQuixPaymentAdapter {
                 if (code == 200 || code == 307) {
                     try {
                         String url = responseBody.string();
-                        if (Utils.getInstance().isValidURL(url)) {
+                        System.out.println(url);
+                        if (Utils.isValidURL(url)) {
                             responseListener.onRedirectionURLReceived(url);
                         } else {
                             responseListener.onError(Error.INVALID_RESPONSE_RECEIVED, Error.INVALID_RESPONSE_RECEIVED.getMessage());
@@ -422,8 +373,8 @@ public class HostedQuixPaymentAdapter {
                     String errorMessage = Error.CLIENT_ERROR.getMessage();
                     try {
                         errorMessage = responseBody.string();
-                    }
-                    catch (IOException exception) {
+                        System.out.println("Error Received = " + errorMessage);
+                    } catch (IOException exception) {
                         exception.printStackTrace();
                     }
                     responseListener.onError(Error.CLIENT_ERROR, errorMessage);
@@ -431,8 +382,8 @@ public class HostedQuixPaymentAdapter {
                     String errorMessage = Error.SERVER_ERROR.getMessage();
                     try {
                         errorMessage = responseBody.string();
-                    }
-                    catch (IOException exception) {
+                        System.out.println("Error Received = " + errorMessage);
+                    } catch (IOException exception) {
                         exception.printStackTrace();
                     }
                     responseListener.onError(Error.SERVER_ERROR, errorMessage);

@@ -14,15 +14,6 @@ public class QuixPassengerFlight {
     @SerializedName("last_name")
     private String lastName = null;
 
-    public QuixPassengerFlight() {
-
-    }
-
-    public QuixPassengerFlight(String firstName, String lastName) {
-        this.firstName = firstName;
-        this.lastName = lastName;
-    }
-
     public String getFirstName() {
         return firstName;
     }
@@ -43,7 +34,7 @@ public class QuixPassengerFlight {
         List<String> mandatoryFields = Arrays.asList(
                 "firstName", "lastName"
         );
-        return Utils.getInstance().containsNull(
+        return Utils.containsNull(
                 this.getClass(), this, mandatoryFields
         );
     }

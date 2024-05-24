@@ -18,12 +18,12 @@ class Utils {
 
     @Test
     fun parseAmountTest() {
-        Assertions.assertEquals("50.1200", Utils.getInstance().parseAmount("50.12"))
-        Assertions.assertEquals("50.0000", Utils.getInstance().parseAmount("50"))
-        Assertions.assertEquals("50.1234", Utils.getInstance().parseAmount("50.1234111"))
-        Assertions.assertEquals("50.1111", Utils.getInstance().parseAmount("50.1111"))
-        Assertions.assertEquals("50.1112", Utils.getInstance().parseAmount("50.111167"))
-        Assertions.assertNull(Utils.getInstance().parseAmount("50,1111"))
+        Assertions.assertEquals("50.1200", Utils.parseAmount("50.12"))
+        Assertions.assertEquals("50.0000", Utils.parseAmount("50"))
+        Assertions.assertEquals("50.1234", Utils.parseAmount("50.1234111"))
+        Assertions.assertEquals("50.1111", Utils.parseAmount("50.1111"))
+        Assertions.assertEquals("50.1112", Utils.parseAmount("50.111167"))
+        Assertions.assertNull(Utils.parseAmount("50,1111"))
     }
 
 }

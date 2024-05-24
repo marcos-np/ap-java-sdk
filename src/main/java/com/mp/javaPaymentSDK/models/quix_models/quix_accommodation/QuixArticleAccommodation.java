@@ -1,6 +1,8 @@
 package com.mp.javaPaymentSDK.models.quix_models.quix_accommodation;
 
 import com.google.gson.annotations.SerializedName;
+import com.mp.javaPaymentSDK.enums.Category;
+import com.mp.javaPaymentSDK.exceptions.InvalidFieldException;
 import com.mp.javaPaymentSDK.models.quix_models.QuixAddress;
 import com.mp.javaPaymentSDK.utils.Utils;
 import kotlin.Pair;
@@ -11,9 +13,10 @@ import java.util.List;
 public class QuixArticleAccommodation {
     private String name = null;
     private final String type = "accommodation";
-    private final String category = "physical";
+    private Category category = null;
     private String reference = null;
-    private double unit_price_with_tax = -1;
+    @SerializedName("unit_price_with_tax")
+    private double unitPriceWithTax = -1;
     @SerializedName("checkin_date")
     private String checkinDate = null;
     @SerializedName("checkout_date")
@@ -22,20 +25,11 @@ public class QuixArticleAccommodation {
     private String establishmentName = null;
     private QuixAddress address = null;
     private int guests = -1;
-
-    public QuixArticleAccommodation() {
-    }
-
-    public QuixArticleAccommodation(String name, String reference, double unit_price_with_tax, String checkinDate, String checkoutDate, String establishmentName, QuixAddress address, int guests) {
-        this.name = name;
-        this.reference = reference;
-        this.unit_price_with_tax = unit_price_with_tax;
-        this.checkinDate = checkinDate;
-        this.checkoutDate = checkoutDate;
-        this.establishmentName = establishmentName;
-        this.address = address;
-        this.guests = guests;
-    }
+    private String url = null;
+    @SerializedName("image_url")
+    private String imageUrl = null;
+    @SerializedName("total_discount")
+    private double totalDiscount = 0;
 
     public String getName() {
         return name;
@@ -49,8 +43,12 @@ public class QuixArticleAccommodation {
         return type;
     }
 
-    public String getCategory() {
+    public Category getCategory() {
         return category;
+    }
+
+    public void setCategory(Category category) {
+        this.category = category;
     }
 
     public String getReference() {
@@ -61,12 +59,12 @@ public class QuixArticleAccommodation {
         this.reference = reference;
     }
 
-    public double getUnit_price_with_tax() {
-        return unit_price_with_tax;
+    public double getUnitPriceWithTax() {
+        return unitPriceWithTax;
     }
 
-    public void setUnit_price_with_tax(double unit_price_with_tax) {
-        this.unit_price_with_tax = Double.parseDouble(Utils.getInstance().roundAmount(unit_price_with_tax));
+    public void setUnitPriceWithTax(double unitPriceWithTax) {
+        this.unitPriceWithTax = Double.parseDouble(Utils.roundAmount(unitPriceWithTax));
     }
 
     public String getCheckinDate() {
@@ -109,19 +107,61 @@ public class QuixArticleAccommodation {
         this.guests = guests;
     }
 
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        if (url != null && !url.isBlank())
+        {
+            this.url = Utils.encodeUrl(url);
+        }
+        else
+        {
+            this.url = null;
+        }
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        if (imageUrl != null && !imageUrl.isBlank())
+        {
+            this.imageUrl = Utils.encodeUrl(imageUrl);
+        }
+        else
+        {
+            this.imageUrl = null;
+        }
+    }
+
+    public double getTotalDiscount() {
+        return totalDiscount;
+    }
+
+    public void setTotalDiscount(double totalDiscount) throws InvalidFieldException {
+        if (totalDiscount < 0)
+        {
+            throw new InvalidFieldException("totalDiscount: Value must be (totalDiscount >= 0)");
+        }
+        this.totalDiscount = Double.parseDouble(Utils.roundAmount(totalDiscount));
+    }
+
     public Pair<Boolean, String> isMissingField() {
-        if (unit_price_with_tax <= 0) {
-            return new Pair<>(true, "Missing unit_price_with_tax");
+        if (unitPriceWithTax <= 0) {
+            return new Pair<>(true, "unitPriceWithTax");
         }
         if (guests <= 0) {
-            return new Pair<>(true, "Missing guests");
+            return new Pair<>(true, "guests");
         }
 
         List<String> mandatoryFields = Arrays.asList(
-                "name", "type", "category", "reference", "unit_price_with_tax",
+                "name", "type", "category", "reference", "unitPriceWithTax",
                 "checkinDate", "checkoutDate", "establishmentName", "address", "guests"
         );
-        Pair<Boolean, String> missingField = Utils.getInstance().containsNull(QuixArticleAccommodation.class, this, mandatoryFields);
+        Pair<Boolean, String> missingField = Utils.containsNull(QuixArticleAccommodation.class, this, mandatoryFields);
         if (missingField.getFirst()) {
             return missingField;
         }

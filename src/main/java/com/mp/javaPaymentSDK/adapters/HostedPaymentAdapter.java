@@ -4,6 +4,7 @@ import com.mp.javaPaymentSDK.callbacks.ResponseListener;
 import com.mp.javaPaymentSDK.callbacks.RequestListener;
 import com.mp.javaPaymentSDK.enums.Endpoints;
 import com.mp.javaPaymentSDK.enums.Error;
+import com.mp.javaPaymentSDK.exceptions.MissingFieldException;
 import com.mp.javaPaymentSDK.models.Credentials;
 import com.mp.javaPaymentSDK.models.requests.hosted.HostedPaymentRecurrentInitial;
 import com.mp.javaPaymentSDK.models.requests.hosted.HostedPaymentRedirection;
@@ -28,12 +29,11 @@ public class HostedPaymentAdapter {
         this.credentials = credentials;
     }
 
-    public void sendHostedPaymentRequest(HostedPaymentRedirection hostedPaymentRedirection, ResponseListener responseListener) {
+    public void sendHostedPaymentRequest(HostedPaymentRedirection hostedPaymentRedirection, ResponseListener responseListener) throws MissingFieldException {
 
         Pair<Boolean, String> isMissingCred = hostedPaymentRedirection.checkCredentials(credentials);
         if (isMissingCred.getFirst()) {
-            responseListener.onError(Error.MISSING_PARAMETER, isMissingCred.getSecond());
-            return;
+            throw new MissingFieldException(MissingFieldException.createMessage(isMissingCred.getSecond(), true));
         }
 
         String endpoint = Endpoints.HOSTED_ENDPOINT.getEndpoint(credentials.getEnvironment());
@@ -42,41 +42,35 @@ public class HostedPaymentAdapter {
 
         Pair<Boolean, String> isMissingField = hostedPaymentRedirection.isMissingField();
         if (isMissingField.getFirst()) {
-            responseListener.onError(Error.MISSING_PARAMETER, isMissingField.getSecond());
-            return;
+            throw new MissingFieldException(MissingFieldException.createMessage(isMissingField.getSecond(), false));
         }
 
-        String parsedAmount = Utils.getInstance().parseAmount(hostedPaymentRedirection.getAmount());
-        if (parsedAmount == null) {
-            responseListener.onError(Error.INVALID_AMOUNT, Error.INVALID_AMOUNT.getMessage());
-            return;
-        }
-        hostedPaymentRedirection.setAmount(parsedAmount);
-
-        String httpQuery = Utils.getInstance().buildQuery(HostedPaymentRedirection.class, hostedPaymentRedirection);
-        String finalQueryParameter = Utils.getInstance().encodeUrl(httpQuery);
+        String httpQuery = Utils.buildQuery(HostedPaymentRedirection.class, hostedPaymentRedirection);
+        System.out.println("Clear Query = " + httpQuery);
+        String finalQueryParameter = Utils.encodeUrl(httpQuery);
+        System.out.println("Encoded Query = " + finalQueryParameter);
         byte[] formattedRequest = finalQueryParameter.getBytes(StandardCharsets.UTF_8);
 
-        byte[] clearIV = SecurityUtils.getInstance().generateIV();
+        byte[] clearIV = SecurityUtils.generateIV();
 
-        byte[] encryptedRequest = SecurityUtils.getInstance().cbcEncryption(
+        byte[] encryptedRequest = SecurityUtils.cbcEncryption(
                 formattedRequest, // formatted request
                 credentials.getMerchantPass().getBytes(),
                 clearIV,
                 true
         );
 
-        byte[] signature = SecurityUtils.getInstance().hash256(formattedRequest);
+        byte[] signature = SecurityUtils.hash256(formattedRequest);
 
         HashMap<String, String> headers = new HashMap<>();
-        headers.put("apiVersion", String.valueOf(hostedPaymentRedirection.getApiVersion()));
+        headers.put("apiVersion", String.valueOf(credentials.getApiVersion()));
         headers.put("encryptionMode", "CBC");
-        headers.put("iv", SecurityUtils.getInstance().base64Encode(clearIV));
+        headers.put("iv", SecurityUtils.base64Encode(clearIV));
 
         HashMap<String, String> queryParameters = new HashMap<>();
         queryParameters.put("merchantId", String.valueOf(hostedPaymentRedirection.getMerchantId()));
-        queryParameters.put("encrypted", SecurityUtils.getInstance().base64Encode(encryptedRequest));
-        queryParameters.put("integrityCheck", HexUtils.getInstance().bytesToHex(signature).toLowerCase());
+        queryParameters.put("encrypted", SecurityUtils.base64Encode(encryptedRequest));
+        queryParameters.put("integrityCheck", HexUtils.bytesToHex(signature).toLowerCase());
 
         networkAdapter.sendRequest(headers, queryParameters, new FormBody.Builder().build(), endpoint, new RequestListener() {
             @Override
@@ -90,7 +84,8 @@ public class HostedPaymentAdapter {
                 if (code == 200) {
                     try {
                         String url = responseBody.string();
-                        if (Utils.getInstance().isValidURL(url)) {
+                        System.out.println(url);
+                        if (Utils.isValidURL(url)) {
                             responseListener.onRedirectionURLReceived(url);
                         } else {
                             responseListener.onError(Error.INVALID_RESPONSE_RECEIVED, Error.INVALID_RESPONSE_RECEIVED.getMessage());
@@ -103,6 +98,7 @@ public class HostedPaymentAdapter {
                     String errorMessage = Error.CLIENT_ERROR.getMessage();
                     try {
                         errorMessage = responseBody.string();
+                        System.out.println("Error Received = " + errorMessage);
                     }
                     catch (IOException exception) {
                         exception.printStackTrace();
@@ -112,6 +108,7 @@ public class HostedPaymentAdapter {
                     String errorMessage = Error.SERVER_ERROR.getMessage();
                     try {
                         errorMessage = responseBody.string();
+                        System.out.println("Error Received = " + errorMessage);
                     }
                     catch (IOException exception) {
                         exception.printStackTrace();
@@ -122,12 +119,11 @@ public class HostedPaymentAdapter {
         });
     }
 
-    public void sendHostedRecurrentInitial(HostedPaymentRecurrentInitial hostedPaymentRecurrentInitial, ResponseListener responseListener) {
+    public void sendHostedRecurrentInitial(HostedPaymentRecurrentInitial hostedPaymentRecurrentInitial, ResponseListener responseListener) throws MissingFieldException {
 
         Pair<Boolean, String> isMissingCred = hostedPaymentRecurrentInitial.checkCredentials(credentials);
         if (isMissingCred.getFirst()) {
-            responseListener.onError(Error.MISSING_PARAMETER, isMissingCred.getSecond());
-            return;
+            throw new MissingFieldException(MissingFieldException.createMessage(isMissingCred.getSecond(), true));
         }
 
         hostedPaymentRecurrentInitial.setCredentials(credentials);
@@ -136,41 +132,35 @@ public class HostedPaymentAdapter {
 
         Pair<Boolean, String> isMissingField = hostedPaymentRecurrentInitial.isMissingField();
         if (isMissingField.getFirst()) {
-            responseListener.onError(Error.MISSING_PARAMETER, isMissingField.getSecond());
-            return;
+            throw new MissingFieldException(MissingFieldException.createMessage(isMissingField.getSecond(), false));
         }
 
-        String parsedAmount = Utils.getInstance().parseAmount(hostedPaymentRecurrentInitial.getAmount());
-        if (parsedAmount == null) {
-            responseListener.onError(Error.INVALID_AMOUNT, Error.INVALID_AMOUNT.getMessage());
-            return;
-        }
-        hostedPaymentRecurrentInitial.setAmount(parsedAmount);
-
-        String httpQuery = Utils.getInstance().buildQuery(HostedPaymentRecurrentInitial.class, hostedPaymentRecurrentInitial);
-        String finalQueryParameter = Utils.getInstance().encodeUrl(httpQuery);
+        String httpQuery = Utils.buildQuery(HostedPaymentRecurrentInitial.class, hostedPaymentRecurrentInitial);
+        System.out.println("Clear Query = " + httpQuery);
+        String finalQueryParameter = Utils.encodeUrl(httpQuery);
+        System.out.println("Encoded Query = " + finalQueryParameter);
         byte[] formattedRequest = finalQueryParameter.getBytes(StandardCharsets.UTF_8);
 
-        byte[] clearIV = SecurityUtils.getInstance().generateIV();
+        byte[] clearIV = SecurityUtils.generateIV();
 
-        byte[] encryptedRequest = SecurityUtils.getInstance().cbcEncryption(
+        byte[] encryptedRequest = SecurityUtils.cbcEncryption(
                 formattedRequest, // formatted request
                 credentials.getMerchantPass().getBytes(),
                 clearIV,
                 true
         );
 
-        byte[] signature = SecurityUtils.getInstance().hash256(formattedRequest);
+        byte[] signature = SecurityUtils.hash256(formattedRequest);
 
         HashMap<String, String> headers = new HashMap<>();
-        headers.put("apiVersion", String.valueOf(hostedPaymentRecurrentInitial.getApiVersion()));
+        headers.put("apiVersion", String.valueOf(credentials.getApiVersion()));
         headers.put("encryptionMode", "CBC");
-        headers.put("iv", SecurityUtils.getInstance().base64Encode(clearIV));
+        headers.put("iv", SecurityUtils.base64Encode(clearIV));
 
         HashMap<String, String> queryParameters = new HashMap<>();
         queryParameters.put("merchantId", String.valueOf(hostedPaymentRecurrentInitial.getMerchantId()));
-        queryParameters.put("encrypted", SecurityUtils.getInstance().base64Encode(encryptedRequest));
-        queryParameters.put("integrityCheck", HexUtils.getInstance().bytesToHex(signature).toLowerCase());
+        queryParameters.put("encrypted", SecurityUtils.base64Encode(encryptedRequest));
+        queryParameters.put("integrityCheck", HexUtils.bytesToHex(signature).toLowerCase());
 
         networkAdapter.sendRequest(headers, queryParameters, new FormBody.Builder().build(), endpoint, new RequestListener() {
             @Override
@@ -184,7 +174,8 @@ public class HostedPaymentAdapter {
                 if (code == 200) {
                     try {
                         String url = responseBody.string();
-                        if (Utils.getInstance().isValidURL(url)) {
+                        System.out.println(url);
+                        if (Utils.isValidURL(url)) {
                             responseListener.onRedirectionURLReceived(url);
                         } else {
                             responseListener.onError(Error.INVALID_RESPONSE_RECEIVED, Error.INVALID_RESPONSE_RECEIVED.getMessage());
@@ -197,6 +188,7 @@ public class HostedPaymentAdapter {
                     String errorMessage = Error.CLIENT_ERROR.getMessage();
                     try {
                         errorMessage = responseBody.string();
+                        System.out.println("Error Received = " + errorMessage);
                     }
                     catch (IOException exception) {
                         exception.printStackTrace();
@@ -206,6 +198,7 @@ public class HostedPaymentAdapter {
                     String errorMessage = Error.SERVER_ERROR.getMessage();
                     try {
                         errorMessage = responseBody.string();
+                        System.out.println("Error Received = " + errorMessage);
                     }
                     catch (IOException exception) {
                         exception.printStackTrace();

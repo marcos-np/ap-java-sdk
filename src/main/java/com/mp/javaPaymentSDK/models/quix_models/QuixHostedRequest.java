@@ -1,25 +1,24 @@
 package com.mp.javaPaymentSDK.models.quix_models;
 
-import com.mp.javaPaymentSDK.enums.CountryCode;
-import com.mp.javaPaymentSDK.enums.Currency;
-import com.mp.javaPaymentSDK.enums.PaymentSolutions;
+import com.mp.javaPaymentSDK.enums.*;
+import com.mp.javaPaymentSDK.exceptions.InvalidFieldException;
 import com.mp.javaPaymentSDK.models.Credentials;
 import com.mp.javaPaymentSDK.utils.Utils;
 import kotlin.Pair;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 public class QuixHostedRequest {
 
-    private final Currency currency = Currency.EUR;
+    private String merchantId = null;
+    private String productId = null;
+    private final PaymentSolutions paymentSolution = PaymentSolutions.quix;
+    private String merchantTransactionId = null;
     private String amount = null;
+    private final Currency currency = Currency.EUR;
     private final CountryCode country = CountryCode.ES;
     private String customerId = null;
-    private String merchantId = null;
-    private String merchantTransactionId = null;
-    private final PaymentSolutions paymentSolution = PaymentSolutions.quix;
     private String statusURL = null;
     private String successURL = null;
     private String errorURL = null;
@@ -27,30 +26,18 @@ public class QuixHostedRequest {
     private String awaitingURL = null;
     private String firstName = null;
     private String lastName = null;
-    private String productId = null;
     private String customerEmail = null;
     private final CountryCode customerCountry = CountryCode.ES;
+    private String customerNationalId = null;
     private String dob = null;
-    private int apiVersion = -1;
-    private List<Pair<String, String>> merchantParams = null;
+    private String ipAddress = null;
+    private OperationTypes operationType = OperationTypes.DEBIT;
+    private String paymentMethod = null;
+    private String telephone = null;
+    private Language language = null;
 
     public QuixHostedRequest() {
-    }
-
-    public QuixHostedRequest(String amount, String customerId, String merchantTransactionId, String statusURL, String successURL, String errorURL, String cancelURL, String awaitingURL, String firstName, String lastName, String customerEmail, String dob, int apiVersion) {
-        this.amount = amount;
-        this.customerId = customerId;
-        this.merchantTransactionId = merchantTransactionId;
-        this.statusURL = statusURL;
-        this.successURL = successURL;
-        this.errorURL = errorURL;
-        this.cancelURL = cancelURL;
-        this.awaitingURL = awaitingURL;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.customerEmail = customerEmail;
-        this.dob = dob;
-        this.apiVersion = apiVersion;
+        merchantTransactionId = Utils.generateRandomNumber();
     }
 
     public Currency getCurrency() {
@@ -61,8 +48,12 @@ public class QuixHostedRequest {
         return amount;
     }
 
-    public void setAmount(String amount) {
-        this.amount = amount;
+    public void setAmount(String amount) throws InvalidFieldException {
+        String parsedAmount = Utils.parseAmount(amount);
+        if (parsedAmount == null) {
+            throw new InvalidFieldException("amount: Should Follow Format #.#### And Be Between 0 And 1000000");
+        }
+        this.amount = parsedAmount;
     }
 
     public CountryCode getCountry() {
@@ -73,7 +64,10 @@ public class QuixHostedRequest {
         return customerId;
     }
 
-    public void setCustomerId(String customerId) {
+    public void setCustomerId(String customerId) throws InvalidFieldException {
+        if (customerId == null || customerId.isEmpty() || customerId.length() > 80) {
+            throw new InvalidFieldException("customerId: Invalid Size, size must be (0 < customerId <= 80)");
+        }
         this.customerId = customerId;
     }
 
@@ -85,7 +79,10 @@ public class QuixHostedRequest {
         return merchantTransactionId;
     }
 
-    public void setMerchantTransactionId(String merchantTransactionId) {
+    public void setMerchantTransactionId(String merchantTransactionId) throws InvalidFieldException {
+        if (merchantTransactionId.isBlank() || merchantTransactionId.length() > 45) {
+            throw new InvalidFieldException("merchantTransactionId: Invalid Size, size must be (0 < merchantTransactionId <= 45)");
+        }
         this.merchantTransactionId = merchantTransactionId;
     }
 
@@ -97,7 +94,10 @@ public class QuixHostedRequest {
         return statusURL;
     }
 
-    public void setStatusURL(String statusURL) {
+    public void setStatusURL(String statusURL) throws InvalidFieldException {
+        if (!Utils.isValidURL(statusURL)) {
+            throw new InvalidFieldException("statusURL");
+        }
         this.statusURL = statusURL;
     }
 
@@ -105,14 +105,21 @@ public class QuixHostedRequest {
         return successURL;
     }
 
-    public void setSuccessURL(String successURL) {
+    public void setSuccessURL(String successURL) throws InvalidFieldException {
+        if (!Utils.isValidURL(successURL)) {
+            throw new InvalidFieldException("successURL");
+        }
         this.successURL = successURL;
     }
 
     public String getAwaitingURL() {
         return awaitingURL;
     }
-    public void setAwaitingURL(String awaitingURL) {
+
+    public void setAwaitingURL(String awaitingURL) throws InvalidFieldException {
+        if (!Utils.isValidURL(awaitingURL)) {
+            throw new InvalidFieldException("awaitingURL");
+        }
         this.awaitingURL = awaitingURL;
     }
 
@@ -120,7 +127,10 @@ public class QuixHostedRequest {
         return errorURL;
     }
 
-    public void setErrorURL(String errorURL) {
+    public void setErrorURL(String errorURL) throws InvalidFieldException {
+        if (!Utils.isValidURL(errorURL)) {
+            throw new InvalidFieldException("errorURL");
+        }
         this.errorURL = errorURL;
     }
 
@@ -128,7 +138,10 @@ public class QuixHostedRequest {
         return cancelURL;
     }
 
-    public void setCancelURL(String cancelURL) {
+    public void setCancelURL(String cancelURL) throws InvalidFieldException {
+        if (!Utils.isValidURL(cancelURL)) {
+            throw new InvalidFieldException("cancelURL");
+        }
         this.cancelURL = cancelURL;
     }
 
@@ -172,32 +185,64 @@ public class QuixHostedRequest {
         this.dob = dob;
     }
 
-    public int getApiVersion() {
-        return apiVersion;
+    public String getCustomerNationalId() {
+        return customerNationalId;
     }
 
-    public void setApiVersion(int apiVersion) {
-        this.apiVersion = apiVersion;
-    }
-
-    public void setMerchantParameters(List<Pair<String, String>> merchantParams) {
-        if (this.merchantParams == null) {
-            this.merchantParams = merchantParams;
+    public void setCustomerNationalId(String customerNationalId) throws InvalidFieldException {
+        if (customerNationalId.length() > 100)
+        {
+            throw new InvalidFieldException("customerNationalId: Invalid Size, size must be (customerNationalId <= 100)");
         }
-        else {
-            this.merchantParams.addAll(merchantParams);
-        }
+        this.customerNationalId = customerNationalId;
     }
 
-    public List<Pair<String, String>> getMerchantParameters() {
-        return merchantParams;
+    public String getIpAddress() {
+        return ipAddress;
     }
 
-    public void setMerchantParameter(String key, String value) {
-        if (merchantParams == null) {
-            this.merchantParams = new ArrayList<>();
+    public void setIpAddress(String ipAddress) throws InvalidFieldException {
+        if (ipAddress.length() > 45 || !Utils.isValidIP(ipAddress))
+        {
+            throw new InvalidFieldException("ipAddress: must follow format IPv4 or IPv6 and max size is 45");
         }
-        this.merchantParams.add(new Pair<>(key, value));
+        this.ipAddress = ipAddress;
+    }
+
+    public OperationTypes getOperationType() {
+        return operationType;
+    }
+
+    public void setOperationType(OperationTypes operationType) {
+        this.operationType = operationType;
+    }
+
+    public String getPaymentMethod() {
+        return paymentMethod;
+    }
+
+    public void setPaymentMethod(String paymentMethod) {
+        this.paymentMethod = paymentMethod;
+    }
+
+    public String getTelephone() {
+        return telephone;
+    }
+
+    public void setTelephone(String telephone) throws InvalidFieldException {
+        if (telephone.length() > 45)
+        {
+            throw new InvalidFieldException("telephone: Invalid Size, size must be (telephone <= 45)");
+        }
+        this.telephone = telephone;
+    }
+
+    public Language getLanguage() {
+        return language;
+    }
+
+    public void setLanguage(Language language) {
+        this.language = language;
     }
 
     public void setCredentials(Credentials credentials) {
@@ -206,28 +251,30 @@ public class QuixHostedRequest {
     }
 
     public Pair<Boolean, String> isMissingFields() {
-        if (apiVersion < 0) {
-            return new Pair<>(true, "Invalid apiVersion");
-        }
 
         List<String> mandatoryFields = Arrays.asList(
-                "amount", "currency", "country", "customerId", "merchantId",
-                "merchantTransactionId", "paymentSolution", "awaitingURL", "statusURL", "successURL",
-                "errorURL", "cancelURL", "firstName", "lastName", "productId", "customerEmail",
-                "customerCountry", "dob"
+                "merchantId", "productId", "paymentSolution", "merchantTransactionId",
+                "amount", "currency", "country", "customerId",
+                "awaitingURL", "statusURL", "successURL",
+                "errorURL", "cancelURL", "firstName", "lastName", "customerEmail",
+                "customerCountry", "dob", "ipAddress"
         );
 
-        return Utils.getInstance().containsNull(
+        return Utils.containsNull(
                 QuixHostedRequest.class, this, mandatoryFields
         );
     }
 
     public Pair<Boolean, String> checkCredentials(Credentials credentials) {
+        if (credentials.getApiVersion() < 0)
+        {
+            return new Pair<>(true, "apiVersion");
+        }
         List<String> mandatoryFields = Arrays.asList(
-                "merchantId", "productId", "merchantPass", "environment"
+                "merchantId", "productId", "environment"
         );
 
-        return Utils.getInstance().containsNull(
+        return Utils.containsNull(
                 Credentials.class, credentials, mandatoryFields
         );
     }

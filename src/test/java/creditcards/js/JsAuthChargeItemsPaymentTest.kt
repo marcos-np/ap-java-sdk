@@ -5,6 +5,7 @@ import com.mp.javaPaymentSDK.adapters.NetworkAdapter
 import com.mp.javaPaymentSDK.callbacks.JSPaymentListener
 import com.mp.javaPaymentSDK.callbacks.RequestListener
 import com.mp.javaPaymentSDK.enums.*
+import com.mp.javaPaymentSDK.exceptions.MissingFieldException
 import com.mp.javaPaymentSDK.models.Credentials
 import com.mp.javaPaymentSDK.models.requests.js.JSAuthorizationRequest
 import com.mp.javaPaymentSDK.models.responses.JSAuthorizationResponse
@@ -13,6 +14,7 @@ import okhttp3.RequestBody
 import okhttp3.ResponseBody
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import utils.NotificationResponses
 
 class JsAuthChargeItemsPaymentTest {
@@ -40,6 +42,7 @@ class JsAuthChargeItemsPaymentTest {
         credentials.merchantId = "111222"
         credentials.environment = Environment.STAGING
         credentials.productId = "1112220001"
+        credentials.apiVersion = 5
 
         val jsAuthorizationRequest = JSAuthorizationRequest()
 
@@ -47,7 +50,6 @@ class JsAuthChargeItemsPaymentTest {
         jsAuthorizationRequest.customerId = "55"
         jsAuthorizationRequest.currency = Currency.EUR
         jsAuthorizationRequest.operationType = OperationTypes.DEBIT
-        jsAuthorizationRequest.apiVersion = 5
 
         val jsPaymentAdapter = JSPaymentAdapter(credentials)
         jsPaymentAdapter.sendJSAuthorizationRequest(jsAuthorizationRequest, mockedResponseListener)
@@ -115,22 +117,19 @@ class JsAuthChargeItemsPaymentTest {
         credentials.merchantId = "111222"
         credentials.environment = Environment.STAGING
         credentials.productId = "1112220001"
+        credentials.apiVersion = 5
 
         val jsAuthorizationRequest = JSAuthorizationRequest()
         jsAuthorizationRequest.country = CountryCode.ES
         jsAuthorizationRequest.currency = Currency.EUR
         jsAuthorizationRequest.operationType = OperationTypes.DEBIT
-        jsAuthorizationRequest.apiVersion = 5
 
         val jsPaymentAdapter = JSPaymentAdapter(credentials)
-        jsPaymentAdapter.sendJSAuthorizationRequest(jsAuthorizationRequest, mockedResponseListener)
 
-        val errorSlot = slot<Error>()
-        val errorMessageSlot = slot<String>()
+        val exception = assertThrows<MissingFieldException> {
+            jsPaymentAdapter.sendJSAuthorizationRequest(jsAuthorizationRequest, mockedResponseListener)
+        }
 
-        verify { mockedResponseListener.onError(capture(errorSlot), capture(errorMessageSlot)) }
-
-        assertEquals(Error.MISSING_PARAMETER, errorSlot.captured)
-        assertEquals("Missing customerId", errorMessageSlot.captured)
+        assertEquals("Missing customerId", exception.message)
     }
 }

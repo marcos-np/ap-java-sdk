@@ -5,6 +5,8 @@ import com.mp.javaPaymentSDK.adapters.NetworkAdapter
 import com.mp.javaPaymentSDK.callbacks.RequestListener
 import com.mp.javaPaymentSDK.callbacks.ResponseListener
 import com.mp.javaPaymentSDK.enums.*
+import com.mp.javaPaymentSDK.exceptions.InvalidFieldException
+import com.mp.javaPaymentSDK.exceptions.MissingFieldException
 import com.mp.javaPaymentSDK.models.Credentials
 import com.mp.javaPaymentSDK.models.requests.h2h.H2HPreAuthorization
 import com.mp.javaPaymentSDK.models.responses.notification.Notification
@@ -14,21 +16,20 @@ import okhttp3.RequestBody
 import okhttp3.ResponseBody
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import utils.NotificationResponses
 
 class PreAuthorizationTest {
 
     @Test
     fun successResponsePreAuthorizationPayment() {
-        val mockedSecurityUtils = mockk<SecurityUtils>()
-        every { mockedSecurityUtils.generateIV() } returns ByteArray(16) { 1 }
-        every { mockedSecurityUtils.hash256(any()) } answers { callOriginal() }
-        every { mockedSecurityUtils.base64Encode(any()) } answers { callOriginal() }
-        every { mockedSecurityUtils.applyAESPadding(any()) } answers { callOriginal() }
-        every { mockedSecurityUtils.cbcEncryption(any(), any(), any(), any()) } answers { callOriginal() }
 
         mockkStatic(SecurityUtils::class)
-        every { SecurityUtils.getInstance() } returns mockedSecurityUtils
+        every { SecurityUtils.generateIV() } returns ByteArray(16) { 1 }
+        every { SecurityUtils.hash256(any()) } answers { callOriginal() }
+        every { SecurityUtils.base64Encode(any()) } answers { callOriginal() }
+        every { SecurityUtils.applyAESPadding(any()) } answers { callOriginal() }
+        every { SecurityUtils.cbcEncryption(any(), any(), any(), any()) } answers { callOriginal() }
 
         mockkConstructor(NetworkAdapter::class, recordPrivateCalls = true)
         every {
@@ -51,6 +52,7 @@ class PreAuthorizationTest {
         credentials.merchantId = "111222"
         credentials.environment = Environment.STAGING
         credentials.productId = "1112220001"
+        credentials.apiVersion = 5
 
         val h2HPreAuthorization = H2HPreAuthorization()
 
@@ -69,7 +71,6 @@ class PreAuthorizationTest {
         h2HPreAuthorization.awaitingURL = "https://test.com/waiting"
         h2HPreAuthorization.cancelURL = "https://test.com/cancel"
         h2HPreAuthorization.merchantTransactionId = "12345678"
-        h2HPreAuthorization.apiVersion = 5
 
         val h2HPaymentAdapter = H2HPaymentAdapter(credentials)
 
@@ -99,11 +100,11 @@ class PreAuthorizationTest {
         Assertions.assertEquals(3, queryParameterSlot.captured.size)
         Assertions.assertEquals("111222", queryParameterSlot.captured["merchantId"])
         Assertions.assertEquals(
-            "7QDv+7cYdagtQmVfr38p1+HRNOMcBrftirm7FfE6+GOSF52tAfECBNLpz0a9jfI8Vlr7QWy4vIfNXFdl+saLSXIVvsH8bn31IcWKU3OeMVXo7oK9uHWbv+xCWoUVvCigNVKwnNRhH3hs4+pxifzJH0+t0lnb/P9KViOOqGRL/v7BeDN8BHaCF3rMLeUwE0q0llyYxUOdhDGW6RlC5J2CqfovVXd5aK8SEAkS3roO74Vr2Ab/iK1vJbdn2hlN7ybb8PFD2eBOHMcdGzv2+Kij/f+ijk5GrnXvcx3LU1q5qUUlcUT+iKpiBdxANrRc5D1fhJXehVUrT6PkwNAlDgDEhcnkUSSz5ehCN6DgjoEhHgRa0K49EIpYX/hU5t5eeQOjtCdRqvZ8vlIxTd2lw8S38beGooQ5ub0CiSAk41Q4gvnxKq/CYqMPhAXGA9lLNfM2bO49N91nJKLMB8KmteAauFwKhU8HTwZRxlA3/BNl3PsWd428UwtCq4CNJLezCo5/GYpqzjONEZD0bbXDwt8a90wzUzykcl6kPYg0lRF04VYKl7sf4qw+4cKyH726VIKNZV7Dv/2iuyISYJ2OcYCP3Ty7SkuaIBPChWldIsNysa+W0hdAkYsQh7CQR60OtjGp1xeRXjCeDfT9SNKGgxdX3g==",
+            "7QDv+7cYdagtQmVfr38p1+HRNOMcBrftirm7FfE6+GOSF52tAfECBNLpz0a9jfI8Vlr7QWy4vIfNXFdl+saLSXIVvsH8bn31IcWKU3OeMVXo7oK9uHWbv+xCWoUVvCigNVKwnNRhH3hs4+pxifzJH0+t0lnb/P9KViOOqGRL/v7BeDN8BHaCF3rMLeUwE0q0os5MjtPjgmIC+jQVmjHlRb2KE+RhLewh/oazUTgOIMo75uj4DHuvlj9qhfRdU/iLhqgZd7P2jeQ0/zMa0Uv+N34NE4dzfeMNQ+leBbsbCiXKH15RubBngQ3MbT3OVd0+qfQE4bKc3ibITXuexUX/y/AufxXCvhX2hRGUxAaQeD0V1pmYkVAdzzIdQz0feLuZyLSY0QlxRRaME6lE1Re+fiWAik1ryPPY1EsBTDIF1/RgeMfH31KkLa1rgyNAv8G3kO4DNxV1ROmELsILCX4jDApkAlME+3Zx6gc/1BeDiRSwY+yssSBXZ6fJniAX39UzqaEsLeywtjdMadlYyjlvIKkh+x70gpiNIqfoYqVMV4Sr6CHzaMSaivIyWTttcYV+BmrvcbmTdRhKlI8QmwLmccQm0i655HFkmlIqm3Fqszbx2NfynZz0mB7MGLWwpmvB7dGl1rkVBTIr9RMc6uQqupsuukYDYvCfrEz0zcnmqMVqNrW/3QJMdmyz2bZRG8EDnHLKq79uu/Xpz6kmjdiCqw==",
             queryParameterSlot.captured["encrypted"]
         )
         Assertions.assertEquals(
-            "1099521ebd8a703be8f2a2762f672479cbe1759d20bed38c3191d4a28d33d616",
+            "976a8992bfdc37bea56b0bf0bf03b357dcb38bb04d8fbd954453b3df21499bd5",
             queryParameterSlot.captured["integrityCheck"]
         )
 
@@ -150,6 +151,7 @@ class PreAuthorizationTest {
         credentials.merchantId = "111222"
         credentials.environment = Environment.STAGING
         credentials.productId = "1112220001"
+        credentials.apiVersion = 5
 
         val h2HPreAuthorization = H2HPreAuthorization()
 
@@ -167,19 +169,14 @@ class PreAuthorizationTest {
         h2HPreAuthorization.awaitingURL = "https://test.com/waiting"
         h2HPreAuthorization.cancelURL = "https://test.com/cancel"
         h2HPreAuthorization.merchantTransactionId = "12345678"
-        h2HPreAuthorization.apiVersion = 5
 
         val h2HPaymentAdapter = H2HPaymentAdapter(credentials)
 
-        h2HPaymentAdapter.sendH2hPreAuthorizationRequest(h2HPreAuthorization, mockedResponseListener)
+        val exception = assertThrows<MissingFieldException> {
+            h2HPaymentAdapter.sendH2hPreAuthorizationRequest(h2HPreAuthorization, mockedResponseListener)
+        }
 
-        val errorSlot = slot<Error>()
-        val errorMessageSlot = slot<String>()
-
-        verify { mockedResponseListener.onError(capture(errorSlot), capture(errorMessageSlot)) }
-
-        Assertions.assertEquals(Error.MISSING_PARAMETER, errorSlot.captured)
-        Assertions.assertEquals("Missing cardNumber", errorMessageSlot.captured)
+        Assertions.assertEquals("Missing cardNumber", exception.message)
     }
 
     @Test
@@ -194,36 +191,14 @@ class PreAuthorizationTest {
         credentials.merchantId = "111222"
         credentials.environment = Environment.STAGING
         credentials.productId = "1112220001"
+        credentials.apiVersion = 5
 
         val h2HPreAuthorization = H2HPreAuthorization()
-        h2HPreAuthorization.amount = "50.123.22"
-        h2HPreAuthorization.currency = Currency.EUR
-        h2HPreAuthorization.country = CountryCode.ES
-        h2HPreAuthorization.customerId = "903"
-        h2HPreAuthorization.chName = "First name Last name"
-        h2HPreAuthorization.paymentSolution = PaymentSolutions.creditcards
-        h2HPreAuthorization.cardNumber = "4907270002222227"
-        h2HPreAuthorization.cvnNumber = "123"
-        h2HPreAuthorization.expDate = "0625"
-        h2HPreAuthorization.statusURL = "https://test.com/status"
-        h2HPreAuthorization.successURL = "https://test.com/success"
-        h2HPreAuthorization.errorURL = "https://test.com/error"
-        h2HPreAuthorization.awaitingURL = "https://test.com/waiting"
-        h2HPreAuthorization.cancelURL = "https://test.com/cancel"
-        h2HPreAuthorization.merchantTransactionId = "12345678"
-        h2HPreAuthorization.apiVersion = 5
+        val exception = assertThrows<InvalidFieldException> {
+            h2HPreAuthorization.amount = "50.123.22"
+        }
 
-        val h2HPaymentAdapter = H2HPaymentAdapter(credentials)
-
-        h2HPaymentAdapter.sendH2hPreAuthorizationRequest(h2HPreAuthorization, mockedResponseListener)
-
-        val errorSlot = slot<Error>()
-        val errorMessageSlot = slot<String>()
-
-        verify { mockedResponseListener.onError(capture(errorSlot), capture(errorMessageSlot)) }
-
-        Assertions.assertEquals(Error.INVALID_AMOUNT, errorSlot.captured)
-        Assertions.assertEquals(Error.INVALID_AMOUNT.message, errorMessageSlot.captured)
+        Assertions.assertEquals("amount: Should Follow Format #.#### And Be Between 0 And 1000000", exception.message)
     }
 
 }

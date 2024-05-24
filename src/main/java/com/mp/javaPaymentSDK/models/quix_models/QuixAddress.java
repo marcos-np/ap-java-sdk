@@ -1,5 +1,6 @@
 package com.mp.javaPaymentSDK.models.quix_models;
 
+import com.google.gson.annotations.SerializedName;
 import com.mp.javaPaymentSDK.enums.CountryCode;
 import com.mp.javaPaymentSDK.utils.Utils;
 import kotlin.Pair;
@@ -9,35 +10,29 @@ import java.util.List;
 
 public class QuixAddress {
 
-    private String street_address;
-    private String postal_code;
-    private String city;
-    private String country;
+    @SerializedName("street_address")
+    private String streetAddress = null;
+    @SerializedName("street_address2")
+    private String streetAddress2 = null;
+    @SerializedName("postal_code")
+    private String postalCode = null;
+    private String city = null;
+    private String country = null;
 
-    public QuixAddress() {
+    public String getStreetAddress() {
+        return streetAddress;
     }
 
-    public QuixAddress(String street_address, String postal_code, String city, String country) {
-        this.street_address = street_address;
-        this.postal_code = postal_code;
-        this.city = city;
-        this.country = country;
+    public void setStreetAddress(String streetAddress) {
+        this.streetAddress = streetAddress;
     }
 
-    public String getStreet_address() {
-        return street_address;
+    public String getPostalCode() {
+        return postalCode;
     }
 
-    public void setStreet_address(String street_address) {
-        this.street_address = street_address;
-    }
-
-    public String getPostal_code() {
-        return postal_code;
-    }
-
-    public void setPostal_code(String postal_code) {
-        this.postal_code = postal_code;
+    public void setPostalCode(String postalCode) {
+        this.postalCode = postalCode;
     }
 
     public String getCity() {
@@ -56,10 +51,18 @@ public class QuixAddress {
         this.country = country.getAlpha3();
     }
 
+    public String getStreetAddress2() {
+        return streetAddress2;
+    }
+
+    public void setStreetAddress2(String streetAddress2) {
+        this.streetAddress2 = streetAddress2;
+    }
+
     public Pair<Boolean, String> isMissingField() {
         List<String> mandatoryFields = Arrays.asList(
-                "street_address", "postal_code", "city", "country"
+                "streetAddress", "postalCode", "city", "country"
         );
-        return Utils.getInstance().containsNull(QuixAddress.class, this, mandatoryFields);
+        return Utils.containsNull(QuixAddress.class, this, mandatoryFields);
     }
 }

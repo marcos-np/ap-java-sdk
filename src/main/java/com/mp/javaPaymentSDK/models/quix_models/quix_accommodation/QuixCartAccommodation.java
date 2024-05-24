@@ -11,16 +11,8 @@ public class QuixCartAccommodation {
 
     private Currency currency = null;
     private double total_price_with_tax = 0;
+    private String reference = null;
     private List<QuixItemCartItemAccommodation> items = new ArrayList<>();
-
-    public QuixCartAccommodation() {
-    }
-
-    public QuixCartAccommodation(Currency currency, double total_price_with_tax, List<QuixItemCartItemAccommodation> items) {
-        this.currency = currency;
-        this.total_price_with_tax = total_price_with_tax;
-        this.items = items;
-    }
 
     public Currency getCurrency() {
         return currency;
@@ -35,7 +27,7 @@ public class QuixCartAccommodation {
     }
 
     public void setTotal_price_with_tax(double total_price_with_tax) {
-        this.total_price_with_tax = Double.parseDouble(Utils.getInstance().roundAmount(total_price_with_tax));
+        this.total_price_with_tax = Double.parseDouble(Utils.roundAmount(total_price_with_tax));
     }
 
     public List<QuixItemCartItemAccommodation> getItems() {
@@ -46,15 +38,23 @@ public class QuixCartAccommodation {
         this.items = items;
     }
 
+    public String getReference() {
+        return reference;
+    }
+
+    public void setReference(String reference) {
+        this.reference = reference;
+    }
+
     public Pair<Boolean, String> isMissingField() {
         if (total_price_with_tax <= 0) {
-            return new Pair<>(true, "Missing total_price_with_tax");
+            return new Pair<>(true, "total_price_with_tax");
         }
         if (currency == null) {
-            return new Pair<>(true, "Missing currency");
+            return new Pair<>(true, "currency");
         }
         if (items == null || items.isEmpty()) {
-            return new Pair<>(true, "Missing items");
+            return new Pair<>(true, "items");
         }
 
         for (QuixItemCartItemAccommodation item : items) {

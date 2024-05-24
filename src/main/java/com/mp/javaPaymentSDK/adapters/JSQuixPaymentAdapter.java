@@ -6,6 +6,7 @@ import com.mp.javaPaymentSDK.callbacks.RequestListener;
 import com.mp.javaPaymentSDK.callbacks.ResponseListener;
 import com.mp.javaPaymentSDK.enums.Endpoints;
 import com.mp.javaPaymentSDK.enums.Error;
+import com.mp.javaPaymentSDK.exceptions.MissingFieldException;
 import com.mp.javaPaymentSDK.models.Credentials;
 import com.mp.javaPaymentSDK.models.quix_models.quix_accommodation.QuixItemCartItemAccommodation;
 import com.mp.javaPaymentSDK.models.quix_models.quix_flight.QuixItemCartItemFlight;
@@ -44,11 +45,10 @@ public class JSQuixPaymentAdapter {
         this.credentials = credentials;
     }
 
-    public void sendJSQuixServiceRequest(JSQuixService jsQuixService, ResponseListener responseListener) {
+    public void sendJSQuixServiceRequest(JSQuixService jsQuixService, ResponseListener responseListener) throws MissingFieldException {
         Pair<Boolean, String> isMissingCred = jsQuixService.checkCredentials(credentials);
         if (isMissingCred.getFirst()) {
-            responseListener.onError(Error.MISSING_PARAMETER, isMissingCred.getSecond());
-            return;
+            throw new MissingFieldException(MissingFieldException.createMessage(isMissingCred.getSecond(), true));
         }
 
         jsQuixService.setCredentials(credentials);
@@ -57,16 +57,8 @@ public class JSQuixPaymentAdapter {
 
         Pair<Boolean, String> missingField = jsQuixService.isMissingFields();
         if (missingField.getFirst()) {
-            responseListener.onError(Error.MISSING_PARAMETER, missingField.getSecond());
-            return;
+            throw new MissingFieldException(MissingFieldException.createMessage(missingField.getSecond(), false));
         }
-
-        String parsedAmount = Utils.getInstance().parseAmount(jsQuixService.getAmount());
-        if (parsedAmount == null) {
-            responseListener.onError(Error.INVALID_AMOUNT, Error.INVALID_AMOUNT.getMessage());
-            return;
-        }
-        jsQuixService.setAmount(parsedAmount);
 
         List<QuixItemCartItemService> items = jsQuixService.getPaySolExtendedData().getCart().getItems();
         for (QuixItemCartItemService item : items) {
@@ -82,19 +74,16 @@ public class JSQuixPaymentAdapter {
 
         JSONObject bodyJson = new JSONObject(gson.toJson(jsQuixService));
         bodyJson.remove("paysolExtendedData");
-        bodyJson.remove("merchantParams");
         bodyJson.remove("prepayToken");
-        if (jsQuixService.getMerchantParameters() != null && !jsQuixService.getMerchantParameters().isEmpty()) {
-            bodyJson.put("merchantParams", Utils.getInstance().merchantParamsQuery(jsQuixService.getMerchantParameters()));
-        }
 
         bodyJson.put("paysolExtendedData", gson.toJson(jsQuixService.getPaySolExtendedData()));
+        System.out.println("Request Body = " + bodyJson.toString(2));
 
         RequestBody requestBody = RequestBody.create(bodyJson.toString(), MediaType.parse("application/json"));
 
         HashMap<String, String> headers = new HashMap<>();
         headers.put("prepayToken", jsQuixService.getPrepayToken());
-        headers.put("apiVersion", String.valueOf(jsQuixService.getApiVersion()));
+        headers.put("apiVersion", String.valueOf(credentials.getApiVersion()));
 
         networkAdapter.sendRequest(headers, null, requestBody, endpoint, new RequestListener() {
             @Override
@@ -108,6 +97,7 @@ public class JSQuixPaymentAdapter {
                 if (code == 200 || code == 307) {
                     try {
                         String rawResponse = responseBody.string();
+                        System.out.println(rawResponse);
                         Notification notification = NotificationAdapter.parseNotification(rawResponse);
                         responseListener.onResponseReceived(rawResponse, notification, notification.getTransactionResult());
                     } catch (Exception e) {
@@ -118,6 +108,7 @@ public class JSQuixPaymentAdapter {
                     String errorMessage = Error.CLIENT_ERROR.getMessage();
                     try {
                         errorMessage = responseBody.string();
+                        System.out.println("Error Received = " + errorMessage);
                     } catch (IOException exception) {
                         exception.printStackTrace();
                     }
@@ -126,6 +117,7 @@ public class JSQuixPaymentAdapter {
                     String errorMessage = Error.SERVER_ERROR.getMessage();
                     try {
                         errorMessage = responseBody.string();
+                        System.out.println("Error Received = " + errorMessage);
                     } catch (IOException exception) {
                         exception.printStackTrace();
                     }
@@ -135,12 +127,11 @@ public class JSQuixPaymentAdapter {
         });
     }
 
-    public void sendJSQuixFlightRequest(JSQuixFlight jsQuixFlight, ResponseListener responseListener) {
+    public void sendJSQuixFlightRequest(JSQuixFlight jsQuixFlight, ResponseListener responseListener) throws MissingFieldException {
 
         Pair<Boolean, String> isMissingCred = jsQuixFlight.checkCredentials(credentials);
         if (isMissingCred.getFirst()) {
-            responseListener.onError(Error.MISSING_PARAMETER, isMissingCred.getSecond());
-            return;
+            throw new MissingFieldException(MissingFieldException.createMessage(isMissingCred.getSecond(), true));
         }
 
         jsQuixFlight.setCredentials(credentials);
@@ -149,24 +140,12 @@ public class JSQuixPaymentAdapter {
 
         Pair<Boolean, String> missingField = jsQuixFlight.isMissingFields();
         if (missingField.getFirst()) {
-            responseListener.onError(Error.MISSING_PARAMETER, missingField.getSecond());
-            return;
+            throw new MissingFieldException(MissingFieldException.createMessage(missingField.getSecond(), false));
         }
-
-        String parsedAmount = Utils.getInstance().parseAmount(jsQuixFlight.getAmount());
-        if (parsedAmount == null) {
-            responseListener.onError(Error.INVALID_AMOUNT, Error.INVALID_AMOUNT.getMessage());
-            return;
-        }
-        jsQuixFlight.setAmount(parsedAmount);
 
         List<QuixItemCartItemFlight> items = jsQuixFlight.getPaySolExtendedData().getCart().getItems();
         for (QuixItemCartItemFlight item : items) {
-            String customerMemberSince = item.getArticle().getCustomerMemberSince();
             String departureDate = item.getArticle().getDepartureDate();
-            if (customerMemberSince.contains(":")) {
-                item.getArticle().setCustomerMemberSince(URLEncoder.encode(customerMemberSince, StandardCharsets.UTF_8));
-            }
             if (departureDate.contains(":")) {
                 item.getArticle().setDepartureDate(URLEncoder.encode(departureDate, StandardCharsets.UTF_8));
             }
@@ -174,19 +153,16 @@ public class JSQuixPaymentAdapter {
 
         JSONObject bodyJson = new JSONObject(gson.toJson(jsQuixFlight));
         bodyJson.remove("paysolExtendedData");
-        bodyJson.remove("merchantParams");
         bodyJson.remove("prepayToken");
-        if (jsQuixFlight.getMerchantParameters() != null && !jsQuixFlight.getMerchantParameters().isEmpty()) {
-            bodyJson.put("merchantParams", Utils.getInstance().merchantParamsQuery(jsQuixFlight.getMerchantParameters()));
-        }
 
         bodyJson.put("paysolExtendedData", gson.toJson(jsQuixFlight.getPaySolExtendedData()));
+        System.out.println("Request Body = " + bodyJson.toString(2));
 
         RequestBody requestBody = RequestBody.create(bodyJson.toString(), MediaType.parse("application/json"));
 
         HashMap<String, String> headers = new HashMap<>();
         headers.put("prepayToken", jsQuixFlight.getPrepayToken());
-        headers.put("apiVersion", String.valueOf(jsQuixFlight.getApiVersion()));
+        headers.put("apiVersion", String.valueOf(credentials.getApiVersion()));
 
         networkAdapter.sendRequest(headers, null, requestBody, endpoint, new RequestListener() {
             @Override
@@ -200,6 +176,7 @@ public class JSQuixPaymentAdapter {
                 if (code == 200 || code == 307) {
                     try {
                         String rawResponse = responseBody.string();
+                        System.out.println(rawResponse);
                         Notification notification = NotificationAdapter.parseNotification(rawResponse);
                         responseListener.onResponseReceived(rawResponse, notification, notification.getTransactionResult());
                     } catch (Exception e) {
@@ -210,6 +187,7 @@ public class JSQuixPaymentAdapter {
                     String errorMessage = Error.CLIENT_ERROR.getMessage();
                     try {
                         errorMessage = responseBody.string();
+                        System.out.println("Error Received = " + errorMessage);
                     } catch (IOException exception) {
                         exception.printStackTrace();
                     }
@@ -218,6 +196,7 @@ public class JSQuixPaymentAdapter {
                     String errorMessage = Error.SERVER_ERROR.getMessage();
                     try {
                         errorMessage = responseBody.string();
+                        System.out.println("Error Received = " + errorMessage);
                     } catch (IOException exception) {
                         exception.printStackTrace();
                     }
@@ -227,12 +206,11 @@ public class JSQuixPaymentAdapter {
         });
     }
 
-    public void sendJSQuixAccommodationRequest(JSQuixAccommodation jsQuixAccommodation, ResponseListener responseListener) {
+    public void sendJSQuixAccommodationRequest(JSQuixAccommodation jsQuixAccommodation, ResponseListener responseListener) throws MissingFieldException {
 
         Pair<Boolean, String> isMissingCred = jsQuixAccommodation.checkCredentials(credentials);
         if (isMissingCred.getFirst()) {
-            responseListener.onError(Error.MISSING_PARAMETER, isMissingCred.getSecond());
-            return;
+            throw new MissingFieldException(MissingFieldException.createMessage(isMissingCred.getSecond(), true));
         }
 
         jsQuixAccommodation.setCredentials(credentials);
@@ -241,16 +219,8 @@ public class JSQuixPaymentAdapter {
 
         Pair<Boolean, String> missingField = jsQuixAccommodation.isMissingFields();
         if (missingField.getFirst()) {
-            responseListener.onError(Error.MISSING_PARAMETER, missingField.getSecond());
-            return;
+            throw new MissingFieldException(MissingFieldException.createMessage(missingField.getSecond(), false));
         }
-
-        String parsedAmount = Utils.getInstance().parseAmount(jsQuixAccommodation.getAmount());
-        if (parsedAmount == null) {
-            responseListener.onError(Error.INVALID_AMOUNT, Error.INVALID_AMOUNT.getMessage());
-            return;
-        }
-        jsQuixAccommodation.setAmount(parsedAmount);
 
         List<QuixItemCartItemAccommodation> items = jsQuixAccommodation.getPaySolExtendedData().getCart().getItems();
         for (QuixItemCartItemAccommodation item : items) {
@@ -266,20 +236,16 @@ public class JSQuixPaymentAdapter {
 
         JSONObject bodyJson = new JSONObject(gson.toJson(jsQuixAccommodation));
         bodyJson.remove("paysolExtendedData");
-        bodyJson.remove("merchantParams");
         bodyJson.remove("prepayToken");
-        if (jsQuixAccommodation.getMerchantParameters() != null && !jsQuixAccommodation.getMerchantParameters().isEmpty()) {
-            bodyJson.put("merchantParams", Utils.getInstance().merchantParamsQuery(jsQuixAccommodation.getMerchantParameters()));
-        }
 
         bodyJson.put("paysolExtendedData", gson.toJson(jsQuixAccommodation.getPaySolExtendedData()));
-        System.out.println("bodyJson \n" + bodyJson);
+        System.out.println("Request Body = " + bodyJson.toString(2));
 
         RequestBody requestBody = RequestBody.create(bodyJson.toString(), MediaType.parse("application/json"));
 
         HashMap<String, String> headers = new HashMap<>();
         headers.put("prepayToken", jsQuixAccommodation.getPrepayToken());
-        headers.put("apiVersion", String.valueOf(jsQuixAccommodation.getApiVersion()));
+        headers.put("apiVersion", String.valueOf(credentials.getApiVersion()));
 
         networkAdapter.sendRequest(headers, null, requestBody, endpoint, new RequestListener() {
             @Override
@@ -293,6 +259,7 @@ public class JSQuixPaymentAdapter {
                 if (code == 200 || code == 307) {
                     try {
                         String rawResponse = responseBody.string();
+                        System.out.println(rawResponse);
                         Notification notification = NotificationAdapter.parseNotification(rawResponse);
                         responseListener.onResponseReceived(rawResponse, notification, notification.getTransactionResult());
 
@@ -304,6 +271,7 @@ public class JSQuixPaymentAdapter {
                     String errorMessage = Error.CLIENT_ERROR.getMessage();
                     try {
                         errorMessage = responseBody.string();
+                        System.out.println("Error Received = " + errorMessage);
                     } catch (IOException exception) {
                         exception.printStackTrace();
                     }
@@ -312,6 +280,7 @@ public class JSQuixPaymentAdapter {
                     String errorMessage = Error.SERVER_ERROR.getMessage();
                     try {
                         errorMessage = responseBody.string();
+                        System.out.println("Error Received = " + errorMessage);
                     } catch (IOException exception) {
                         exception.printStackTrace();
                     }
@@ -321,12 +290,11 @@ public class JSQuixPaymentAdapter {
         });
     }
 
-    public void sendJSQuixItemRequest(JSQuixItem jsQuixItem, ResponseListener responseListener) {
+    public void sendJSQuixItemRequest(JSQuixItem jsQuixItem, ResponseListener responseListener) throws MissingFieldException {
 
         Pair<Boolean, String> isMissingCred = jsQuixItem.checkCredentials(credentials);
         if (isMissingCred.getFirst()) {
-            responseListener.onError(Error.MISSING_PARAMETER, isMissingCred.getSecond());
-            return;
+            throw new MissingFieldException(MissingFieldException.createMessage(isMissingCred.getSecond(), true));
         }
 
         jsQuixItem.setCredentials(credentials);
@@ -335,32 +303,21 @@ public class JSQuixPaymentAdapter {
 
         Pair<Boolean, String> missingField = jsQuixItem.isMissingFields();
         if (missingField.getFirst()) {
-            responseListener.onError(Error.MISSING_PARAMETER, missingField.getSecond());
-            return;
+            throw new MissingFieldException(MissingFieldException.createMessage(missingField.getSecond(), false));
         }
-
-        String parsedAmount = Utils.getInstance().parseAmount(jsQuixItem.getAmount());
-        if (parsedAmount == null) {
-            responseListener.onError(Error.INVALID_AMOUNT, Error.INVALID_AMOUNT.getMessage());
-            return;
-        }
-        jsQuixItem.setAmount(parsedAmount);
 
         JSONObject bodyJson = new JSONObject(jsQuixItem);
         bodyJson.remove("paysolExtendedData");
-        bodyJson.remove("merchantParams");
         bodyJson.remove("prepayToken");
-        if (jsQuixItem.getMerchantParameters() != null && !jsQuixItem.getMerchantParameters().isEmpty()) {
-            bodyJson.put("merchantParams", Utils.getInstance().merchantParamsQuery(jsQuixItem.getMerchantParameters()));
-        }
 
         bodyJson.put("paysolExtendedData", gson.toJson(jsQuixItem.getPaySolExtendedData()));
+        System.out.println("Request Body = " + bodyJson.toString(2));
 
         RequestBody requestBody = RequestBody.create(bodyJson.toString(), MediaType.parse("application/json"));
 
         HashMap<String, String> headers = new HashMap<>();
         headers.put("prepayToken", jsQuixItem.getPrepayToken());
-        headers.put("apiVersion", String.valueOf(jsQuixItem.getApiVersion()));
+        headers.put("apiVersion", String.valueOf(credentials.getApiVersion()));
 
         networkAdapter.sendRequest(headers, null, requestBody, endpoint, new RequestListener() {
             @Override
@@ -374,6 +331,7 @@ public class JSQuixPaymentAdapter {
                 if (code == 200 || code == 307) {
                     try {
                         String rawResponse = responseBody.string();
+                        System.out.println(rawResponse);
                         Notification notification = NotificationAdapter.parseNotification(rawResponse);
                         responseListener.onResponseReceived(rawResponse, notification, notification.getTransactionResult());
 
@@ -385,6 +343,7 @@ public class JSQuixPaymentAdapter {
                     String errorMessage = Error.CLIENT_ERROR.getMessage();
                     try {
                         errorMessage = responseBody.string();
+                        System.out.println("Error Received = " + errorMessage);
                     } catch (IOException exception) {
                         exception.printStackTrace();
                     }
@@ -393,6 +352,7 @@ public class JSQuixPaymentAdapter {
                     String errorMessage = Error.SERVER_ERROR.getMessage();
                     try {
                         errorMessage = responseBody.string();
+                        System.out.println("Error Received = " + errorMessage);
                     } catch (IOException exception) {
                         exception.printStackTrace();
                     }

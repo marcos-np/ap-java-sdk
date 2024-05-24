@@ -5,6 +5,8 @@ import com.mp.javaPaymentSDK.adapters.NetworkAdapter
 import com.mp.javaPaymentSDK.adapters.ResponseListenerAdapter
 import com.mp.javaPaymentSDK.callbacks.RequestListener
 import com.mp.javaPaymentSDK.enums.*
+import com.mp.javaPaymentSDK.exceptions.InvalidFieldException
+import com.mp.javaPaymentSDK.exceptions.MissingFieldException
 import com.mp.javaPaymentSDK.models.Credentials
 import com.mp.javaPaymentSDK.models.requests.js.JSCharge
 import com.mp.javaPaymentSDK.models.responses.notification.Notification
@@ -14,6 +16,7 @@ import okhttp3.ResponseBody
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import utils.NotificationResponses
 
 class JsChargePaymentTest {
@@ -42,6 +45,7 @@ class JsChargePaymentTest {
         credentials.merchantId = "111222"
         credentials.environment = Environment.STAGING
         credentials.productId = "1112220001"
+        credentials.apiVersion = 5
 
         val jsCharge = JSCharge()
 
@@ -130,6 +134,7 @@ class JsChargePaymentTest {
         credentials.merchantId = "111222"
         credentials.environment = Environment.STAGING
         credentials.productId = "1112220001"
+        credentials.apiVersion = 5
 
         val jsCharge = JSCharge()
 
@@ -147,14 +152,12 @@ class JsChargePaymentTest {
         jsCharge.apiVersion = 5
 
         val jsPaymentAdapter = JSPaymentAdapter(credentials)
-        jsPaymentAdapter.sendJSChargeRequest(jsCharge, mockedResponseListener)
-        val errorSlot = slot<Error>()
-        val errorMessageSlot = slot<String>()
 
-        verify { mockedResponseListener.onError(capture(errorSlot), capture(errorMessageSlot)) }
+        val exception = assertThrows<MissingFieldException> {
+            jsPaymentAdapter.sendJSChargeRequest(jsCharge, mockedResponseListener)
+        }
 
-        assertEquals(Error.MISSING_PARAMETER, errorSlot.captured)
-        assertEquals("Missing prepayToken", errorMessageSlot.captured)
+        assertEquals("Missing prepayToken", exception.message)
     }
 
     @Test
@@ -181,31 +184,14 @@ class JsChargePaymentTest {
         credentials.merchantId = "111222"
         credentials.environment = Environment.STAGING
         credentials.productId = "1112220001"
+        credentials.apiVersion = 5
 
         val jsCharge = JSCharge()
 
-        jsCharge.amount = "30.123.123"
-        jsCharge.prepayToken = "2795f021-f31c-4533-a74d-5d3d887a003b"
-        jsCharge.country = CountryCode.ES
-        jsCharge.customerId = "55"
-        jsCharge.currency = Currency.EUR
-        jsCharge.operationType = OperationTypes.DEBIT
-        jsCharge.paymentSolution = PaymentSolutions.creditcards
-        jsCharge.statusURL = "https://test.com/paymentNotification"
-        jsCharge.successURL = "https://test.com/success"
-        jsCharge.errorURL = "https://test.com/error"
-        jsCharge.awaitingURL = "https://test.com/awaiting"
-        jsCharge.cancelURL = "https://test.com/cancel"
-        jsCharge.apiVersion = 5
+        val exception = assertThrows<InvalidFieldException> {
+            jsCharge.amount = "30.123.123"
+        }
 
-        val jsPaymentAdapter = JSPaymentAdapter(credentials)
-        jsPaymentAdapter.sendJSChargeRequest(jsCharge, mockedResponseListener)
-        val errorSlot = slot<Error>()
-        val errorMessageSlot = slot<String>()
-
-        verify { mockedResponseListener.onError(capture(errorSlot), capture(errorMessageSlot)) }
-
-        assertEquals(Error.INVALID_AMOUNT, errorSlot.captured)
-        assertEquals(Error.INVALID_AMOUNT.message, errorMessageSlot.captured)
+        assertEquals("amount: Should Follow Format #.#### And Be Between 0 And 1000000", exception.message)
     }
 }

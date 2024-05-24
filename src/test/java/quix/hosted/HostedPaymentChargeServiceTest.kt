@@ -2,22 +2,18 @@ package quix.hosted
 
 import com.mp.javaPaymentSDK.adapters.HostedQuixPaymentAdapter
 import com.mp.javaPaymentSDK.adapters.NetworkAdapter
-import com.mp.javaPaymentSDK.adapters.SocketAdapter
 import com.mp.javaPaymentSDK.callbacks.RequestListener
 import com.mp.javaPaymentSDK.callbacks.ResponseListener
 import com.mp.javaPaymentSDK.enums.*
+import com.mp.javaPaymentSDK.exceptions.InvalidFieldException
+import com.mp.javaPaymentSDK.exceptions.MissingFieldException
 import com.mp.javaPaymentSDK.models.Credentials
 import com.mp.javaPaymentSDK.models.quix_models.QuixAddress
 import com.mp.javaPaymentSDK.models.quix_models.QuixBilling
-import com.mp.javaPaymentSDK.models.quix_models.quix_product.QuixArticleProduct
-import com.mp.javaPaymentSDK.models.quix_models.quix_product.QuixCartProduct
-import com.mp.javaPaymentSDK.models.quix_models.quix_product.QuixItemCartItemProduct
-import com.mp.javaPaymentSDK.models.quix_models.quix_product.QuixItemPaySolExtendedData
 import com.mp.javaPaymentSDK.models.quix_models.quix_service.QuixArticleService
 import com.mp.javaPaymentSDK.models.quix_models.quix_service.QuixCartService
 import com.mp.javaPaymentSDK.models.quix_models.quix_service.QuixItemCartItemService
 import com.mp.javaPaymentSDK.models.quix_models.quix_service.QuixServicePaySolExtendedData
-import com.mp.javaPaymentSDK.models.requests.quix_hosted.HostedQuixItem
 import com.mp.javaPaymentSDK.models.requests.quix_hosted.HostedQuixService
 import com.mp.javaPaymentSDK.utils.SecurityUtils
 import io.mockk.*
@@ -25,20 +21,19 @@ import okhttp3.RequestBody
 import okhttp3.ResponseBody
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 
 class HostedPaymentChargeServiceTest {
 
     @Test
     fun successHostedServiceNotification() {
-        val mockedSecurityUtils = mockk<SecurityUtils>()
-        every { mockedSecurityUtils.generateIV() } returns ByteArray(16) { 1 }
-        every { mockedSecurityUtils.hash256(any()) } answers { callOriginal() }
-        every { mockedSecurityUtils.base64Encode(any()) } answers { callOriginal() }
-        every { mockedSecurityUtils.applyAESPadding(any()) } answers { callOriginal() }
-        every { mockedSecurityUtils.cbcEncryption(any(), any(), any(), any()) } answers { callOriginal() }
 
         mockkStatic(SecurityUtils::class)
-        every { SecurityUtils.getInstance() } returns mockedSecurityUtils
+        every { SecurityUtils.generateIV() } returns ByteArray(16) { 1 }
+        every { SecurityUtils.hash256(any()) } answers { callOriginal() }
+        every { SecurityUtils.base64Encode(any()) } answers { callOriginal() }
+        every { SecurityUtils.applyAESPadding(any()) } answers { callOriginal() }
+        every { SecurityUtils.cbcEncryption(any(), any(), any(), any()) } answers { callOriginal() }
 
         mockkConstructor(NetworkAdapter::class, recordPrivateCalls = true)
         every {
@@ -62,6 +57,7 @@ class HostedPaymentChargeServiceTest {
         credentials.merchantId = "111222"
         credentials.environment = Environment.STAGING
         credentials.productId = "1112220001"
+        credentials.apiVersion = 5
 
         val hostedQuixService = HostedQuixService()
         hostedQuixService.amount = "99.0"
@@ -76,20 +72,21 @@ class HostedPaymentChargeServiceTest {
         hostedQuixService.firstName = "Name"
         hostedQuixService.lastName = "Last Name"
         hostedQuixService.merchantTransactionId = "12345678"
-        hostedQuixService.apiVersion = 5
+        hostedQuixService.ipAddress = "0.0.0.0"
 
         val quixArticleService = QuixArticleService()
         quixArticleService.name = "Nombre del servicio 2"
         quixArticleService.reference = "4912345678903"
         quixArticleService.startDate = "2024-10-30T00:00:00+01:00"
         quixArticleService.endDate = "2024-12-31T23:59:59+01:00"
-        quixArticleService.unit_price_with_tax = 99.0
+        quixArticleService.unitPriceWithTax = 99.0
+        quixArticleService.category = Category.digital
 
         val quixItemCartItemService = QuixItemCartItemService()
         quixItemCartItemService.article = quixArticleService
         quixItemCartItemService.units = 1
-        quixItemCartItemService.isAuto_shipping = true
-        quixItemCartItemService.total_price_with_tax = 99.0
+        quixItemCartItemService.isAutoShipping = true
+        quixItemCartItemService.totalPriceWithTax = 99.0
 
         val items: MutableList<QuixItemCartItemService> = java.util.ArrayList()
         items.add(quixItemCartItemService)
@@ -97,18 +94,18 @@ class HostedPaymentChargeServiceTest {
         val quixCartService = QuixCartService()
         quixCartService.currency = Currency.EUR
         quixCartService.items = items
-        quixCartService.total_price_with_tax = 99.0
+        quixCartService.totalPriceWithTax = 99.0
 
         val quixAddress = QuixAddress()
         quixAddress.city = "Barcelona"
         quixAddress.setCountry(CountryCode.ES)
-        quixAddress.street_address = "Nombre de la vía y nº"
-        quixAddress.postal_code = "28003"
+        quixAddress.streetAddress = "Nombre de la vía y nº"
+        quixAddress.postalCode = "28003"
 
         val quixBilling = QuixBilling()
         quixBilling.address = quixAddress
-        quixBilling.first_name = "Nombre"
-        quixBilling.last_name = "Apellido"
+        quixBilling.firstName = "Nombre"
+        quixBilling.lastName = "Apellido"
 
         val quixServicePaySolExtendedData = QuixServicePaySolExtendedData()
         quixServicePaySolExtendedData.cart = quixCartService
@@ -144,11 +141,11 @@ class HostedPaymentChargeServiceTest {
         assertEquals(3, queryParameterSlot.captured.size)
         assertEquals("111222", queryParameterSlot.captured["merchantId"])
         assertEquals(
-            "2BDGM6x+gfSbyWnsjorW6SehNsfnfDRVlBc2heL9fGfOXyKzcFeArKLvKxO7s3Cz432FV9V9VSgfAfQzbHVr59WgjfTvj+uv9Bs1DxyFcf+hUKY/McQbXpRenl49P0ghITtNiN7Vyxs6TleM/JkjJjz8/ebgqHFTegpiyDbECd9/YURkLT8rvFK8PCIiP218KYAjXsH8990sraRF1T4SJIjBsXEepliqXGHBr1zjNWz19ViO4PQcG4JfsF4YNwi8dtKEsNQ+w9SpuOJ7DpTPVAjjp1iIf/2lb1sEd5SjKkLCB4SnWRsh4GRg0iOay1obfm2oHVwJbJOj6EUvjUrVAorEtFvFMwmC2LqspfOyBTqp3T5gbrwMqRSF+AJ8rFZOUgKzkK7cY2k5SGoCY0FyZS9qiHj70NQRI+VmAT/OPnbQJvz/HXU7AbBVS29vWZ2Tl4S9is5C32YRpyKjsSSa43RO7v74mRN/X4xZn36rldDbcTVRdM/7crGzlx25E169WPUkaxK9U+0soUvUHW5EQ8RJC3RcymRXaRq990B26urzv6VfrooBj7lo74VW55jzB3aJ0hCwr1A+wuVfonalT+73P/sqjKijtXvMEYd/V903e+i/ZXzjVzasXuxU3siuLbJ0pJj+7DUy/BOD2DW1qfxkK9QT3WFea9swAxXZWNsVl549OtqVqim4W6McZFr7e1f5hzhJIRSXIeLIU+Vm4W6dnN0WXIYrYO6bKUU/iE5bNPqN5PBmM3lkHerVo/rnip1rCnUHjZF+i7PaChFFHuZak6SKis/2uBRrFtLPm3NKfI9Gd2zEN87MmWXrM5OM7QqsU1S5TVKjjkXePlpJSawuElcgaXkB383OYmWiFGlCItk6Aqj+N/jNGGNiC1xm/n/Y4MAnqUWZsCSMnvlul1bBQ83D7VfdhuIW7KdXUu6V/e32AN8gqgToWuviCWNMzs4DIpyNvq6sjTniEw7DJWkMbQLPLDGzD/Y+hoR/fBieMTs7FtJEhxViiCFfYR4cfTNFChk9JjM1QA1oV46dndfOUPyUt1MiUZgibQvBraS1xZXRQMiCVsWhfybCtneJ0A3FtX04qkNZdJbfsgojSJSb7f0PUJobflfiLs8uKrnq5F6g0UBecvp/oA2Z5pDKz7ooEF1RO9WKxzAvKpkIj5SRc8jWv3tji39tU8JXJrk/dU9uBlrgfoDRwFPt36A5/Y6CQratuFndfjhXxzOfpP6oKLPHwQybU9QaIlzISjy1RAVw3dXGdbf6juLvb3bZ763arvNQo3YSrLcyawgNxJ4mTiSHkKD54C8oPVQylLmvWV7u+4aMfEXTmTG8eRTuiYCP6MpwHx8pBy5tpH5md3od499JkdgJ3L3IFYjLqc6OG84qoDz2FOoKkjCklDkzKPcYYvy+wvynNhnXq+0E9Xi8G79r79Q9fvq1iqaQ+h8+JC5O7IHO7AGs4QynEYPCqK7xAv/oZKdu4T9VP8GbZIprqhooNWMZIYSUE9dHwH8AELxIv21FANxmlYNPHA+TW7LaBsFsKq5YfeisSHmkZMOH+mxXcYUsibdhUU6uDWDCU8t7KXKzclQ3WtgBcEEt05sN0ZX/nE+70hJIIFPzjMqlCEQ0hhvySv7z60UVVp3DOyVMtLDUItjhqu+XxhgAX5WmLTc5W5ZmKKpW4SEZNw==",
+            "pDH/U+/gbuzXdYp84aiQKsVwdo0OluLSE7iid4fDTDsOp3Iz5PMaVkId+H/okm/59Slik6eoVuhf9S0X7utcyiYp1zqBuvvjPWiO0Nmne1/ZLwf2liuTEo6jRVTCGjokuW3KnOMHbgeoHjg5TaK6fzocze2OWBs55Luc+A4onL6/qm7Lt8dAhWkUjIcWzIE5KXyKPm4Icm16zGh5wmDou/WEtJVEedu7LsO1HfOvJro6s39Ya+e8RAaNEoQZ64f4J8kDU9KYEm6aQZrOEp/+n1wI2Vc7u/6Y/VGO2ye7649smVWFsPhgGe9L8i5wzQRI4xpVpKLKQKe2Opx7fG7FZVgy1RZ8Ye4t3KZ8qEKlpHMTriACrdB4QxcwctvbRQCWgjCqCEDwD+98eTefF1LRqh2++/xptrxrXxBl+oOiyNbIdG8ZllTmYZIDF/dIESFWQUXqxL3vAYEj4CMctMZSmb2721NohunvlobjzKnbl/LB8o2dxsCrONuhDn8AX4I+5+IErn+6ifP0cgce4p1LwQL3twThfnqWZRIz0D9O54QEVSj/MTHwTFumZHiNdHlw5tHa+rFVK26AbJ/2za7kmZtaIDbJRFzJdCzRD011DY08wqla03v4qBBdNFCBJqjE2NXnmcAELemPMC+CdnfDmyT0Asyn0vLagzVJrWcN5ntxdtojoybPT4MgafMID6scUltph1LrpSLJRYqd39gLMbNv9icUxwpQMWVWFGWH+guE+GOTDcQ3z/DYuhSmS9ApTe/cULsQHjF/J/GHqtNSOupGeMJf54VL7IDeE6dIGoufPFDyO7Zs0wNsflGQh1Ri2OjGeT4cJZRhCchy1a5oxgb4GZekJcFHFvMD8BI5onoEeqbmpT3kEc+noty+nyCB2OGfHCKQ3Pz9Lt6qTIiQARk36KROp5XfSpn5+F3P9nb8dNJEG7UyEpd12AShXkms8vihKrmshExP0ciF5+KLKyysOcJ3l4BZHSqv1xhnMVZAEyTLrYOJpddf7ND1Fq8yQTF71w06gpuJAY161jzMpZiwkzDwngasTOHIeI3KDz5ooKkg7sH/L+KroqenuhPVheN2NAL2F327Ptd6eQf8zWNgJx29UOGxdmx69CeKSS3HeioGPUDAh7py/V/AWVtv5Oob0BMpg68W3AEbEOqG/OhSwHsZ5ckPpjOgJik78w++bsMRcx9lXJ6ofwGWNv0hkgmS17KusF8LC/lcenqHK2nOaZba7ypq8Re3IYBPlDydCErszd/BxFIu2QdXyDPmURo1mlLQ6QDOIZeaNuWr/P6JT7wqe0H+gaVlDPucYLvuPvC3E6f+7BciDYkeUvRthnQrjPNaRoNNgqAFn9NP8u1pChDoHZKtMZS7QKIaCrq53SguUP4GM19ztB56ZBAqV25PQebFSifxfwbly9gg8QkSlyj9o+TUBSVR+mGB+l+Dbuit1iozWiskS7UOagrTJrXBStKzQKSUI9JSOucLGd7dOO99j3yIm5VAE5tfvjqDa+hX61FdsxfWNnoVRERaCnF0WuxYXEJrAt9iNoVu2IJ5giu7wlAf9iCEmCAA6rYH9T9IwxnW3jNZOPDXicIaFvkgBt6xPBfQwEiGjrle7wzVg0y8wUNxFNTK15q8wezKhUqgljuzbC8/XUfb72EOA01MYH5d/IGQnaWe/2kwuO1HRY1pHbwXmoTedoramtfvhBmUAaA7noOr+MmbvLvPC92Bwn4HvmO7bZ8nCouefw==",
             queryParameterSlot.captured["encrypted"]
         )
         assertEquals(
-            "475598a303edde3e618ccc22d22db5940d1312081a43a5c116524069959c5b2c",
+            "a569abf609a9b1150a101c4ae616e9c45d4f744b287de2d5d5a90ebc4205bf50",
             queryParameterSlot.captured["integrityCheck"]
         )
 
@@ -177,18 +174,13 @@ class HostedPaymentChargeServiceTest {
 
     @Test
     fun failMissingParameterHosted() {
-        mockkConstructor(SocketAdapter::class, recordPrivateCalls = true)
-        every { anyConstructed<SocketAdapter>().connect(any(), any()) } just Runs
-
-        val mockedSecurityUtils = mockk<SecurityUtils>()
-        every { mockedSecurityUtils.generateIV() } returns ByteArray(16) { 1 }
-        every { mockedSecurityUtils.hash256(any()) } answers { callOriginal() }
-        every { mockedSecurityUtils.base64Encode(any()) } answers { callOriginal() }
-        every { mockedSecurityUtils.applyAESPadding(any()) } answers { callOriginal() }
-        every { mockedSecurityUtils.cbcEncryption(any(), any(), any(), any()) } answers { callOriginal() }
 
         mockkStatic(SecurityUtils::class)
-        every { SecurityUtils.getInstance() } returns mockedSecurityUtils
+        every { SecurityUtils.generateIV() } returns ByteArray(16) { 1 }
+        every { SecurityUtils.hash256(any()) } answers { callOriginal() }
+        every { SecurityUtils.base64Encode(any()) } answers { callOriginal() }
+        every { SecurityUtils.applyAESPadding(any()) } answers { callOriginal() }
+        every { SecurityUtils.cbcEncryption(any(), any(), any(), any()) } answers { callOriginal() }
 
         mockkConstructor(NetworkAdapter::class, recordPrivateCalls = true)
         every {
@@ -212,6 +204,7 @@ class HostedPaymentChargeServiceTest {
         credentials.merchantId = "111222"
         credentials.environment = Environment.STAGING
         credentials.productId = "1112220001"
+        credentials.apiVersion = 5
 
         val hostedQuixService = HostedQuixService()
         hostedQuixService.amount = "99.0"
@@ -225,20 +218,20 @@ class HostedPaymentChargeServiceTest {
         hostedQuixService.firstName = "Name"
         hostedQuixService.lastName = "Last Name"
         hostedQuixService.merchantTransactionId = "12345678"
-        hostedQuixService.apiVersion = 5
 
         val quixArticleService = QuixArticleService()
         quixArticleService.name = "Nombre del servicio 2"
         quixArticleService.reference = "4912345678903"
         quixArticleService.startDate = "2024-10-30T00:00:00+01:00"
         quixArticleService.endDate = "2024-12-31T23:59:59+01:00"
-        quixArticleService.unit_price_with_tax = 99.0
+        quixArticleService.unitPriceWithTax = 99.0
+        quixArticleService.category = Category.digital
 
         val quixItemCartItemService = QuixItemCartItemService()
         quixItemCartItemService.article = quixArticleService
         quixItemCartItemService.units = 1
-        quixItemCartItemService.isAuto_shipping = true
-        quixItemCartItemService.total_price_with_tax = 99.0
+        quixItemCartItemService.isAutoShipping = true
+        quixItemCartItemService.totalPriceWithTax = 99.0
 
         val items: MutableList<QuixItemCartItemService> = java.util.ArrayList()
         items.add(quixItemCartItemService)
@@ -246,18 +239,18 @@ class HostedPaymentChargeServiceTest {
         val quixCartService = QuixCartService()
         quixCartService.currency = Currency.EUR
         quixCartService.items = items
-        quixCartService.total_price_with_tax = 99.0
+        quixCartService.totalPriceWithTax = 99.0
 
         val quixAddress = QuixAddress()
         quixAddress.city = "Barcelona"
         quixAddress.setCountry(CountryCode.ES)
-        quixAddress.street_address = "Nombre de la vía y nº"
-        quixAddress.postal_code = "28003"
+        quixAddress.streetAddress = "Nombre de la vía y nº"
+        quixAddress.postalCode = "28003"
 
         val quixBilling = QuixBilling()
         quixBilling.address = quixAddress
-        quixBilling.first_name = "Nombre"
-        quixBilling.last_name = "Apellido"
+        quixBilling.firstName = "Nombre"
+        quixBilling.lastName = "Apellido"
 
         val quixServicePaySolExtendedData = QuixServicePaySolExtendedData()
         quixServicePaySolExtendedData.cart = quixCartService
@@ -267,31 +260,23 @@ class HostedPaymentChargeServiceTest {
         hostedQuixService.paySolExtendedData = quixServicePaySolExtendedData
 
         val hostedQuixPaymentAdapter = HostedQuixPaymentAdapter(credentials)
-        hostedQuixPaymentAdapter.sendHostedQuixServiceRequest(hostedQuixService, mockedResponseListener)
 
-        val errorSlot = slot<Error>()
-        val errorMessageSlot = slot<String>()
+        val exception = assertThrows<MissingFieldException> {
+            hostedQuixPaymentAdapter.sendHostedQuixServiceRequest(hostedQuixService, mockedResponseListener)
+        }
 
-        verify { mockedResponseListener.onError(capture(errorSlot), capture(errorMessageSlot)) }
-
-        assertEquals(Error.MISSING_PARAMETER, errorSlot.captured)
-        assertEquals("Missing statusURL", errorMessageSlot.captured)
+        assertEquals("Missing statusURL", exception.message)
     }
 
     @Test
     fun failInvalidAmountHosted() {
-        mockkConstructor(SocketAdapter::class, recordPrivateCalls = true)
-        every { anyConstructed<SocketAdapter>().connect(any(), any()) } just Runs
-
-        val mockedSecurityUtils = mockk<SecurityUtils>()
-        every { mockedSecurityUtils.generateIV() } returns ByteArray(16) { 1 }
-        every { mockedSecurityUtils.hash256(any()) } answers { callOriginal() }
-        every { mockedSecurityUtils.base64Encode(any()) } answers { callOriginal() }
-        every { mockedSecurityUtils.applyAESPadding(any()) } answers { callOriginal() }
-        every { mockedSecurityUtils.cbcEncryption(any(), any(), any(), any()) } answers { callOriginal() }
 
         mockkStatic(SecurityUtils::class)
-        every { SecurityUtils.getInstance() } returns mockedSecurityUtils
+        every { SecurityUtils.generateIV() } returns ByteArray(16) { 1 }
+        every { SecurityUtils.hash256(any()) } answers { callOriginal() }
+        every { SecurityUtils.base64Encode(any()) } answers { callOriginal() }
+        every { SecurityUtils.applyAESPadding(any()) } answers { callOriginal() }
+        every { SecurityUtils.cbcEncryption(any(), any(), any(), any()) } answers { callOriginal() }
 
         mockkConstructor(NetworkAdapter::class, recordPrivateCalls = true)
         every {
@@ -315,70 +300,14 @@ class HostedPaymentChargeServiceTest {
         credentials.merchantId = "111222"
         credentials.environment = Environment.STAGING
         credentials.productId = "1112220001"
+        credentials.apiVersion = 5
 
         val hostedQuixService = HostedQuixService()
-        hostedQuixService.amount = "99,1123"
-        hostedQuixService.customerId = "903"
-        hostedQuixService.statusURL = "https://test.com/paymentNotification"
-        hostedQuixService.cancelURL = "https://test.com/cancel"
-        hostedQuixService.errorURL = "https://test.com/error"
-        hostedQuixService.successURL = "https://test.com/success"
-        hostedQuixService.awaitingURL = "https://test.com/awaiting"
-        hostedQuixService.customerEmail = "test@mail.com"
-        hostedQuixService.dob = "01-12-1999"
-        hostedQuixService.firstName = "Name"
-        hostedQuixService.lastName = "Last Name"
-        hostedQuixService.merchantTransactionId = "12345678"
-        hostedQuixService.apiVersion = 5
 
-        val quixArticleService = QuixArticleService()
-        quixArticleService.name = "Nombre del servicio 2"
-        quixArticleService.reference = "4912345678903"
-        quixArticleService.startDate = "2024-10-30T00:00:00+01:00"
-        quixArticleService.endDate = "2024-12-31T23:59:59+01:00"
-        quixArticleService.unit_price_with_tax = 99.0
+        val exception = assertThrows<InvalidFieldException> {
+            hostedQuixService.amount = "99,1123"
+        }
 
-        val quixItemCartItemService = QuixItemCartItemService()
-        quixItemCartItemService.article = quixArticleService
-        quixItemCartItemService.units = 1
-        quixItemCartItemService.isAuto_shipping = true
-        quixItemCartItemService.total_price_with_tax = 99.0
-
-        val items: MutableList<QuixItemCartItemService> = java.util.ArrayList()
-        items.add(quixItemCartItemService)
-
-        val quixCartService = QuixCartService()
-        quixCartService.currency = Currency.EUR
-        quixCartService.items = items
-        quixCartService.total_price_with_tax = 99.0
-
-        val quixAddress = QuixAddress()
-        quixAddress.city = "Barcelona"
-        quixAddress.setCountry(CountryCode.ES)
-        quixAddress.street_address = "Nombre de la vía y nº"
-        quixAddress.postal_code = "28003"
-
-        val quixBilling = QuixBilling()
-        quixBilling.address = quixAddress
-        quixBilling.first_name = "Nombre"
-        quixBilling.last_name = "Apellido"
-
-        val quixServicePaySolExtendedData = QuixServicePaySolExtendedData()
-        quixServicePaySolExtendedData.cart = quixCartService
-        quixServicePaySolExtendedData.billing = quixBilling
-        quixServicePaySolExtendedData.product = "instalments"
-
-        hostedQuixService.paySolExtendedData = quixServicePaySolExtendedData
-
-        val hostedQuixPaymentAdapter = HostedQuixPaymentAdapter(credentials)
-        hostedQuixPaymentAdapter.sendHostedQuixServiceRequest(hostedQuixService, mockedResponseListener)
-
-        val errorSlot = slot<Error>()
-        val errorMessageSlot = slot<String>()
-
-        verify { mockedResponseListener.onError(capture(errorSlot), capture(errorMessageSlot)) }
-
-        assertEquals(Error.INVALID_AMOUNT, errorSlot.captured)
-        assertEquals(Error.INVALID_AMOUNT.message, errorMessageSlot.captured)
+        assertEquals("amount: Should Follow Format #.#### And Be Between 0 And 1000000", exception.message)
     }
 }

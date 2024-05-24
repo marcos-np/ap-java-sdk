@@ -2,18 +2,9 @@ package com.mp.javaPaymentSDK.utils;
 
 public class HexUtils {
 
-    private final char[] hexArray = "0123456789ABCDEF".toCharArray();
+    private static final char[] hexArray = "0123456789ABCDEF".toCharArray();
 
-    private static HexUtils hexUtils = new HexUtils();
-
-    private HexUtils() {
-    }
-
-    public static HexUtils getInstance() {
-        return hexUtils;
-    }
-
-    public byte[] hexStringToByteArray(String s) {
+    public static byte[] hexStringToByteArray(String s) {
         int len = s.length();
         byte[] data = new byte[len / 2];
         for (int i = 0; i < len; i += 2) {
@@ -23,7 +14,7 @@ public class HexUtils {
         return data;
     }
 
-    public String bytesToHex(byte[] bytes) {
+    public static String bytesToHex(byte[] bytes) {
         char[] hexChars = new char[bytes.length * 2];
         for (int j = 0; j < bytes.length; j++) {
             int v = bytes[j] & 0xFF;

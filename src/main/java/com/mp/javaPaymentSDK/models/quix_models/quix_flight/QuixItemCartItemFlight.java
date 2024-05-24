@@ -1,5 +1,6 @@
 package com.mp.javaPaymentSDK.models.quix_models.quix_flight;
 
+import com.google.gson.annotations.SerializedName;
 import com.mp.javaPaymentSDK.utils.Utils;
 import kotlin.Pair;
 
@@ -7,18 +8,10 @@ public class QuixItemCartItemFlight {
 
     private QuixArticleFlight article = null;
     private int units = -1;
-    private double total_price_with_tax = -1;
-    private boolean auto_shipping = true;
-
-    public QuixItemCartItemFlight() {
-    }
-
-    public QuixItemCartItemFlight(QuixArticleFlight article, int units, double total_price_with_tax, boolean auto_shipping) {
-        this.article = article;
-        this.units = units;
-        this.total_price_with_tax = total_price_with_tax;
-        this.auto_shipping = auto_shipping;
-    }
+    @SerializedName("total_price_with_tax")
+    private double totalPriceWithTax = -1;
+    @SerializedName("auto_shipping")
+    private boolean autoShipping = true;
 
     public QuixArticleFlight getArticle() {
         return article;
@@ -36,31 +29,31 @@ public class QuixItemCartItemFlight {
         this.units = units;
     }
 
-    public double getTotal_price_with_tax() {
-        return total_price_with_tax;
+    public double getTotalPriceWithTax() {
+        return totalPriceWithTax;
     }
 
-    public void setTotal_price_with_tax(double total_price_with_tax) {
-        this.total_price_with_tax = Double.parseDouble(Utils.getInstance().roundAmount(total_price_with_tax));
+    public void setTotalPriceWithTax(double totalPriceWithTax) {
+        this.totalPriceWithTax = Double.parseDouble(Utils.roundAmount(totalPriceWithTax));
     }
 
-    public boolean isAuto_shipping() {
-        return auto_shipping;
+    public boolean isAutoShipping() {
+        return autoShipping;
     }
 
-    public void setAuto_shipping(boolean auto_shipping) {
-        this.auto_shipping = auto_shipping;
+    public void setAutoShipping(boolean autoShipping) {
+        this.autoShipping = autoShipping;
     }
 
     public Pair<Boolean, String> isMissingFields() {
         if (units <= 0) {
-            return new Pair<>(true, "Missing units");
+            return new Pair<>(true, "units");
         }
-        if (total_price_with_tax <= 0) {
-            return new Pair<>(true, "Missing total_price_with_tax");
+        if (totalPriceWithTax <= 0) {
+            return new Pair<>(true, "totalPriceWithTax");
         }
         if (article == null) {
-            return new Pair<>(true, "Missing article");
+            return new Pair<>(true, "article");
         }
 
         return article.isMissingFields();

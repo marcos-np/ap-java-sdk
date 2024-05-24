@@ -1,14 +1,10 @@
 package com.mp.javaPaymentSDK.examples.quix.js.accommodation;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.mp.javaPaymentSDK.adapters.NotificationAdapter;
-import com.mp.javaPaymentSDK.adapters.ResponseListenerAdapter;
-import com.mp.javaPaymentSDK.callbacks.NotificationListener;
 import com.mp.javaPaymentSDK.adapters.JSQuixPaymentAdapter;
-import com.mp.javaPaymentSDK.adapters.SocketAdapter;
+import com.mp.javaPaymentSDK.adapters.ResponseListenerAdapter;
 import com.mp.javaPaymentSDK.enums.*;
 import com.mp.javaPaymentSDK.enums.Error;
+import com.mp.javaPaymentSDK.exceptions.FieldException;
 import com.mp.javaPaymentSDK.models.Credentials;
 import com.mp.javaPaymentSDK.models.quix_models.QuixAddress;
 import com.mp.javaPaymentSDK.models.quix_models.QuixBilling;
@@ -30,118 +26,93 @@ public class ChargeAccommodation {
     }
 
     private static void sendQuixJsAccommodationRequest() {
-        SocketAdapter socketAdapter = new SocketAdapter();
-        Gson gson = new GsonBuilder().disableHtmlEscaping().create();
+        try {
+            // region Step 1 - Creating Credentials Object
+            Credentials credentials = new Credentials();
+            credentials.setMerchantId(Creds.merchantId);
+            credentials.setMerchantPass(Creds.merchantPass);
+            credentials.setEnvironment(Creds.environment);
+            credentials.setProductId(Creds.productIdAccommodation);
+            credentials.setApiVersion(5);
+            // endregion
 
-        // region Step 1 - Creating Credentials Object
-        Credentials credentials = new Credentials();
-        credentials.setMerchantId(Creds.merchantId);
-        credentials.setMerchantPass(Creds.merchantPass);
-        credentials.setEnvironment(Creds.environment);
-        credentials.setProductId(Creds.productIdAccommodation);
-        // endregion
+            // region Step 2 - Configure Payment Parameters
+            JSQuixAccommodation jsQuixAccommodation = new JSQuixAccommodation();
+            jsQuixAccommodation.setAmount("99.555555");
+            jsQuixAccommodation.setCustomerId("55");
+            jsQuixAccommodation.setPrepayToken("2795f021-f31c-4533-a74d-5d3d887a003b");
+            jsQuixAccommodation.setStatusURL(Creds.statusUrl);
+            jsQuixAccommodation.setCancelURL(Creds.cancelUrl);
+            jsQuixAccommodation.setErrorURL(Creds.errorUrl);
+            jsQuixAccommodation.setSuccessURL(Creds.successUrl);
+            jsQuixAccommodation.setAwaitingURL(Creds.awaitingUrl);
+            jsQuixAccommodation.setCustomerEmail("test@mail.com");
+            jsQuixAccommodation.setDob("01-12-1999");
+            jsQuixAccommodation.setFirstName("Name");
+            jsQuixAccommodation.setLastName("Last Name");
+            jsQuixAccommodation.setIpAddress("0.0.0.0");
 
-        // region Step 2 - Configure Payment Parameters
-        JSQuixAccommodation jsQuixAccommodation = new JSQuixAccommodation();
-        jsQuixAccommodation.setApiVersion(5);
-        jsQuixAccommodation.setAmount("99.555555");
-        jsQuixAccommodation.setCustomerId("55");
-        jsQuixAccommodation.setPrepayToken("2795f021-f31c-4533-a74d-5d3d887a003b");
-        jsQuixAccommodation.setStatusURL(Creds.statusUrl);
-        jsQuixAccommodation.setCancelURL(Creds.cancelUrl);
-        jsQuixAccommodation.setErrorURL(Creds.errorUrl);
-        jsQuixAccommodation.setSuccessURL(Creds.successUrl);
-        jsQuixAccommodation.setAwaitingURL(Creds.awaitingUrl);
-        jsQuixAccommodation.setCustomerEmail("test@mail.com");
-        jsQuixAccommodation.setDob("01-12-1999");
-        jsQuixAccommodation.setFirstName("Name");
-        jsQuixAccommodation.setLastName("Last Name");
+            QuixAddress quixAddress = new QuixAddress();
+            quixAddress.setCity("Barcelona");
+            quixAddress.setCountry(CountryCode.ES);
+            quixAddress.setStreetAddress("Nombre de la vía y nº");
+            quixAddress.setPostalCode("28003");
 
-        QuixAddress quixAddress = new QuixAddress();
-        quixAddress.setCity("Barcelona");
-        quixAddress.setCountry(CountryCode.ES);
-        quixAddress.setStreet_address("Nombre de la vía y nº");
-        quixAddress.setPostal_code("28003");
+            QuixArticleAccommodation quixArticleAccommodation = new QuixArticleAccommodation();
+            quixArticleAccommodation.setName("Nombre del servicio 2");
+            quixArticleAccommodation.setReference("4912345678903");
+            quixArticleAccommodation.setCheckinDate("2024-10-30T00:00:00+01:00");
+            quixArticleAccommodation.setCheckoutDate("2024-12-31T23:59:59+01:00");
+            quixArticleAccommodation.setGuests(1);
+            quixArticleAccommodation.setEstablishmentName("Hotel");
+            quixArticleAccommodation.setAddress(quixAddress);
+            quixArticleAccommodation.setUnitPriceWithTax(99.555555);
+            quixArticleAccommodation.setCategory(Category.digital);
 
-        QuixArticleAccommodation quixArticleAccommodation = new QuixArticleAccommodation();
-        quixArticleAccommodation.setName("Nombre del servicio 2");
-        quixArticleAccommodation.setReference("4912345678903");
-        quixArticleAccommodation.setCheckinDate("2024-10-30T00:00:00+01:00");
-        quixArticleAccommodation.setCheckoutDate("2024-12-31T23:59:59+01:00");
-        quixArticleAccommodation.setGuests(1);
-        quixArticleAccommodation.setEstablishmentName("Hotel");
-        quixArticleAccommodation.setAddress(quixAddress);
-        quixArticleAccommodation.setUnit_price_with_tax(99.555555);
+            QuixItemCartItemAccommodation quixItemCartItemAccommodation = new QuixItemCartItemAccommodation();
+            quixItemCartItemAccommodation.setArticle(quixArticleAccommodation);
+            quixItemCartItemAccommodation.setUnits(1);
+            quixItemCartItemAccommodation.setAuto_shipping(true);
+            quixItemCartItemAccommodation.setTotalPriceWithTax(99.555555);
 
-        QuixItemCartItemAccommodation quixItemCartItemAccommodation = new QuixItemCartItemAccommodation();
-        quixItemCartItemAccommodation.setArticle(quixArticleAccommodation);
-        quixItemCartItemAccommodation.setUnits(1);
-        quixItemCartItemAccommodation.setAuto_shipping(true);
-        quixItemCartItemAccommodation.setTotal_price_with_tax(99.555555);
+            List<QuixItemCartItemAccommodation> items = new ArrayList<>();
+            items.add(quixItemCartItemAccommodation);
 
-        List<QuixItemCartItemAccommodation> items = new ArrayList<>();
-        items.add(quixItemCartItemAccommodation);
+            QuixCartAccommodation quixCartAccommodation = new QuixCartAccommodation();
+            quixCartAccommodation.setCurrency(Currency.EUR);
+            quixCartAccommodation.setItems(items);
+            quixCartAccommodation.setTotal_price_with_tax(99.555555);
 
-        QuixCartAccommodation quixCartAccommodation = new QuixCartAccommodation();
-        quixCartAccommodation.setCurrency(Currency.EUR);
-        quixCartAccommodation.setItems(items);
-        quixCartAccommodation.setTotal_price_with_tax(99.555555);
+            QuixBilling quixBilling = new QuixBilling();
+            quixBilling.setAddress(quixAddress);
+            quixBilling.setFirstName("Nombre");
+            quixBilling.setLastName("Apellido");
 
-        QuixBilling quixBilling = new QuixBilling();
-        quixBilling.setAddress(quixAddress);
-        quixBilling.setFirst_name("Nombre");
-        quixBilling.setLast_name("Apellido");
+            QuixAccommodationPaySolExtendedData quixAccommodationPaySolExtendedData = new QuixAccommodationPaySolExtendedData();
+            quixAccommodationPaySolExtendedData.setCart(quixCartAccommodation);
+            quixAccommodationPaySolExtendedData.setBilling(quixBilling);
+            quixAccommodationPaySolExtendedData.setProduct("instalments");
 
-        QuixAccommodationPaySolExtendedData quixAccommodationPaySolExtendedData = new QuixAccommodationPaySolExtendedData();
-        quixAccommodationPaySolExtendedData.setCart(quixCartAccommodation);
-        quixAccommodationPaySolExtendedData.setBilling(quixBilling);
-        quixAccommodationPaySolExtendedData.setProduct("instalments");
+            jsQuixAccommodation.setPaySolExtendedData(quixAccommodationPaySolExtendedData);
+            //endregion
 
-        jsQuixAccommodation.setPaySolExtendedData(quixAccommodationPaySolExtendedData);
-        //endregion
+            // Step 3 - Send Payment Request
+            JSQuixPaymentAdapter jsQuixPaymentAdapter = new JSQuixPaymentAdapter(credentials);
+            jsQuixPaymentAdapter.sendJSQuixAccommodationRequest(jsQuixAccommodation, new ResponseListenerAdapter() {
+                // Step 4 - Handle the Response
+                @Override
+                public void onError(Error error, String errorMessage) {
+                    System.out.println("Error received - " + error.name() + " - " + errorMessage);
+                }
 
-        // Step 3 - Send Payment Request
-        JSQuixPaymentAdapter jsQuixPaymentAdapter = new JSQuixPaymentAdapter(credentials);
-        jsQuixPaymentAdapter.sendJSQuixAccommodationRequest(jsQuixAccommodation, new ResponseListenerAdapter() {
-            // Step 4 - Handle the Response
-            @Override
-            public void onError(Error error, String errorMessage) {
-                System.out.println("Error received - " + error.name() + " - " + errorMessage);
-            }
-
-            @Override
-            public void onResponseReceived(String rawResponse, Notification notification, TransactionResult transactionResult) {
-                System.out.println("Intermediate Notification Received");
-                System.out.println(gson.toJson(notification));
-                socketAdapter.connect(jsQuixAccommodation.getMerchantTransactionId(), new NotificationListener() {
-                    @Override
-                    public void onError(Error error, String errorMessage) {
-                        System.out.println("An error occurred in H2H Payment - " + error.getMessage() + " - " + errorMessage);
-                    }
-
-                    @Override
-                    public void onNotificationReceived(String notificationResponse) {
-                        // Step 5 - Handle Payment Notification
-                        try {
-                            Notification notification = NotificationAdapter.parseNotification(notificationResponse);
-                            if (notification != null) {
-                                if (notification.isLastNotification()) {
-                                    System.out.println("Final Notification Received For merchantTransactionId = " + notification.getMerchantTransactionId());
-                                } else {
-                                    System.out.println("Intermediate Notification For merchantTransactionId = " + notification.getMerchantTransactionId());
-                                }
-                            }
-                            else {
-                                System.out.println("Invalid Response Received");
-                            }
-                        }
-                        catch (Exception exception) {
-                            exception.printStackTrace();
-                            System.out.println("Invalid Response Received");
-                        }
-                    }
-                });
-            }
-        });
+                @Override
+                public void onResponseReceived(String rawResponse, Notification notification, TransactionResult transactionResult) {
+                    System.out.println("Intermediate Notification Received");
+                    System.out.println(rawResponse);
+                }
+            });
+        } catch (FieldException fieldException) {
+            fieldException.printStackTrace();
+        }
     }
 }

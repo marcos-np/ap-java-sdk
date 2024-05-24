@@ -1,5 +1,6 @@
 package com.mp.javaPaymentSDK.models.quix_models.quix_service;
 
+import com.google.gson.annotations.SerializedName;
 import com.mp.javaPaymentSDK.enums.Currency;
 import com.mp.javaPaymentSDK.utils.Utils;
 import kotlin.Pair;
@@ -9,18 +10,11 @@ import java.util.List;
 
 public class QuixCartService {
 
+    @SerializedName("total_price_with_tax")
+    private double totalPriceWithTax = 0;
     private Currency currency = null;
-    private double total_price_with_tax = 0;
+    private String reference = null;
     private List<QuixItemCartItemService> items = new ArrayList<>();
-
-    public QuixCartService() {
-    }
-
-    public QuixCartService(Currency currency, double total_price_with_tax, List<QuixItemCartItemService> items) {
-        this.currency = currency;
-        this.total_price_with_tax = total_price_with_tax;
-        this.items = items;
-    }
 
     public Currency getCurrency() {
         return currency;
@@ -30,12 +24,12 @@ public class QuixCartService {
         this.currency = currency;
     }
 
-    public double getTotal_price_with_tax() {
-        return total_price_with_tax;
+    public double getTotalPriceWithTax() {
+        return totalPriceWithTax;
     }
 
-    public void setTotal_price_with_tax(double total_price_with_tax) {
-        this.total_price_with_tax = Double.parseDouble(Utils.getInstance().roundAmount(total_price_with_tax));
+    public void setTotalPriceWithTax(double totalPriceWithTax) {
+        this.totalPriceWithTax = Double.parseDouble(Utils.roundAmount(totalPriceWithTax));
     }
 
     public List<QuixItemCartItemService> getItems() {
@@ -46,15 +40,23 @@ public class QuixCartService {
         this.items = items;
     }
 
+    public String getReference() {
+        return reference;
+    }
+
+    public void setReference(String reference) {
+        this.reference = reference;
+    }
+
     public Pair<Boolean, String> isMissingField() {
-        if (total_price_with_tax <= 0) {
-            return new Pair<>(true, "Missing total_price_with_tax");
+        if (totalPriceWithTax <= 0) {
+            return new Pair<>(true, "totalPriceWithTax");
         }
         if (currency == null) {
-            return new Pair<>(true, "Missing currency");
+            return new Pair<>(true, "currency");
         }
         if (items == null || items.isEmpty()) {
-            return new Pair<>(true, "Missing items");
+            return new Pair<>(true, "items");
         }
 
         for (QuixItemCartItemService item : items) {

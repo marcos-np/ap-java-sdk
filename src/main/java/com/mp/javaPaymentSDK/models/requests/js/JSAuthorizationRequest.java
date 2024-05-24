@@ -3,38 +3,24 @@ package com.mp.javaPaymentSDK.models.requests.js;
 import com.mp.javaPaymentSDK.enums.CountryCode;
 import com.mp.javaPaymentSDK.enums.Currency;
 import com.mp.javaPaymentSDK.enums.OperationTypes;
+import com.mp.javaPaymentSDK.exceptions.InvalidFieldException;
 import com.mp.javaPaymentSDK.models.Credentials;
 import com.mp.javaPaymentSDK.utils.Utils;
 import kotlin.Pair;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 public class JSAuthorizationRequest {
 
-    private Currency currency = null;
     private String merchantId = null;
     private String merchantKey = null;
     private String productId = null;
+    private Currency currency = null;
     private CountryCode country = null;
     private String customerId = null;
     private OperationTypes operationType = null;
-    private int apiVersion = -1;
-    private List<Pair<String, String>> merchantParams = null;
     private boolean anonymousCustomer = false;
-
-    public JSAuthorizationRequest() {
-    }
-
-    public JSAuthorizationRequest(Currency currency, CountryCode country, String customerId, OperationTypes operationType, int apiVersion, boolean anonymousCustomer) {
-        this.currency = currency;
-        this.country = country;
-        this.customerId = customerId;
-        this.operationType = operationType;
-        this.apiVersion = apiVersion;
-        this.anonymousCustomer = anonymousCustomer;
-    }
 
     public Currency getCurrency() {
         return currency;
@@ -60,7 +46,10 @@ public class JSAuthorizationRequest {
         return customerId;
     }
 
-    public void setCustomerId(String customerId) {
+    public void setCustomerId(String customerId) throws InvalidFieldException {
+        if (customerId == null || customerId.isEmpty() || customerId.length() > 80) {
+            throw new InvalidFieldException("customerId: Invalid Size, size must be (0 < customerId <= 80)");
+        }
         this.customerId = customerId;
     }
 
@@ -80,40 +69,12 @@ public class JSAuthorizationRequest {
         return merchantKey;
     }
 
-    public int getApiVersion() {
-        return apiVersion;
-    }
-
-    public void setApiVersion(int apiVersion) {
-        this.apiVersion = apiVersion;
-    }
-
     public boolean isAnonymousCustomer() {
         return anonymousCustomer;
     }
 
     public void setAnonymousCustomer(boolean anonymousCustomer) {
         this.anonymousCustomer = anonymousCustomer;
-    }
-
-    public void setMerchantParameters(List<Pair<String, String>> merchantParams) {
-        if (this.merchantParams == null) {
-            this.merchantParams = merchantParams;
-        }
-        else {
-            this.merchantParams.addAll(merchantParams);
-        }
-    }
-
-    public List<Pair<String, String>> getMerchantParameters() {
-        return merchantParams;
-    }
-
-    public void setMerchantParameter(String key, String value) {
-        if (merchantParams == null) {
-            this.merchantParams = new ArrayList<>();
-        }
-        this.merchantParams.add(new Pair<>(key, value));
     }
 
     public void setCredentials(Credentials credentials) {
@@ -123,27 +84,26 @@ public class JSAuthorizationRequest {
     }
 
     public Pair<Boolean, String> isMissingField() {
-        if (apiVersion < 0) {
-            return new Pair<>(true, "Invalid apiVersion");
-        }
-
         List<String> mandatoryFields = Arrays.asList(
                 "merchantId", "productId", "merchantKey",
-                 "currency", "country", "customerId",
+                "currency", "country", "customerId",
                 "operationType"
         );
 
-        return Utils.getInstance().containsNull(
+        return Utils.containsNull(
                 JSAuthorizationRequest.class, this, mandatoryFields
         );
     }
 
     public Pair<Boolean, String> checkCredentials(Credentials credentials) {
+        if (credentials.getApiVersion() < 0) {
+            return new Pair<>(true, "apiVersion");
+        }
         List<String> mandatoryFields = Arrays.asList(
                 "merchantId", "productId", "merchantKey", "environment"
         );
 
-        return Utils.getInstance().containsNull(
+        return Utils.containsNull(
                 Credentials.class, credentials, mandatoryFields
         );
     }

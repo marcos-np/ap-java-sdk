@@ -2,10 +2,11 @@ package quix.js
 
 import com.mp.javaPaymentSDK.adapters.JSQuixPaymentAdapter
 import com.mp.javaPaymentSDK.adapters.NetworkAdapter
-import com.mp.javaPaymentSDK.adapters.SocketAdapter
 import com.mp.javaPaymentSDK.callbacks.RequestListener
 import com.mp.javaPaymentSDK.callbacks.ResponseListener
 import com.mp.javaPaymentSDK.enums.*
+import com.mp.javaPaymentSDK.exceptions.InvalidFieldException
+import com.mp.javaPaymentSDK.exceptions.MissingFieldException
 import com.mp.javaPaymentSDK.models.Credentials
 import com.mp.javaPaymentSDK.models.quix_models.QuixAddress
 import com.mp.javaPaymentSDK.models.quix_models.QuixBilling
@@ -18,6 +19,7 @@ import okhttp3.RequestBody
 import okhttp3.ResponseBody
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import utils.NotificationResponses
 
 class JsPaymentChargeFlightsTest {
@@ -46,6 +48,7 @@ class JsPaymentChargeFlightsTest {
         credentials.merchantId = "111222"
         credentials.environment = Environment.STAGING
         credentials.productId = "1112220001"
+        credentials.apiVersion = 5
 
         val jsQuixFlight = JSQuixFlight()
         jsQuixFlight.amount = "99.0"
@@ -60,7 +63,7 @@ class JsPaymentChargeFlightsTest {
         jsQuixFlight.dob = "01-12-1999"
         jsQuixFlight.firstName = "Name"
         jsQuixFlight.lastName = "Last Name"
-        jsQuixFlight.apiVersion = 5
+        jsQuixFlight.ipAddress = "0.0.0.0"
 
         val quixPassengerFlight = QuixPassengerFlight()
         quixPassengerFlight.firstName = "Pablo"
@@ -79,17 +82,17 @@ class JsPaymentChargeFlightsTest {
         val quixArticleFlight = QuixArticleFlight()
         quixArticleFlight.name = "Nombre del servicio 2"
         quixArticleFlight.reference = "4912345678903"
-        quixArticleFlight.customerMemberSince = "2023-10-30T00:00:00+01:00"
         quixArticleFlight.departureDate = "2024-12-31T23:59:59+01:00"
         quixArticleFlight.passengers = passangers
         quixArticleFlight.segments = segments
-        quixArticleFlight.unit_price_with_tax = 99.0
+        quixArticleFlight.unitPriceWithTax = 99.0
+        quixArticleFlight.category = Category.digital
 
         val quixItemCartItemFlight = QuixItemCartItemFlight()
         quixItemCartItemFlight.article = quixArticleFlight
         quixItemCartItemFlight.units = 1
-        quixItemCartItemFlight.isAuto_shipping = true
-        quixItemCartItemFlight.total_price_with_tax = 99.0
+        quixItemCartItemFlight.isAutoShipping = true
+        quixItemCartItemFlight.totalPriceWithTax = 99.0
 
         val items: MutableList<QuixItemCartItemFlight> = ArrayList()
         items.add(quixItemCartItemFlight)
@@ -97,18 +100,18 @@ class JsPaymentChargeFlightsTest {
         val quixCartFlight = QuixCartFlight()
         quixCartFlight.currency = Currency.EUR
         quixCartFlight.items = items
-        quixCartFlight.total_price_with_tax = 99.0
+        quixCartFlight.totalPriceWithTax = 99.0
 
         val quixAddress = QuixAddress()
         quixAddress.city = "Barcelona"
         quixAddress.setCountry(CountryCode.ES)
-        quixAddress.street_address = "Nombre de la vía y nº"
-        quixAddress.postal_code = "28003"
+        quixAddress.streetAddress = "Nombre de la vía y nº"
+        quixAddress.postalCode = "28003"
 
         val quixBilling = QuixBilling()
         quixBilling.address = quixAddress
-        quixBilling.first_name = "Nombre"
-        quixBilling.last_name = "Apellido"
+        quixBilling.firstName = "Nombre"
+        quixBilling.lastName = "Apellido"
 
         val quixFlightPaySolExtendedData = QuixFlightPaySolExtendedData()
         quixFlightPaySolExtendedData.cart = quixCartFlight
@@ -169,18 +172,12 @@ class JsPaymentChargeFlightsTest {
 
     @Test
     fun failMissingParameterJS() {
-        mockkConstructor(SocketAdapter::class, recordPrivateCalls = true)
-        every { anyConstructed<SocketAdapter>().connect(any(), any()) } just Runs
-
-        val mockedSecurityUtils = mockk<SecurityUtils>()
-        every { mockedSecurityUtils.generateIV() } returns ByteArray(16) { 1 }
-        every { mockedSecurityUtils.hash256(any()) } answers { callOriginal() }
-        every { mockedSecurityUtils.base64Encode(any()) } answers { callOriginal() }
-        every { mockedSecurityUtils.applyAESPadding(any()) } answers { callOriginal() }
-        every { mockedSecurityUtils.cbcEncryption(any(), any(), any(), any()) } answers { callOriginal() }
-
         mockkStatic(SecurityUtils::class)
-        every { SecurityUtils.getInstance() } returns mockedSecurityUtils
+        every { SecurityUtils.generateIV() } returns ByteArray(16) { 1 }
+        every { SecurityUtils.hash256(any()) } answers { callOriginal() }
+        every { SecurityUtils.base64Encode(any()) } answers { callOriginal() }
+        every { SecurityUtils.applyAESPadding(any()) } answers { callOriginal() }
+        every { SecurityUtils.cbcEncryption(any(), any(), any(), any()) } answers { callOriginal() }
 
         mockkConstructor(NetworkAdapter::class, recordPrivateCalls = true)
         every {
@@ -204,6 +201,7 @@ class JsPaymentChargeFlightsTest {
         credentials.merchantId = "111222"
         credentials.environment = Environment.STAGING
         credentials.productId = "1112220001"
+        credentials.apiVersion = 5
 
         val jsQuixFlight = JSQuixFlight()
         jsQuixFlight.amount = "99.0"
@@ -235,16 +233,15 @@ class JsPaymentChargeFlightsTest {
         val quixArticleFlight = QuixArticleFlight()
         quixArticleFlight.name = "Nombre del servicio 2"
         quixArticleFlight.reference = "4912345678903"
-        quixArticleFlight.customerMemberSince = "2023-10-30T00:00:00+01:00"
         quixArticleFlight.departureDate = "2024-12-31T23:59:59+01:00"
         quixArticleFlight.passengers = passangers
         quixArticleFlight.segments = segments
-        quixArticleFlight.unit_price_with_tax = 99.0
+        quixArticleFlight.unitPriceWithTax = 99.0
 
         val quixItemCartItemFlight = QuixItemCartItemFlight()
         quixItemCartItemFlight.article = quixArticleFlight
-        quixItemCartItemFlight.isAuto_shipping = true
-        quixItemCartItemFlight.total_price_with_tax = 99.0
+        quixItemCartItemFlight.isAutoShipping = true
+        quixItemCartItemFlight.totalPriceWithTax = 99.0
 
         val items: MutableList<QuixItemCartItemFlight> = ArrayList()
         items.add(quixItemCartItemFlight)
@@ -252,18 +249,18 @@ class JsPaymentChargeFlightsTest {
         val quixCartFlight = QuixCartFlight()
         quixCartFlight.currency = Currency.EUR
         quixCartFlight.items = items
-        quixCartFlight.total_price_with_tax = 99.0
+        quixCartFlight.totalPriceWithTax = 99.0
 
         val quixAddress = QuixAddress()
         quixAddress.city = "Barcelona"
         quixAddress.setCountry(CountryCode.ES)
-        quixAddress.street_address = "Nombre de la vía y nº"
-        quixAddress.postal_code = "28003"
+        quixAddress.streetAddress = "Nombre de la vía y nº"
+        quixAddress.postalCode = "28003"
 
         val quixBilling = QuixBilling()
         quixBilling.address = quixAddress
-        quixBilling.first_name = "Nombre"
-        quixBilling.last_name = "Apellido"
+        quixBilling.firstName = "Nombre"
+        quixBilling.lastName = "Apellido"
 
         val quixFlightPaySolExtendedData = QuixFlightPaySolExtendedData()
         quixFlightPaySolExtendedData.cart = quixCartFlight
@@ -274,31 +271,22 @@ class JsPaymentChargeFlightsTest {
 
         val jsQuixPaymentAdapter = JSQuixPaymentAdapter(credentials)
 
-        jsQuixPaymentAdapter.sendJSQuixFlightRequest(jsQuixFlight, mockedResponseListener)
+        val exception = assertThrows<MissingFieldException> {
+            jsQuixPaymentAdapter.sendJSQuixFlightRequest(jsQuixFlight, mockedResponseListener)
+        }
 
-        val errorSlot = slot<Error>()
-        val errorMessageSlot = slot<String>()
-
-        verify { mockedResponseListener.onError(capture(errorSlot), capture(errorMessageSlot)) }
-
-        assertEquals(Error.MISSING_PARAMETER, errorSlot.captured)
-        assertEquals("Missing units", errorMessageSlot.captured)
+        assertEquals("Missing units", exception.message)
     }
 
     @Test
     fun failInvalidAmountJS() {
-        mockkConstructor(SocketAdapter::class, recordPrivateCalls = true)
-        every { anyConstructed<SocketAdapter>().connect(any(), any()) } just Runs
-
-        val mockedSecurityUtils = mockk<SecurityUtils>()
-        every { mockedSecurityUtils.generateIV() } returns ByteArray(16) { 1 }
-        every { mockedSecurityUtils.hash256(any()) } answers { callOriginal() }
-        every { mockedSecurityUtils.base64Encode(any()) } answers { callOriginal() }
-        every { mockedSecurityUtils.applyAESPadding(any()) } answers { callOriginal() }
-        every { mockedSecurityUtils.cbcEncryption(any(), any(), any(), any()) } answers { callOriginal() }
 
         mockkStatic(SecurityUtils::class)
-        every { SecurityUtils.getInstance() } returns mockedSecurityUtils
+        every { SecurityUtils.generateIV() } returns ByteArray(16) { 1 }
+        every { SecurityUtils.hash256(any()) } answers { callOriginal() }
+        every { SecurityUtils.base64Encode(any()) } answers { callOriginal() }
+        every { SecurityUtils.applyAESPadding(any()) } answers { callOriginal() }
+        every { SecurityUtils.cbcEncryption(any(), any(), any(), any()) } answers { callOriginal() }
 
         mockkConstructor(NetworkAdapter::class, recordPrivateCalls = true)
         every {
@@ -322,87 +310,14 @@ class JsPaymentChargeFlightsTest {
         credentials.merchantId = "111222"
         credentials.environment = Environment.STAGING
         credentials.productId = "1112220001"
+        credentials.apiVersion = 5
 
         val jsQuixFlight = JSQuixFlight()
-        jsQuixFlight.amount = "99,0"
-        jsQuixFlight.prepayToken = "2795f021-f31c-4533-a74d-5d3d887a003b"
-        jsQuixFlight.customerId = "55"
-        jsQuixFlight.statusURL = "https://test.com/paymentNotification"
-        jsQuixFlight.cancelURL = "https://test.com/cancel"
-        jsQuixFlight.errorURL = "https://test.com/error"
-        jsQuixFlight.successURL = "https://test.com/success"
-        jsQuixFlight.awaitingURL = "https://test.com/awaiting"
-        jsQuixFlight.customerEmail = "test@mail.com"
-        jsQuixFlight.dob = "01-12-1999"
-        jsQuixFlight.firstName = "Name"
-        jsQuixFlight.lastName = "Last Name"
-        jsQuixFlight.apiVersion = 5
 
-        val quixPassengerFlight = QuixPassengerFlight()
-        quixPassengerFlight.firstName = "Pablo"
-        quixPassengerFlight.lastName = "Navvaro"
+        val exception = assertThrows<InvalidFieldException> {
+            jsQuixFlight.amount = "99,0"
+        }
 
-        val passangers: MutableList<QuixPassengerFlight> = ArrayList()
-        passangers.add(quixPassengerFlight)
-
-        val quixSegmentFlight = QuixSegmentFlight()
-        quixSegmentFlight.iataDepartureCode = "MAD"
-        quixSegmentFlight.iataDestinationCode = "BCN"
-
-        val segments: MutableList<QuixSegmentFlight> = ArrayList()
-        segments.add(quixSegmentFlight)
-
-        val quixArticleFlight = QuixArticleFlight()
-        quixArticleFlight.name = "Nombre del servicio 2"
-        quixArticleFlight.reference = "4912345678903"
-        quixArticleFlight.customerMemberSince = "2023-10-30T00:00:00+01:00"
-        quixArticleFlight.departureDate = "2024-12-31T23:59:59+01:00"
-        quixArticleFlight.passengers = passangers
-        quixArticleFlight.segments = segments
-        quixArticleFlight.unit_price_with_tax = 99.0
-
-        val quixItemCartItemFlight = QuixItemCartItemFlight()
-        quixItemCartItemFlight.article = quixArticleFlight
-        quixItemCartItemFlight.units = 1
-        quixItemCartItemFlight.isAuto_shipping = true
-        quixItemCartItemFlight.total_price_with_tax = 99.0
-
-        val items: MutableList<QuixItemCartItemFlight> = ArrayList()
-        items.add(quixItemCartItemFlight)
-
-        val quixCartFlight = QuixCartFlight()
-        quixCartFlight.currency = Currency.EUR
-        quixCartFlight.items = items
-        quixCartFlight.total_price_with_tax = 99.0
-
-        val quixAddress = QuixAddress()
-        quixAddress.city = "Barcelona"
-        quixAddress.setCountry(CountryCode.ES)
-        quixAddress.street_address = "Nombre de la vía y nº"
-        quixAddress.postal_code = "28003"
-
-        val quixBilling = QuixBilling()
-        quixBilling.address = quixAddress
-        quixBilling.first_name = "Nombre"
-        quixBilling.last_name = "Apellido"
-
-        val quixFlightPaySolExtendedData = QuixFlightPaySolExtendedData()
-        quixFlightPaySolExtendedData.cart = quixCartFlight
-        quixFlightPaySolExtendedData.billing = quixBilling
-        quixFlightPaySolExtendedData.product = "instalments"
-
-        jsQuixFlight.paySolExtendedData = quixFlightPaySolExtendedData
-
-        val jsQuixPaymentAdapter = JSQuixPaymentAdapter(credentials)
-
-        jsQuixPaymentAdapter.sendJSQuixFlightRequest(jsQuixFlight, mockedResponseListener)
-
-        val errorSlot = slot<Error>()
-        val errorMessageSlot = slot<String>()
-
-        verify { mockedResponseListener.onError(capture(errorSlot), capture(errorMessageSlot)) }
-
-        assertEquals(Error.INVALID_AMOUNT, errorSlot.captured)
-        assertEquals(Error.INVALID_AMOUNT.message, errorMessageSlot.captured)
+        assertEquals("amount: Should Follow Format #.#### And Be Between 0 And 1000000", exception.message)
     }
 }

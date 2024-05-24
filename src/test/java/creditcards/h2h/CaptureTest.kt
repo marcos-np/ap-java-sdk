@@ -5,6 +5,7 @@ import com.mp.javaPaymentSDK.adapters.NetworkAdapter
 import com.mp.javaPaymentSDK.callbacks.RequestListener
 import com.mp.javaPaymentSDK.callbacks.ResponseListener
 import com.mp.javaPaymentSDK.enums.*
+import com.mp.javaPaymentSDK.exceptions.MissingFieldException
 import com.mp.javaPaymentSDK.models.Credentials
 import com.mp.javaPaymentSDK.models.requests.h2h.H2HPaymentRecurrentSuccessive
 import com.mp.javaPaymentSDK.models.requests.h2h.H2HPreAuthorizationCapture
@@ -15,6 +16,7 @@ import okhttp3.RequestBody
 import okhttp3.ResponseBody
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import utils.NotificationResponses
 
 class CaptureTest {
@@ -22,15 +24,12 @@ class CaptureTest {
     @Test
     fun successNotificationCapture() {
 
-        val mockedSecurityUtils = mockk<SecurityUtils>()
-        every { mockedSecurityUtils.generateIV() } returns ByteArray(16) { 1 }
-        every { mockedSecurityUtils.hash256(any()) } answers { callOriginal() }
-        every { mockedSecurityUtils.base64Encode(any()) } answers { callOriginal() }
-        every { mockedSecurityUtils.applyAESPadding(any()) } answers { callOriginal() }
-        every { mockedSecurityUtils.cbcEncryption(any(), any(), any(), any()) } answers { callOriginal() }
-
         mockkStatic(SecurityUtils::class)
-        every { SecurityUtils.getInstance() } returns mockedSecurityUtils
+        every { SecurityUtils.generateIV() } returns ByteArray(16) { 1 }
+        every { SecurityUtils.hash256(any()) } answers { callOriginal() }
+        every { SecurityUtils.base64Encode(any()) } answers { callOriginal() }
+        every { SecurityUtils.applyAESPadding(any()) } answers { callOriginal() }
+        every { SecurityUtils.cbcEncryption(any(), any(), any(), any()) } answers { callOriginal() }
 
         mockkConstructor(NetworkAdapter::class, recordPrivateCalls = true)
         every {
@@ -52,6 +51,7 @@ class CaptureTest {
         credentials.merchantKey = "11111111-1111-1111-1111-111111111111"
         credentials.merchantId = "111222"
         credentials.environment = Environment.STAGING
+        credentials.apiVersion = 5
 
         val h2HPreAuthorizationCapture = H2HPreAuthorizationCapture()
 
@@ -59,7 +59,6 @@ class CaptureTest {
         h2HPreAuthorizationCapture.merchantTransactionId = "46604547"
         h2HPreAuthorizationCapture.transactionId = "7817556"
         h2HPreAuthorizationCapture.merchantTransactionId = "12345678"
-        h2HPreAuthorizationCapture.apiVersion = 5
 
         val h2HPaymentAdapter = H2HPaymentAdapter(credentials)
 
@@ -89,11 +88,11 @@ class CaptureTest {
         Assertions.assertEquals(3, queryParameterSlot.captured.size)
         Assertions.assertEquals("111222", queryParameterSlot.captured["merchantId"])
         Assertions.assertEquals(
-            "pDH/U+/gbuzXdYp84aiQKmAB1WoG3rPuYdEo0WU+k+I6Po6qoGum82RamnYAjsafVDBx2jk7xKlzE5alJVodXAOqiuCV3paKIRxM8ao64TsaSgiWG/8QQ8K2YYlrg3TPDUs+ECdEqQxGCg58SDUWaQ==",
+            "pDH/U+/gbuzXdYp84aiQKmAB1WoG3rPuYdEo0WU+k+I6Po6qoGum82RamnYAjsafVDBx2jk7xKlzE5alJVodXAOqiuCV3paKIRxM8ao64TsaSgiWG/8QQ8K2YYlrg3TPZf2xPhKoX78sjjnYUCDFcA==",
             queryParameterSlot.captured["encrypted"]
         )
         Assertions.assertEquals(
-            "50374804a5b7ec7c63339d60ce57a7da9bc6c14c78ac5a0b81866fa26f8cebff",
+            "bb7b2df7cde5ab2f5988dd02de01206139494b36fb20e7794e65efb559408161",
             queryParameterSlot.captured["integrityCheck"]
         )
 
@@ -136,25 +135,20 @@ class CaptureTest {
         credentials.merchantKey = "11111111-1111-1111-1111-111111111111"
         credentials.merchantId = "111222"
         credentials.environment = Environment.STAGING
+        credentials.apiVersion = 5
 
         val h2HPreAuthorizationCapture = H2HPreAuthorizationCapture()
 
         h2HPreAuthorizationCapture.paymentSolution = PaymentSolutions.creditcards
         h2HPreAuthorizationCapture.merchantTransactionId = "46604547"
-        h2HPreAuthorizationCapture.merchantTransactionId = "12345678"
-        h2HPreAuthorizationCapture.apiVersion = 5
 
         val h2HPaymentAdapter = H2HPaymentAdapter(credentials)
 
-        h2HPaymentAdapter.sendH2hPreAuthorizationCapture(h2HPreAuthorizationCapture, mockedResponseListener)
+        val exception = assertThrows<MissingFieldException> {
+            h2HPaymentAdapter.sendH2hPreAuthorizationCapture(h2HPreAuthorizationCapture, mockedResponseListener)
+        }
 
-        val errorSlot = slot<Error>()
-        val errorMessageSlot = slot<String>()
-
-        verify { mockedResponseListener.onError(capture(errorSlot), capture(errorMessageSlot)) }
-
-        Assertions.assertEquals(Error.MISSING_PARAMETER, errorSlot.captured)
-        Assertions.assertEquals("Missing transactionId", errorMessageSlot.captured)
+        Assertions.assertEquals("Missing transactionId", exception.message)
     }
 
     @Test
@@ -178,15 +172,11 @@ class CaptureTest {
 
         val h2HPaymentAdapter = H2HPaymentAdapter(credentials)
 
-        h2HPaymentAdapter.sendH2hPreAuthorizationCapture(h2HPreAuthorizationCapture, mockedResponseListener)
+        val exception = assertThrows<MissingFieldException> {
+            h2HPaymentAdapter.sendH2hPreAuthorizationCapture(h2HPreAuthorizationCapture, mockedResponseListener)
+        }
 
-        val errorSlot = slot<Error>()
-        val errorMessageSlot = slot<String>()
-
-        verify { mockedResponseListener.onError(capture(errorSlot), capture(errorMessageSlot)) }
-
-        Assertions.assertEquals(Error.MISSING_PARAMETER, errorSlot.captured)
-        Assertions.assertEquals("Invalid apiVersion", errorMessageSlot.captured)
+        Assertions.assertEquals("Mandatory credentials are missing. Please ensure you provide: apiVersion", exception.message)
     }
 
 }

@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 import com.mp.javaPaymentSDK.callbacks.ResponseListener;
 import com.mp.javaPaymentSDK.enums.Endpoints;
 import com.mp.javaPaymentSDK.enums.Error;
+import com.mp.javaPaymentSDK.exceptions.MissingFieldException;
 import com.mp.javaPaymentSDK.models.requests.js.JSPaymentRecurrentInitial;
 import com.mp.javaPaymentSDK.models.responses.notification.Notification;
 import com.mp.javaPaymentSDK.callbacks.JSPaymentListener;
@@ -35,12 +36,11 @@ public class JSPaymentAdapter {
         this.credentials = credentials;
     }
 
-    public void sendJSAuthorizationRequest(JSAuthorizationRequest jsAuthorizationRequest, JSPaymentListener jsPaymentListener) {
+    public void sendJSAuthorizationRequest(JSAuthorizationRequest jsAuthorizationRequest, JSPaymentListener jsPaymentListener) throws MissingFieldException {
 
         Pair<Boolean, String> isMissingCred = jsAuthorizationRequest.checkCredentials(credentials);
         if (isMissingCred.getFirst()) {
-            jsPaymentListener.onError(Error.MISSING_PARAMETER, isMissingCred.getSecond());
-            return;
+            throw new MissingFieldException(MissingFieldException.createMessage(isMissingCred.getSecond(), true));
         }
 
         jsAuthorizationRequest.setCredentials(credentials);
@@ -49,11 +49,12 @@ public class JSPaymentAdapter {
 
         Pair<Boolean, String> isMissingField = jsAuthorizationRequest.isMissingField();
         if (isMissingField.getFirst()) {
-            jsPaymentListener.onError(Error.MISSING_PARAMETER, isMissingField.getSecond());
-            return;
+            throw new MissingFieldException(MissingFieldException.createMessage(isMissingField.getSecond(), false));
         }
 
         JSONObject bodyJson = new JSONObject(gson.toJson(jsAuthorizationRequest));
+
+        System.out.println("Request Body = " + bodyJson.toString(2));
 
         RequestBody requestBody = RequestBody.create(bodyJson.toString(), MediaType.parse("application/json"));
 
@@ -69,6 +70,7 @@ public class JSPaymentAdapter {
                 if (code == 200 || code == 307) {
                     try {
                         String rawResponse = responseBody.string();
+                        System.out.println(rawResponse);
                         Gson gson = new Gson();
                         JSAuthorizationResponse jsAuthorizationResponse
                                 = gson.fromJson(rawResponse, JSAuthorizationResponse.class);
@@ -86,6 +88,7 @@ public class JSPaymentAdapter {
                     String errorMessage = Error.CLIENT_ERROR.getMessage();
                     try {
                         errorMessage = responseBody.string();
+                        System.out.println("Error Received = " + errorMessage);
                     }
                     catch (IOException exception) {
                         exception.printStackTrace();
@@ -95,6 +98,7 @@ public class JSPaymentAdapter {
                     String errorMessage = Error.SERVER_ERROR.getMessage();
                     try {
                         errorMessage = responseBody.string();
+                        System.out.println("Error Received = " + errorMessage);
                     }
                     catch (IOException exception) {
                         exception.printStackTrace();
@@ -105,12 +109,11 @@ public class JSPaymentAdapter {
         });
     }
 
-    public void sendJSChargeRequest(JSCharge jsCharge, ResponseListener responseListener) {
+    public void sendJSChargeRequest(JSCharge jsCharge, ResponseListener responseListener) throws MissingFieldException {
 
         Pair<Boolean, String> isMissingCred = jsCharge.checkCredentials(credentials);
         if (isMissingCred.getFirst()) {
-            responseListener.onError(Error.MISSING_PARAMETER, isMissingCred.getSecond());
-            return;
+            throw new MissingFieldException(MissingFieldException.createMessage(isMissingCred.getSecond(), true));
         }
 
         jsCharge.setCredentials(credentials);
@@ -119,19 +122,12 @@ public class JSPaymentAdapter {
 
         Pair<Boolean, String> isMissingField = jsCharge.isMissingField();
         if (isMissingField.getFirst()) {
-            responseListener.onError(Error.MISSING_PARAMETER, isMissingField.getSecond());
-            return;
+            throw new MissingFieldException(MissingFieldException.createMessage(isMissingField.getSecond(), false));
         }
-
-        String parsedAmount = Utils.getInstance().parseAmount(jsCharge.getAmount());
-        if (parsedAmount == null) {
-            responseListener.onError(Error.INVALID_AMOUNT, Error.INVALID_AMOUNT.getMessage());
-            return;
-        }
-        jsCharge.setAmount(parsedAmount);
 
         JSONObject bodyJson = new JSONObject(gson.toJson(jsCharge));
         bodyJson.remove("prepayToken");
+        System.out.println("Request Body = " + bodyJson.toString(2));
 
         RequestBody requestBody = RequestBody.create(bodyJson.toString(), MediaType.parse("application/json"));
 
@@ -151,6 +147,7 @@ public class JSPaymentAdapter {
                 if (code == 200 || code == 307) {
                     try {
                         String rawResponse = responseBody.string();
+                        System.out.println(rawResponse);
                         Notification notification = NotificationAdapter.parseNotification(rawResponse);
                         responseListener.onResponseReceived(rawResponse, notification, notification.getTransactionResult());
 
@@ -162,6 +159,7 @@ public class JSPaymentAdapter {
                     String errorMessage = Error.CLIENT_ERROR.getMessage();
                     try {
                         errorMessage = responseBody.string();
+                        System.out.println("Error Received = " + errorMessage);
                     }
                     catch (IOException exception) {
                         exception.printStackTrace();
@@ -171,6 +169,7 @@ public class JSPaymentAdapter {
                     String errorMessage = Error.SERVER_ERROR.getMessage();
                     try {
                         errorMessage = responseBody.string();
+                        System.out.println("Error Received = " + errorMessage);
                     }
                     catch (IOException exception) {
                         exception.printStackTrace();
@@ -181,12 +180,11 @@ public class JSPaymentAdapter {
         });
     }
 
-    public void sendJSPaymentRecurrentInitial(JSPaymentRecurrentInitial jsPaymentRecurrentInitial, ResponseListener responseListener) {
+    public void sendJSPaymentRecurrentInitial(JSPaymentRecurrentInitial jsPaymentRecurrentInitial, ResponseListener responseListener) throws MissingFieldException {
 
         Pair<Boolean, String> isMissingCred = jsPaymentRecurrentInitial.checkCredentials(credentials);
         if (isMissingCred.getFirst()) {
-            responseListener.onError(Error.MISSING_PARAMETER, isMissingCred.getSecond());
-            return;
+            throw new MissingFieldException(MissingFieldException.createMessage(isMissingCred.getSecond(), true));
         }
 
         jsPaymentRecurrentInitial.setCredentials(credentials);
@@ -195,19 +193,12 @@ public class JSPaymentAdapter {
 
         Pair<Boolean, String> isMissingField = jsPaymentRecurrentInitial.isMissingField();
         if (isMissingField.getFirst()) {
-            responseListener.onError(Error.MISSING_PARAMETER, isMissingField.getSecond());
-            return;
+            throw new MissingFieldException(MissingFieldException.createMessage(isMissingField.getSecond(), false));
         }
-
-        String parsedAmount = Utils.getInstance().parseAmount(jsPaymentRecurrentInitial.getAmount());
-        if (parsedAmount == null) {
-            responseListener.onError(Error.INVALID_AMOUNT, Error.INVALID_AMOUNT.getMessage());
-            return;
-        }
-        jsPaymentRecurrentInitial.setAmount(parsedAmount);
 
         JSONObject bodyJson = new JSONObject(gson.toJson(jsPaymentRecurrentInitial));
         bodyJson.remove("prepayToken");
+        System.out.println("Request Body = " + bodyJson.toString(2));
 
         RequestBody requestBody = RequestBody.create(bodyJson.toString(), MediaType.parse("application/json"));
 
@@ -227,6 +218,7 @@ public class JSPaymentAdapter {
                 if (code == 200 || code == 307) {
                     try {
                         String rawResponse = responseBody.string();
+                        System.out.println(rawResponse);
                         Notification notification = NotificationAdapter.parseNotification(rawResponse);
                         responseListener.onResponseReceived(rawResponse, notification, notification.getTransactionResult());
 
@@ -238,6 +230,7 @@ public class JSPaymentAdapter {
                     String errorMessage = Error.CLIENT_ERROR.getMessage();
                     try {
                         errorMessage = responseBody.string();
+                        System.out.println("Error Received = " + errorMessage);
                     }
                     catch (IOException exception) {
                         exception.printStackTrace();
@@ -247,6 +240,7 @@ public class JSPaymentAdapter {
                     String errorMessage = Error.SERVER_ERROR.getMessage();
                     try {
                         errorMessage = responseBody.string();
+                        System.out.println("Error Received = " + errorMessage);
                     }
                     catch (IOException exception) {
                         exception.printStackTrace();

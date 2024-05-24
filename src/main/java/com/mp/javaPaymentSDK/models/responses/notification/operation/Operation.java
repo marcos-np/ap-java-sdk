@@ -8,6 +8,8 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import com.mp.javaPaymentSDK.enums.Currency;
 import com.mp.javaPaymentSDK.enums.OperationTypes;
 import com.mp.javaPaymentSDK.enums.PaymentSolutions;
+import com.mp.javaPaymentSDK.exceptions.InvalidFieldException;
+import com.mp.javaPaymentSDK.utils.Utils;
 
 @JacksonXmlRootElement
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -169,7 +171,11 @@ public class Operation {
         return transactionId;
     }
 
-    public void setTransactionId(String transactionId) {
+    public void setTransactionId(String transactionId) throws InvalidFieldException {
+        if (!Utils.isNumbersOnly(transactionId) || transactionId.length() > 100)
+        {
+            throw new InvalidFieldException("transactionId: Must be numbers only with size (transactionId <= 100)");
+        }
         this.transactionId = transactionId;
     }
 

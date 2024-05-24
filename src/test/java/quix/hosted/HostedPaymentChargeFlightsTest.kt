@@ -2,10 +2,11 @@ package quix.hosted
 
 import com.mp.javaPaymentSDK.adapters.HostedQuixPaymentAdapter
 import com.mp.javaPaymentSDK.adapters.NetworkAdapter
-import com.mp.javaPaymentSDK.adapters.SocketAdapter
 import com.mp.javaPaymentSDK.callbacks.RequestListener
 import com.mp.javaPaymentSDK.callbacks.ResponseListener
 import com.mp.javaPaymentSDK.enums.*
+import com.mp.javaPaymentSDK.exceptions.InvalidFieldException
+import com.mp.javaPaymentSDK.exceptions.MissingFieldException
 import com.mp.javaPaymentSDK.models.Credentials
 import com.mp.javaPaymentSDK.models.quix_models.QuixAddress
 import com.mp.javaPaymentSDK.models.quix_models.QuixBilling
@@ -17,20 +18,19 @@ import okhttp3.RequestBody
 import okhttp3.ResponseBody
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 
 class HostedPaymentChargeFlightsTest {
 
     @Test
     fun successHostedResponse() {
-        val mockedSecurityUtils = mockk<SecurityUtils>()
-        every { mockedSecurityUtils.generateIV() } returns ByteArray(16) { 1 }
-        every { mockedSecurityUtils.hash256(any()) } answers { callOriginal() }
-        every { mockedSecurityUtils.base64Encode(any()) } answers { callOriginal() }
-        every { mockedSecurityUtils.applyAESPadding(any()) } answers { callOriginal() }
-        every { mockedSecurityUtils.cbcEncryption(any(), any(), any(), any()) } answers { callOriginal() }
 
         mockkStatic(SecurityUtils::class)
-        every { SecurityUtils.getInstance() } returns mockedSecurityUtils
+        every { SecurityUtils.generateIV() } returns ByteArray(16) { 1 }
+        every { SecurityUtils.hash256(any()) } answers { callOriginal() }
+        every { SecurityUtils.base64Encode(any()) } answers { callOriginal() }
+        every { SecurityUtils.applyAESPadding(any()) } answers { callOriginal() }
+        every { SecurityUtils.cbcEncryption(any(), any(), any(), any()) } answers { callOriginal() }
 
         mockkConstructor(NetworkAdapter::class, recordPrivateCalls = true)
         every {
@@ -54,6 +54,7 @@ class HostedPaymentChargeFlightsTest {
         credentials.merchantId = "111222"
         credentials.environment = Environment.STAGING
         credentials.productId = "1112220001"
+        credentials.apiVersion = 5
 
         val hostedQuixFlight = HostedQuixFlight()
         hostedQuixFlight.amount = "99.0"
@@ -68,7 +69,7 @@ class HostedPaymentChargeFlightsTest {
         hostedQuixFlight.firstName = "Name"
         hostedQuixFlight.lastName = "Last Name"
         hostedQuixFlight.merchantTransactionId = "12345678"
-        hostedQuixFlight.apiVersion = 5
+        hostedQuixFlight.ipAddress = "0.0.0.0"
 
         val quixPassengerFlight = QuixPassengerFlight()
         quixPassengerFlight.firstName = "Pablo"
@@ -87,17 +88,17 @@ class HostedPaymentChargeFlightsTest {
         val quixArticleFlight = QuixArticleFlight()
         quixArticleFlight.name = "Nombre del servicio 2"
         quixArticleFlight.reference = "4912345678903"
-        quixArticleFlight.customerMemberSince = "2023-10-30T00:00:00+01:00"
         quixArticleFlight.departureDate = "2024-12-31T23:59:59+01:00"
         quixArticleFlight.passengers = passangers
         quixArticleFlight.segments = segments
-        quixArticleFlight.unit_price_with_tax = 99.0
+        quixArticleFlight.unitPriceWithTax = 99.0
+        quixArticleFlight.category = Category.digital
 
         val quixItemCartItemFlight = QuixItemCartItemFlight()
         quixItemCartItemFlight.article = quixArticleFlight
         quixItemCartItemFlight.units = 1
-        quixItemCartItemFlight.isAuto_shipping = true
-        quixItemCartItemFlight.total_price_with_tax = 99.0
+        quixItemCartItemFlight.isAutoShipping = true
+        quixItemCartItemFlight.totalPriceWithTax = 99.0
 
         val items: MutableList<QuixItemCartItemFlight> = ArrayList()
         items.add(quixItemCartItemFlight)
@@ -105,25 +106,25 @@ class HostedPaymentChargeFlightsTest {
         val quixCartFlight = QuixCartFlight()
         quixCartFlight.currency = Currency.EUR
         quixCartFlight.items = items
-        quixCartFlight.total_price_with_tax = 99.0
+        quixCartFlight.totalPriceWithTax = 99.0
 
         val quixAddress = QuixAddress()
         quixAddress.city = "Barcelona"
         quixAddress.setCountry(CountryCode.ES)
-        quixAddress.street_address = "Nombre de la vía y nº"
-        quixAddress.postal_code = "28003"
+        quixAddress.streetAddress = "Nombre de la vía y nº"
+        quixAddress.postalCode = "28003"
 
         val quixBilling = QuixBilling()
         quixBilling.address = quixAddress
-        quixBilling.first_name = "Nombre"
-        quixBilling.last_name = "Apellido"
+        quixBilling.firstName = "Nombre"
+        quixBilling.lastName = "Apellido"
 
         val quixFlightPaySolExtendedData = QuixFlightPaySolExtendedData()
         quixFlightPaySolExtendedData.cart = quixCartFlight
         quixFlightPaySolExtendedData.billing = quixBilling
         quixFlightPaySolExtendedData.product = "instalments"
 
-        hostedQuixFlight.paysolExtendedData = quixFlightPaySolExtendedData
+        hostedQuixFlight.paySolExtendedData = quixFlightPaySolExtendedData
 
         val hostedQuixPaymentAdapter = HostedQuixPaymentAdapter(credentials)
         hostedQuixPaymentAdapter.sendHostedQuixFlightRequest(hostedQuixFlight, mockedResponseListener)
@@ -152,11 +153,11 @@ class HostedPaymentChargeFlightsTest {
         assertEquals(3, queryParameterSlot.captured.size)
         assertEquals("111222", queryParameterSlot.captured["merchantId"])
         assertEquals(
-            "2BDGM6x+gfSbyWnsjorW6SehNsfnfDRVlBc2heL9fGfOXyKzcFeArKLvKxO7s3Cz432FV9V9VSgfAfQzbHVr59WgjfTvj+uv9Bs1DxyFcf+hUKY/McQbXpRenl49P0ghITtNiN7Vyxs6TleM/JkjJjz8/ebgqHFTegpiyDbECd9/YURkLT8rvFK8PCIiP218KYAjXsH8990sraRF1T4SJIjBsXEepliqXGHBr1zjNWz19ViO4PQcG4JfsF4YNwi8dtKEsNQ+w9SpuOJ7DpTPVAjjp1iIf/2lb1sEd5SjKkLCB4SnWRsh4GRg0iOay1obfm2oHVwJbJOj6EUvjUrVAorEtFvFMwmC2LqspfOyBTqp3T5gbrwMqRSF+AJ8rFZOUgKzkK7cY2k5SGoCY0FyZS9qiHj70NQRI+VmAT/OPnbQJvz/HXU7AbBVS29vWZ2Tl4S9is5C32YRpyKjsSSa43RO7v74mRN/X4xZn36rldDbcTVRdM/7crGzlx25E169WPUkaxK9U+0soUvUHW5EQ8RJC3RcymRXaRq990B26urzv6VfrooBj7lo74VW55jzB3aJ0hCwr1A+wuVfonalT+73P/sqjKijtXvMEYd/V903e+i/ZXzjVzasXuxU3siuLbJ0pJj+7DUy/BOD2DW1qfxkK9QT3WFea9swAxXZWNsVl549OtqVqim4W6McZFr7e1f5hzhJIRSXIeLIU+Vm4W6dnN0WXIYrYO6bKUU/iE5bNPqN5PBmM3lkHerVo/rnip1rCnUHjZF+i7PaChFFHuZak6SKis/2uBRrFtLPm3NKfI9Gd2zEN87MmWXrM5OM7QqsU1S5TVKjjkXePlpJSawuElcgaXkB383OYmWiFGlCItk6Aqj+N/jNGGNiC1xm/n/Y4MAnqUWZsCSMnvlul1bBQ83D7VfdhuIW7KdXUu6V/e32AN8gqgToWuviCWNMzs4DIpyNvq6sjTniEw7DJWkMbQLPLDGzD/Y+hoR/fBieMTs7FtJEhxViiCFfYR4cfTNFChk9JjM1QA1oV46dndfOUPyUt1MiUZgibQvBraS1xZXRQMiCVsWhfybCtneJ0A3FtX04qkNZdJbfsgojSJSb7f0PUJobflfiLs8uKrnq5F6g0UBecvp/oA2Z5pDKz7ooEF1RO9WKxzAvKpkIj5SRc8jWv3tji39tU8JXJrk/dU9uBlrgfoDRwFPt36A5jtwnPxjQQnI3tLQr/lbjO91cQbwtUQgn1ISfM9sHAE7ciBhPm/7V2FfcG0yBNaFDlHYgPeKHuGj3UtH4CbIJ4ORflp/OhLXYVto6PMewc703LlvDfKcohS/9VCyxyRL6dUlh1pRxtXXc5aUiCB2SUxqvlaMXeA+szCesE34rtyJLTCj+eKoyV/gUkVfl7+FueGw+rmViekVffkD/+vjqZDILTET2E1MRqZ1+00gObSqkq0xrD+6DpbsZ2kwCYa6wsRqN+ijmYC5AVgYhx/9/dVfiU8Jy930mkcN9NGJJGPNdu0DG+UuzQCHQ0a3FQ3pdAVo0SwWx0PwFy2Oa3L41h99zBJjbTq4UuZduh13LyKlJ+aRX+wHEJIfwKxj+XCmdEjI/fsGFwpYBvcwtbmjAkVchMZnA7GHqEtkBPjicLlwV+BOPxX6SZyEnG5q21waM9/kyv+XLarJjo3/caUDOSuFwHRIJU3CWCb5mGP5CHscE0lbl8xZizqZbgzYoXPGrhNqv50AHbeL1ostqCqQFoNt80b3cgeLNvcDlYTnL4MOJsz2bRbU3fjP587+Af0LrWpZ9Poh5HXkywudt/B1AkoJbJFg1Izu55gQfDEsqZnYVysyuqAFZ3esHpp64rxNqgal5gEN+6OMMYY7CLXfKxuuJmkL0RwxA/lbuAAa05a6wIoyvJuq0UXozvSu6BuLXtjkNnn2pugtNABLvCCi8DaISkBkcRBwmsj6UIysXdK8=",
+            "pDH/U+/gbuzXdYp84aiQKsVwdo0OluLSE7iid4fDTDsOp3Iz5PMaVkId+H/okm/59Slik6eoVuhf9S0X7utcyiYp1zqBuvvjPWiO0Nmne1/ZLwf2liuTEo6jRVTCGjokuW3KnOMHbgeoHjg5TaK6fzocze2OWBs55Luc+A4onL6/qm7Lt8dAhWkUjIcWzIE5KXyKPm4Icm16zGh5wmDou/WEtJVEedu7LsO1HfOvJro6s39Ya+e8RAaNEoQZ64f4J8kDU9KYEm6aQZrOEp/+n1wI2Vc7u/6Y/VGO2ye7649smVWFsPhgGe9L8i5wzQRI4xpVpKLKQKe2Opx7fG7FZVgy1RZ8Ye4t3KZ8qEKlpHMTriACrdB4QxcwctvbRQCWgjCqCEDwD+98eTefF1LRqh2++/xptrxrXxBl+oOiyNbIdG8ZllTmYZIDF/dIESFWQUXqxL3vAYEj4CMctMZSmb2721NohunvlobjzKnbl/LB8o2dxsCrONuhDn8AX4I+5+IErn+6ifP0cgce4p1LwQL3twThfnqWZRIz0D9O54QEVSj/MTHwTFumZHiNdHlw5tHa+rFVK26AbJ/2za7kmZtaIDbJRFzJdCzRD011DY08wqla03v4qBBdNFCBJqjE2NXnmcAELemPMC+CdnfDmyT0Asyn0vLagzVJrWcN5ntxdtojoybPT4MgafMID6scUltph1LrpSLJRYqd39gLMbNv9icUxwpQMWVWFGWH+guE+GOTDcQ3z/DYuhSmS9ApTe/cULsQHjF/J/GHqtNSOupGeMJf54VL7IDeE6dIGoufPFDyO7Zs0wNsflGQh1Ri2OjGeT4cJZRhCchy1a5oxgb4GZekJcFHFvMD8BI5onoEeqbmpT3kEc+noty+nyCB2OGfHCKQ3Pz9Lt6qTIiQARk36KROp5XfSpn5+F3P9nb8dNJEG7UyEpd12AShXkms8vihKrmshExP0ciF5+KLKyysOcJ3l4BZHSqv1xhnMVZAEyTLrYOJpddf7ND1Fq8yQTF71w06gpuJAY161jzMpZiwkzDwngasTOHIeI3KDz5ooKkg7sH/L+KroqenuhPVheN2NAL2F327Ptd6eQf8zdAdk7Bk6454+mf/UR9ZebntXlKTQGrRJWowcPsJEhkIbw82YIJQbGunOP8xvVXxtycXmSMSFTBaxizIQjKenyf0JO2W9DdfYndUl6JG1ayfIGzgXM+Vqo7+I4xyKUrnRiuuGtMs6Ir574D9Ut0BD8ezBVO9vSEJ9EZ+ZhsnBNl07BRR7CvDeE4CIO9DEJpktUteK7RTiVI70uogrf1BStFG+nvpDnHMAvHTtP8gZVn0AwhhawjB8wYokGg0db1AsmGN+vhYQbaEQgg+2aWh9EXAcNbMiL3jqbQijqwlmkfx0oVzsAbyEm3HJWvck4NIker63CV0umPkPlqwzp3YcRvpNVl4CzSVjNCtIGg648glV6Sb/CyOIZzbpF9/pP3OmDmeDvmFSdlGyaLWYKLfuQGGJ40gUFGx/Gv09r+tZU9E1+HAoyO/P87h/3HNIhHvuN6rkVN6Q0hXMObWNQvh4sDxowiTsOSK9V370gKI1qZRH55nlEbHMTNk53idU9yQQOfecj0eQYVh1lR2hxau0Wh7pDb0FCdOJldUi5g7Gyyw1OcW8sS43Uuc1lROJ3VPkdtbKbgRT4d0l/JLxGtG+TrMPSfusKsLKzAv/XLD+qqoWFHJ519H4lwm3uzd7cr5g+lqbtVQKKxS1dh+/paLxXxb62cQrYqiWeiUIUJ/0Qi/0bNrR6Ac/RB678t12WJmE555zOdeGd72qREag9Uyk3MBtbuQPIpCbgQrJ9f5VU4+yOxVTyCz8Mq6SUUkdD5gZD+WdvPLHTKjsumhBIibmec=",
             queryParameterSlot.captured["encrypted"]
         )
         assertEquals(
-            "0299b4605967d2bcc3129f29c2cbfff5fedab308cfc729716fcccbcf6cb042f2",
+            "f2dfd78451135a036594d7e0541cacad0b049bd1c16a354f49d5a3d126dd120f",
             queryParameterSlot.captured["integrityCheck"]
         )
 
@@ -185,18 +186,13 @@ class HostedPaymentChargeFlightsTest {
 
     @Test
     fun failMissingParameterHosted() {
-        mockkConstructor(SocketAdapter::class, recordPrivateCalls = true)
-        every { anyConstructed<SocketAdapter>().connect(any(), any()) } just Runs
-
-        val mockedSecurityUtils = mockk<SecurityUtils>()
-        every { mockedSecurityUtils.generateIV() } returns ByteArray(16) { 1 }
-        every { mockedSecurityUtils.hash256(any()) } answers { callOriginal() }
-        every { mockedSecurityUtils.base64Encode(any()) } answers { callOriginal() }
-        every { mockedSecurityUtils.applyAESPadding(any()) } answers { callOriginal() }
-        every { mockedSecurityUtils.cbcEncryption(any(), any(), any(), any()) } answers { callOriginal() }
 
         mockkStatic(SecurityUtils::class)
-        every { SecurityUtils.getInstance() } returns mockedSecurityUtils
+        every { SecurityUtils.generateIV() } returns ByteArray(16) { 1 }
+        every { SecurityUtils.hash256(any()) } answers { callOriginal() }
+        every { SecurityUtils.base64Encode(any()) } answers { callOriginal() }
+        every { SecurityUtils.applyAESPadding(any()) } answers { callOriginal() }
+        every { SecurityUtils.cbcEncryption(any(), any(), any(), any()) } answers { callOriginal() }
 
         mockkConstructor(NetworkAdapter::class, recordPrivateCalls = true)
         every {
@@ -220,6 +216,7 @@ class HostedPaymentChargeFlightsTest {
         credentials.merchantId = "111222"
         credentials.environment = Environment.STAGING
         credentials.productId = "1112220001"
+        credentials.apiVersion = 5
 
         val hostedQuixFlight = HostedQuixFlight()
         hostedQuixFlight.amount = "99.0"
@@ -232,7 +229,6 @@ class HostedPaymentChargeFlightsTest {
         hostedQuixFlight.firstName = "Name"
         hostedQuixFlight.lastName = "Last Name"
         hostedQuixFlight.merchantTransactionId = "12345678"
-        hostedQuixFlight.apiVersion = 5
 
         val quixPassengerFlight = QuixPassengerFlight()
         quixPassengerFlight.firstName = "Pablo"
@@ -251,17 +247,17 @@ class HostedPaymentChargeFlightsTest {
         val quixArticleFlight = QuixArticleFlight()
         quixArticleFlight.name = "Nombre del servicio 2"
         quixArticleFlight.reference = "4912345678903"
-        quixArticleFlight.customerMemberSince = "2023-10-30T00:00:00+01:00"
         quixArticleFlight.departureDate = "2024-12-31T23:59:59+01:00"
         quixArticleFlight.passengers = passangers
         quixArticleFlight.segments = segments
-        quixArticleFlight.unit_price_with_tax = 99.0
+        quixArticleFlight.unitPriceWithTax = 99.0
+        quixArticleFlight.category = Category.digital
 
         val quixItemCartItemFlight = QuixItemCartItemFlight()
         quixItemCartItemFlight.article = quixArticleFlight
         quixItemCartItemFlight.units = 1
-        quixItemCartItemFlight.isAuto_shipping = true
-        quixItemCartItemFlight.total_price_with_tax = 99.0
+        quixItemCartItemFlight.isAutoShipping = true
+        quixItemCartItemFlight.totalPriceWithTax = 99.0
 
         val items: MutableList<QuixItemCartItemFlight> = ArrayList()
         items.add(quixItemCartItemFlight)
@@ -269,52 +265,44 @@ class HostedPaymentChargeFlightsTest {
         val quixCartFlight = QuixCartFlight()
         quixCartFlight.currency = Currency.EUR
         quixCartFlight.items = items
-        quixCartFlight.total_price_with_tax = 99.0
+        quixCartFlight.totalPriceWithTax = 99.0
 
         val quixAddress = QuixAddress()
         quixAddress.city = "Barcelona"
         quixAddress.setCountry(CountryCode.ES)
-        quixAddress.street_address = "Nombre de la vía y nº"
-        quixAddress.postal_code = "28003"
+        quixAddress.streetAddress = "Nombre de la vía y nº"
+        quixAddress.postalCode = "28003"
 
         val quixBilling = QuixBilling()
         quixBilling.address = quixAddress
-        quixBilling.first_name = "Nombre"
-        quixBilling.last_name = "Apellido"
+        quixBilling.firstName = "Nombre"
+        quixBilling.lastName = "Apellido"
 
         val quixFlightPaySolExtendedData = QuixFlightPaySolExtendedData()
         quixFlightPaySolExtendedData.cart = quixCartFlight
         quixFlightPaySolExtendedData.billing = quixBilling
         quixFlightPaySolExtendedData.product = "instalments"
 
-        hostedQuixFlight.paysolExtendedData = quixFlightPaySolExtendedData
+        hostedQuixFlight.paySolExtendedData = quixFlightPaySolExtendedData
 
         val hostedQuixPaymentAdapter = HostedQuixPaymentAdapter(credentials)
-        hostedQuixPaymentAdapter.sendHostedQuixFlightRequest(hostedQuixFlight, mockedResponseListener)
 
-        val errorSlot = slot<Error>()
-        val errorMessageSlot = slot<String>()
+        val exception = assertThrows<MissingFieldException> {
+            hostedQuixPaymentAdapter.sendHostedQuixFlightRequest(hostedQuixFlight, mockedResponseListener)
+        }
 
-        verify { mockedResponseListener.onError(capture(errorSlot), capture(errorMessageSlot)) }
-
-        assertEquals(Error.MISSING_PARAMETER, errorSlot.captured)
-        assertEquals("Missing statusURL", errorMessageSlot.captured)
+        assertEquals("Missing statusURL", exception.message)
     }
 
     @Test
     fun failInvalidAmountHosted() {
-        mockkConstructor(SocketAdapter::class, recordPrivateCalls = true)
-        every { anyConstructed<SocketAdapter>().connect(any(), any()) } just Runs
-
-        val mockedSecurityUtils = mockk<SecurityUtils>()
-        every { mockedSecurityUtils.generateIV() } returns ByteArray(16) { 1 }
-        every { mockedSecurityUtils.hash256(any()) } answers { callOriginal() }
-        every { mockedSecurityUtils.base64Encode(any()) } answers { callOriginal() }
-        every { mockedSecurityUtils.applyAESPadding(any()) } answers { callOriginal() }
-        every { mockedSecurityUtils.cbcEncryption(any(), any(), any(), any()) } answers { callOriginal() }
 
         mockkStatic(SecurityUtils::class)
-        every { SecurityUtils.getInstance() } returns mockedSecurityUtils
+        every { SecurityUtils.generateIV() } returns ByteArray(16) { 1 }
+        every { SecurityUtils.hash256(any()) } answers { callOriginal() }
+        every { SecurityUtils.base64Encode(any()) } answers { callOriginal() }
+        every { SecurityUtils.applyAESPadding(any()) } answers { callOriginal() }
+        every { SecurityUtils.cbcEncryption(any(), any(), any(), any()) } answers { callOriginal() }
 
         mockkConstructor(NetworkAdapter::class, recordPrivateCalls = true)
         every {
@@ -338,87 +326,14 @@ class HostedPaymentChargeFlightsTest {
         credentials.merchantId = "111222"
         credentials.environment = Environment.STAGING
         credentials.productId = "1112220001"
+        credentials.apiVersion = 5
 
         val hostedQuixFlight = HostedQuixFlight()
-        hostedQuixFlight.amount = "99,0"
-        hostedQuixFlight.customerId = "903"
-        hostedQuixFlight.statusURL = "https://test.com/paymentNotification"
-        hostedQuixFlight.cancelURL = "https://test.com/cancel"
-        hostedQuixFlight.errorURL = "https://test.com/error"
-        hostedQuixFlight.successURL = "https://test.com/success"
-        hostedQuixFlight.awaitingURL = "https://test.com/awaiting"
-        hostedQuixFlight.customerEmail = "test@mail.com"
-        hostedQuixFlight.dob = "01-12-1999"
-        hostedQuixFlight.firstName = "Name"
-        hostedQuixFlight.lastName = "Last Name"
-        hostedQuixFlight.merchantTransactionId = "12345678"
-        hostedQuixFlight.apiVersion = 5
 
-        val quixPassengerFlight = QuixPassengerFlight()
-        quixPassengerFlight.firstName = "Pablo"
-        quixPassengerFlight.lastName = "Navvaro"
+        val exception = assertThrows<InvalidFieldException> {
+            hostedQuixFlight.amount = "99,0"
+        }
 
-        val passangers: MutableList<QuixPassengerFlight> = ArrayList()
-        passangers.add(quixPassengerFlight)
-
-        val quixSegmentFlight = QuixSegmentFlight()
-        quixSegmentFlight.iataDepartureCode = "MAD"
-        quixSegmentFlight.iataDestinationCode = "BCN"
-
-        val segments: MutableList<QuixSegmentFlight> = ArrayList()
-        segments.add(quixSegmentFlight)
-
-
-        val quixArticleFlight = QuixArticleFlight()
-        quixArticleFlight.name = "Nombre del servicio 2"
-        quixArticleFlight.reference = "4912345678903"
-        quixArticleFlight.customerMemberSince = "2023-10-30T00:00:00+01:00"
-        quixArticleFlight.departureDate = "2024-12-31T23:59:59+01:00"
-        quixArticleFlight.passengers = passangers
-        quixArticleFlight.segments = segments
-        quixArticleFlight.unit_price_with_tax = 99.0
-
-        val quixItemCartItemFlight = QuixItemCartItemFlight()
-        quixItemCartItemFlight.article = quixArticleFlight
-        quixItemCartItemFlight.units = 1
-        quixItemCartItemFlight.isAuto_shipping = true
-        quixItemCartItemFlight.total_price_with_tax = 99.0
-
-        val items: MutableList<QuixItemCartItemFlight> = ArrayList()
-        items.add(quixItemCartItemFlight)
-
-        val quixCartFlight = QuixCartFlight()
-        quixCartFlight.currency = Currency.EUR
-        quixCartFlight.items = items
-        quixCartFlight.total_price_with_tax = 99.0
-
-        val quixAddress = QuixAddress()
-        quixAddress.city = "Barcelona"
-        quixAddress.setCountry(CountryCode.ES)
-        quixAddress.street_address = "Nombre de la vía y nº"
-        quixAddress.postal_code = "28003"
-
-        val quixBilling = QuixBilling()
-        quixBilling.address = quixAddress
-        quixBilling.first_name = "Nombre"
-        quixBilling.last_name = "Apellido"
-
-        val quixFlightPaySolExtendedData = QuixFlightPaySolExtendedData()
-        quixFlightPaySolExtendedData.cart = quixCartFlight
-        quixFlightPaySolExtendedData.billing = quixBilling
-        quixFlightPaySolExtendedData.product = "instalments"
-
-        hostedQuixFlight.paysolExtendedData = quixFlightPaySolExtendedData
-
-        val hostedQuixPaymentAdapter = HostedQuixPaymentAdapter(credentials)
-        hostedQuixPaymentAdapter.sendHostedQuixFlightRequest(hostedQuixFlight, mockedResponseListener)
-
-        val errorSlot = slot<Error>()
-        val errorMessageSlot = slot<String>()
-
-        verify { mockedResponseListener.onError(capture(errorSlot), capture(errorMessageSlot)) }
-
-        assertEquals(Error.INVALID_AMOUNT, errorSlot.captured)
-        assertEquals(Error.INVALID_AMOUNT.message, errorMessageSlot.captured)
+        assertEquals("amount: Should Follow Format #.#### And Be Between 0 And 1000000", exception.message)
     }
 }

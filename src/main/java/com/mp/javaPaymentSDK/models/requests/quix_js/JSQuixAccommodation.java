@@ -9,11 +9,7 @@ public class JSQuixAccommodation extends QuixJSRequest {
     private QuixAccommodationPaySolExtendedData paySolExtendedData;
 
     public JSQuixAccommodation() {
-    }
-
-    public JSQuixAccommodation(String amount, String customerId, String merchantTransactionId, String statusURL, String successURL, String errorURL, String cancelURL,String awaitingURL, String firstName, String lastName, String customerEmail, String dob, String prepayToken, QuixAccommodationPaySolExtendedData paySolExtendedData, int apiVersion) {
-        super(amount, customerId, merchantTransactionId, statusURL, successURL, errorURL, cancelURL,awaitingURL, firstName, lastName, customerEmail, dob, prepayToken, apiVersion);
-        this.paySolExtendedData = paySolExtendedData;
+        super();
     }
 
     public QuixAccommodationPaySolExtendedData getPaySolExtendedData() {
@@ -26,7 +22,7 @@ public class JSQuixAccommodation extends QuixJSRequest {
 
     public Pair<Boolean, String> isMissingFields() {
         if (paySolExtendedData == null) {
-            return new Pair<>(true, "Missing paySolExtendedData");
+            return new Pair<>(true, "paySolExtendedData");
         }
 
         Pair<Boolean, String> missingField = paySolExtendedData.isMissingField();

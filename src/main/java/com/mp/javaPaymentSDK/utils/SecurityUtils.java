@@ -19,22 +19,13 @@ import java.util.Random;
 
 public class SecurityUtils {
 
-    private static SecurityUtils securityUtils = new SecurityUtils();
-
-    private int AES_256_BLOCK_SIZE = 32;
-
-    private SecurityUtils() {
-    }
-
-    public static SecurityUtils getInstance() {
-        return securityUtils;
-    }
+    private static int AES_256_BLOCK_SIZE = 32;
 
     /**
      * Generates a random byte array (IV) with size 16 bytes
      * @return Generated IV
      */
-    public byte[] generateIV() {
+    public static byte[] generateIV() {
         Random random = new Random();
         byte[] iv = new byte[16];
         random.nextBytes(iv);
@@ -46,7 +37,7 @@ public class SecurityUtils {
      * @param byteArray Byte array to be encoded
      * @return The encoded string
      */
-    public String base64Encode(byte[] byteArray) {
+    public static String base64Encode(byte[] byteArray) {
         byte[] encodedBytes = Base64.getEncoder().encode(byteArray);
         return new String(encodedBytes);
     }
@@ -59,7 +50,7 @@ public class SecurityUtils {
      * @param encrypt Boolean in which the function do encryption or decryption
      * @return The byte array result
      */
-    public byte[] cbcEncryption(byte[] data, byte[] key, byte[] iv, Boolean encrypt) {
+    public static byte[] cbcEncryption(byte[] data, byte[] key, byte[] iv, Boolean encrypt) {
         try {
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
             IvParameterSpec ivParameterSpec = new IvParameterSpec(iv);
@@ -83,7 +74,7 @@ public class SecurityUtils {
      * @param data Data to be hashed
      * @return Hashed string
      */
-    public byte[] hash256(byte[] data) {
+    public static byte[] hash256(byte[] data) {
         try {
             MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
             return messageDigest.digest(data);
@@ -98,7 +89,7 @@ public class SecurityUtils {
      * @param data Data to be padded
      * @return Padded byte array
      */
-    public byte[] applyAESPadding(byte[] data) {
+    public static byte[] applyAESPadding(byte[] data) {
         if (data.length == 0) {
             return null;
         }
@@ -108,7 +99,7 @@ public class SecurityUtils {
         }
 
         byte[] paddedData = new byte[data.length + (32 - (data.length % AES_256_BLOCK_SIZE))];
-        Utils.getInstance().arrayCopy(data, 0, data.length, paddedData, 0);
+        Utils.arrayCopy(data, 0, data.length, paddedData, 0);
         return paddedData;
     }
 
