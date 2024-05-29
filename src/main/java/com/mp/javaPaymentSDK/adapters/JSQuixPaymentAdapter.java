@@ -63,12 +63,15 @@ public class JSQuixPaymentAdapter {
         List<QuixItemCartItemService> items = jsQuixService.getPaySolExtendedData().getCart().getItems();
         for (QuixItemCartItemService item : items) {
             String endDate = item.getArticle().getEndDate();
-            String startDate = item.getArticle().getStartDate();
             if (endDate.contains(":")) {
                 item.getArticle().setEndDate(URLEncoder.encode(endDate, StandardCharsets.UTF_8));
             }
-            if (startDate.contains(":")) {
-                item.getArticle().setStartDate(URLEncoder.encode(startDate, StandardCharsets.UTF_8));
+            if (item.getArticle().getStartDate() != null)
+            {
+                String startDate = item.getArticle().getStartDate();
+                if (startDate.contains(":")) {
+                    item.getArticle().setStartDate(URLEncoder.encode(startDate, StandardCharsets.UTF_8));
+                }
             }
         }
 

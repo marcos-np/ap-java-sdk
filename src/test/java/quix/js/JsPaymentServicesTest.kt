@@ -71,7 +71,6 @@ class JsPaymentServicesTest {
         val quixArticleService = QuixArticleService()
         quixArticleService.name = "Nombre del servicio 2"
         quixArticleService.reference = "4912345678903"
-        quixArticleService.startDate = "2024-10-30T00:00:00+01:00"
         quixArticleService.endDate = "2024-12-31T23:59:59+01:00"
         quixArticleService.unitPriceWithTax = 99.0
         quixArticleService.category = Category.digital
@@ -207,7 +206,6 @@ class JsPaymentServicesTest {
         val quixArticleService = QuixArticleService()
         quixArticleService.name = "Nombre del servicio 2"
         quixArticleService.reference = "4912345678903"
-        quixArticleService.startDate = "2024-10-30T00:00:00+01:00"
         quixArticleService.endDate = "2024-12-31T23:59:59+01:00"
         quixArticleService.unitPriceWithTax = 99.0
 

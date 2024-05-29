@@ -77,7 +77,6 @@ class HostedPaymentChargeServiceTest {
         val quixArticleService = QuixArticleService()
         quixArticleService.name = "Nombre del servicio 2"
         quixArticleService.reference = "4912345678903"
-        quixArticleService.startDate = "2024-10-30T00:00:00+01:00"
         quixArticleService.endDate = "2024-12-31T23:59:59+01:00"
         quixArticleService.unitPriceWithTax = 99.0
         quixArticleService.category = Category.digital
@@ -141,11 +140,11 @@ class HostedPaymentChargeServiceTest {
         assertEquals(3, queryParameterSlot.captured.size)
         assertEquals("111222", queryParameterSlot.captured["merchantId"])
         assertEquals(
-            "pDH/U+/gbuzXdYp84aiQKsVwdo0OluLSE7iid4fDTDsOp3Iz5PMaVkId+H/okm/59Slik6eoVuhf9S0X7utcyiYp1zqBuvvjPWiO0Nmne1/ZLwf2liuTEo6jRVTCGjokuW3KnOMHbgeoHjg5TaK6fzocze2OWBs55Luc+A4onL6/qm7Lt8dAhWkUjIcWzIE5KXyKPm4Icm16zGh5wmDou/WEtJVEedu7LsO1HfOvJro6s39Ya+e8RAaNEoQZ64f4J8kDU9KYEm6aQZrOEp/+n1wI2Vc7u/6Y/VGO2ye7649smVWFsPhgGe9L8i5wzQRI4xpVpKLKQKe2Opx7fG7FZVgy1RZ8Ye4t3KZ8qEKlpHMTriACrdB4QxcwctvbRQCWgjCqCEDwD+98eTefF1LRqh2++/xptrxrXxBl+oOiyNbIdG8ZllTmYZIDF/dIESFWQUXqxL3vAYEj4CMctMZSmb2721NohunvlobjzKnbl/LB8o2dxsCrONuhDn8AX4I+5+IErn+6ifP0cgce4p1LwQL3twThfnqWZRIz0D9O54QEVSj/MTHwTFumZHiNdHlw5tHa+rFVK26AbJ/2za7kmZtaIDbJRFzJdCzRD011DY08wqla03v4qBBdNFCBJqjE2NXnmcAELemPMC+CdnfDmyT0Asyn0vLagzVJrWcN5ntxdtojoybPT4MgafMID6scUltph1LrpSLJRYqd39gLMbNv9icUxwpQMWVWFGWH+guE+GOTDcQ3z/DYuhSmS9ApTe/cULsQHjF/J/GHqtNSOupGeMJf54VL7IDeE6dIGoufPFDyO7Zs0wNsflGQh1Ri2OjGeT4cJZRhCchy1a5oxgb4GZekJcFHFvMD8BI5onoEeqbmpT3kEc+noty+nyCB2OGfHCKQ3Pz9Lt6qTIiQARk36KROp5XfSpn5+F3P9nb8dNJEG7UyEpd12AShXkms8vihKrmshExP0ciF5+KLKyysOcJ3l4BZHSqv1xhnMVZAEyTLrYOJpddf7ND1Fq8yQTF71w06gpuJAY161jzMpZiwkzDwngasTOHIeI3KDz5ooKkg7sH/L+KroqenuhPVheN2NAL2F327Ptd6eQf8zWNgJx29UOGxdmx69CeKSS3HeioGPUDAh7py/V/AWVtv5Oob0BMpg68W3AEbEOqG/OhSwHsZ5ckPpjOgJik78w++bsMRcx9lXJ6ofwGWNv0hkgmS17KusF8LC/lcenqHK2nOaZba7ypq8Re3IYBPlDydCErszd/BxFIu2QdXyDPmURo1mlLQ6QDOIZeaNuWr/P6JT7wqe0H+gaVlDPucYLvuPvC3E6f+7BciDYkeUvRthnQrjPNaRoNNgqAFn9NP8u1pChDoHZKtMZS7QKIaCrq53SguUP4GM19ztB56ZBAqV25PQebFSifxfwbly9gg8QkSlyj9o+TUBSVR+mGB+l+Dbuit1iozWiskS7UOagrTJrXBStKzQKSUI9JSOucLGd7dOO99j3yIm5VAE5tfvjqDa+hX61FdsxfWNnoVRERaCnF0WuxYXEJrAt9iNoVu2IJ5giu7wlAf9iCEmCAA6rYH9T9IwxnW3jNZOPDXicIaFvkgBt6xPBfQwEiGjrle7wzVg0y8wUNxFNTK15q8wezKhUqgljuzbC8/XUfb72EOA01MYH5d/IGQnaWe/2kwuO1HRY1pHbwXmoTedoramtfvhBmUAaA7noOr+MmbvLvPC92Bwn4HvmO7bZ8nCouefw==",
+            "pDH/U+/gbuzXdYp84aiQKsVwdo0OluLSE7iid4fDTDsOp3Iz5PMaVkId+H/okm/59Slik6eoVuhf9S0X7utcyiYp1zqBuvvjPWiO0Nmne1/ZLwf2liuTEo6jRVTCGjokuW3KnOMHbgeoHjg5TaK6fzocze2OWBs55Luc+A4onL6/qm7Lt8dAhWkUjIcWzIE5KXyKPm4Icm16zGh5wmDou/WEtJVEedu7LsO1HfOvJro6s39Ya+e8RAaNEoQZ64f4J8kDU9KYEm6aQZrOEp/+n1wI2Vc7u/6Y/VGO2ye7649smVWFsPhgGe9L8i5wzQRI4xpVpKLKQKe2Opx7fG7FZVgy1RZ8Ye4t3KZ8qEKlpHMTriACrdB4QxcwctvbRQCWgjCqCEDwD+98eTefF1LRqh2++/xptrxrXxBl+oOiyNbIdG8ZllTmYZIDF/dIESFWQUXqxL3vAYEj4CMctMZSmb2721NohunvlobjzKnbl/LB8o2dxsCrONuhDn8AX4I+5+IErn+6ifP0cgce4p1LwQL3twThfnqWZRIz0D9O54QEVSj/MTHwTFumZHiNdHlw5tHa+rFVK26AbJ/2za7kmZtaIDbJRFzJdCzRD011DY08wqla03v4qBBdNFCBJqjE2NXnmcAELemPMC+CdnfDmyT0Asyn0vLagzVJrWcN5ntxdtojoybPT4MgafMID6scUltph1LrpSLJRYqd39gLMbNv9icUxwpQMWVWFGWH+guE+GOTDcQ3z/DYuhSmS9ApTe/cULsQHjF/J/GHqtNSOupGeMJf54VL7IDeE6dIGoufPFDyO7Zs0wNsflGQh1Ri2OjGeT4cJZRhCchy1a5oxgb4GZekJcFHFvMD8BI5onoEeqbmpT3kEc+noty+nyCB2OGfHCKQ3Pz9Lt6qTIiQARk36KROp5XfSpn5+F3P9nb8dNJEG7UyEpd12AShXkms8vihKrmshExP0ciF5+KLKyysOcJ3l4BZHSqv1xhnMVZAEyTLrYOJpddf7ND1Fq8yQTF71w06gpuJAY161jzMpZiwkzDwngasTOHIeI3KDz5ooKkg7sH/L+KroqenuhPVheN2NAL2F327Ptd6eQf8zWNgJx29UOGxdmx69CeKSS3HeioGPUDAh7py/V/AWVtv5Oob0BMpg68W3AEbEOqG/OhSwHsZ5ckPpjOgJik78w++bsMRcx9lXJ6ofwGWNv0hkgmS17KusF8LC/lcenqHK2nOaZba7ypq8Re3IYBPlDydCErszd/BxFIu2QdXyDPmURo1mlLQ6QDOIZeaNuWr/P6JT7wqe0H+gaVlDPucYLvuPvC3E6f+7BciDYkeUvRthnQrjPNaRoNNgqAFn9NP8u1pChDoHZKtMZS7QKIaCrq53SguUP4GM19ztB56ZBAqiGxm/eYbMrksCUvjZrBO/beIcFT5pcz3oCQ9lFICo9GlvGgSguzQSVnJHqFXdCEBNe7b0aEWwoCmv5hEqX/Dy0rLVNTGNYN/UvzRo8YO72hv28ChYXkOSLbZ0GfH24YF91Z8DbIpkcyfH3m7uwdIi63TAvW8zwqSH+1FVFNUEphdOzkJQA+tlO2CV6J462bIxONatQE4yGLFSDyjnSYDzTbtLXSZ/nVybn3d5ZJ7s/7YPP8+3+FltT8PuvOMACTpWUGZMcT/my78LTzvSWPIsw==",
             queryParameterSlot.captured["encrypted"]
         )
         assertEquals(
-            "a569abf609a9b1150a101c4ae616e9c45d4f744b287de2d5d5a90ebc4205bf50",
+            "337825d7d4fc5a302f324ada22f6147214d827acc918b3c5bb2e7171ebac472d",
             queryParameterSlot.captured["integrityCheck"]
         )
 
@@ -222,7 +221,6 @@ class HostedPaymentChargeServiceTest {
         val quixArticleService = QuixArticleService()
         quixArticleService.name = "Nombre del servicio 2"
         quixArticleService.reference = "4912345678903"
-        quixArticleService.startDate = "2024-10-30T00:00:00+01:00"
         quixArticleService.endDate = "2024-12-31T23:59:59+01:00"
         quixArticleService.unitPriceWithTax = 99.0
         quixArticleService.category = Category.digital

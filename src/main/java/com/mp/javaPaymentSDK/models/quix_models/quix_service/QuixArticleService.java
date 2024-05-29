@@ -139,8 +139,7 @@ public class QuixArticleService {
             return new Pair<>(true, "unitPriceWithTax");
         }
         List<String> mandatoryFields = Arrays.asList(
-                "name", "type", "category", "reference",
-                "startDate", "endDate"
+                "name", "type", "category", "reference", "endDate"
         );
         return Utils.containsNull(
                 this.getClass(), this, mandatoryFields

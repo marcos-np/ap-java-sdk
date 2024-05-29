@@ -103,6 +103,13 @@ public class ChargeItems {
                 public void onResponseReceived(String rawResponse, Notification notification, TransactionResult transactionResult) {
                     System.out.println("Intermediate Notification Received");
                     System.out.println(rawResponse);
+                    System.out.println("Use the next two variables in the JS Library to complete the payment");
+                    System.out.println("nemuruCartHash = " + notification.getNemuruCartHash());
+                    System.out.println("nemuruAuthToken = " + notification.getNemuruAuthToken());
+                    System.out.println("HTML Code: window['NEMURU'].checkoutNemuru(response.nemuru_auth_token, response.nemuru_cart_hash);\n" +
+                            "window['NEMURU'].setStatusCallback(() => {\n" +
+                            "    window.location = 'https://test.com/notification.html';\n" +
+                            "});\n");
                 }
             });
         } catch (FieldException fieldException) {

@@ -55,7 +55,6 @@ public class Service {
             QuixArticleService quixArticleService = new QuixArticleService();
             quixArticleService.setName("Nombre del servicio 2");
             quixArticleService.setReference("4912345678903");
-            quixArticleService.setStartDate("2024-10-30T00:00:00+01:00");
             quixArticleService.setEndDate("2024-12-31T23:59:59+01:00");
             quixArticleService.setUnitPriceWithTax(99);
             quixArticleService.setCategory(Category.digital);
